@@ -3,28 +3,31 @@ name: Deploy Laravel via FTP
 on:
   push:
     branches:
-      - main   # change if needed
+      - main  # change if needed
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Get latest code
+        uses: actions/checkout@v4
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
 
-    - name: Install Dependencies
-      run: composer install --no-dev --optimize-autoloader
+      - name: Install Dependencies
+        run: composer install --no-dev --optimize-autoloader
 
-    - name: Upload via FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ vars.FTP_HOST }}
-        username: ${{ vars.FTP_USERNAME }}
-        password: ${{ vars.FTP_PASSWORD }}
-        server-dir: ./
+      - name: Sync files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./ 
