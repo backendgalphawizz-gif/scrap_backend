@@ -27,4 +27,4 @@ jobs:
         server: ${{ vars.FTP_HOST }}
         username: ${{ vars.FTP_USERNAME }}
         password: ${{ vars.FTP_PASSWORD }}
-        server-dir: /
+        server-dir: ./
