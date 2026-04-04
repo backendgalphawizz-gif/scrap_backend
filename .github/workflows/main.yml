@@ -3,10 +3,7 @@ name: Deploy Laravel via FTP
 on:
   push:
     branches:
-      - main  # change if needed
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      - main
 
 jobs:
   deploy:
@@ -24,10 +21,16 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Sync files via FTP
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ./ 
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.env
+            **/node_modules/**
+            **/vendor/**
+          log-level: verbose
