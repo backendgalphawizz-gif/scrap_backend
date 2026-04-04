@@ -1,36 +1,41 @@
-name: Deploy Laravel via FTP
+name: Production SSH Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ] 
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Get latest code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Deploying to GoDaddy via SSH
+        uses: appleboy/ssh-action@master
         with:
-          php-version: '8.2'
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/developmentalpha/deendari.developmentalphawizz.com
+            
+            # 1. GitHub se naya code aur pehle se bani hui build files lein
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # 2. PHP dependencies update karein (Agar composer.json badla hai)
+            # Agar composer nahi chalta toh is line ko remove kar sakte hain
+            composer install --no-dev --optimize-autoloader --no-interaction || echo "Composer skip"
 
-      - name: Install Dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
-          exclude: |
-            **/.git*
-            **/.env
-            **/node_modules/**
-            **/vendor/**
-          log-level: verbose
+            # 3. Laravel ka cache clear karein (TAAKI NAYI FILES DIKHEIN)
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan view:cache
+            
+            # 4. Verify karein ki build folder maujood hai
+            echo "Current Build Status:"
+            ls -la public/build/manifest.json
+            
+            echo "🚀 Website Updated Successfully!"
