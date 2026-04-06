@@ -23,5 +23,5 @@ jobs:
           log-level: verbose
           exclude: |
             **/RoleMiddleware.php
-         #server-dir: /   # ⚠️ IMPORTANT
+         #server-dir: /   # ⚠️ IMPORTANT (test)
          
