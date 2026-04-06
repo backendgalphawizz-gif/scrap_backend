@@ -48,8 +48,8 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label">{{ \App\CPU\translate('image') }}</label>
-                                        <input type="file" name="image" class="form-control"
+                                        <label class="form-label">{{ \App\CPU\translate('image') }} <span class="text-danger">*</span></label>
+                                        <input required type="file" name="image" class="form-control"
                                             id="mbimageFileUploader"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
 

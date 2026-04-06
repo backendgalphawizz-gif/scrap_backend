@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\Seller\FeedBackQuestionController as FeedbackQuesti
 
 use App\Http\Controllers\Api\Sale\AuthController as SaleAuthController;
 use App\Http\Controllers\Api\Sale\DashboardController as SaleDashboardController;
+use App\Http\Controllers\Api\AdminSupportTicketController;
+use App\Http\Controllers\Api\User\SupportTicketController as UserSupportTicketController;
+use App\Http\Controllers\Api\Seller\SupportTicketController as BrandSupportTicketController;
 
 
 Route::get('/user', function (Request $request) {
@@ -77,6 +80,11 @@ Route::prefix('admin')
         Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
         Route::post('/users/{id}/status', [UserManagementController::class, 'updateStatus']);
 
+        Route::get('/support-tickets', [AdminSupportTicketController::class, 'index']);
+        Route::get('/support-tickets/{id}', [AdminSupportTicketController::class, 'show']);
+        Route::delete('/support-tickets/{id}', [AdminSupportTicketController::class, 'destroy']);
+        Route::post('/support-tickets/{id}/messages', [AdminSupportTicketController::class, 'sendMessage']);
+
         //
 
         // Route::middleware('admin:create_user')
@@ -111,6 +119,12 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('notifications', [UserProfileController::class, 'notifications']);
 
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
+
+    Route::get('support-tickets', [UserSupportTicketController::class, 'index']);
+    Route::post('support-tickets', [UserSupportTicketController::class, 'store']);
+    Route::get('support-tickets/{id}', [UserSupportTicketController::class, 'show']);
+    Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
+    Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
 });
     
 Route::get('categories', [UserAuthController::class, 'categories']);
@@ -162,6 +176,12 @@ Route::group(['prefix' => 'brand'], function () {
     Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
 
     Route::get('notifications', [SellerDashboardController::class, 'notifications']);
+
+    Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
+    Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
+    Route::get('support-tickets/{id}', [BrandSupportTicketController::class, 'show']);
+    Route::delete('support-tickets/{id}', [BrandSupportTicketController::class, 'destroy']);
+    Route::post('support-tickets/{id}/messages', [BrandSupportTicketController::class, 'sendMessage']);
 
 });
 

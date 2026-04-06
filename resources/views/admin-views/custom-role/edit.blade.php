@@ -30,8 +30,8 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group mb-4">
-                                        <label for="name" class="title-color">{{\App\CPU\translate('role_name')}}</label>
-                                        <input type="text" name="name" value="{{$role['name']}}" class="form-control" id="name"
+                                        <label for="name" class="title-color">{{\App\CPU\translate('role_name')}} <span class="text-danger">*</span></label>
+                                        <input required type="text" name="name" value="{{$role['name']}}" class="form-control" id="name"
                                             aria-describedby="emailHelp"
                                             placeholder="{{\App\CPU\translate('Ex')}} : {{\App\CPU\translate('Store')}}">
                                     </div>
