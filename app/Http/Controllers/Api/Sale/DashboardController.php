@@ -20,8 +20,9 @@ use Hash;
 
 class DashboardController extends Controller
 {
-    // check city
+   
     public function index(Request $request) {
+        // check city and state
         $data = Helpers::get_sale_by_token($request);
         if ($data['success'] == 1) {
             $seller = $data['data'];
