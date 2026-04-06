@@ -20,7 +20,7 @@ use Hash;
 
 class DashboardController extends Controller
 {
-    //
+    // check cicd
     public function index(Request $request) {
         $data = Helpers::get_sale_by_token($request);
         if ($data['success'] == 1) {
