@@ -105,7 +105,7 @@
                                     <div class="d-flex justify-content-center gap-2">
                                         <a title="{{\App\CPU\translate('View')}}"
                                         class="btn btn-outline-info btn-sm square-btn"
-                                        target="_blank"
+                                        target="_self"
                                         href="{{ route('admin.user.view',[$customer['id']]) }}">
                                             View
                                         </a>

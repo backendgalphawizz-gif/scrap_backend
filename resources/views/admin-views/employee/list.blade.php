@@ -11,7 +11,7 @@
             <span class="page-title-icon bg-gradient-primary text-white me-2">
                 <i class="mdi mdi-account-group"></i>
             </span>
-            {{\App\CPU\translate('Employee List')}}
+            {{\App\CPU\translate('Admin List')}}
         </h3>
 
         <!-- Search + Add -->

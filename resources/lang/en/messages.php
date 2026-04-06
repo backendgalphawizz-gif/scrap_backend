@@ -466,4 +466,9 @@
   ' Role_deleted_successfully ' => ' Role deleted successfully ',
   ' select_minimum_one_selection_box ' => ' select minimum one selection box ',
   'Brand_Reposxdgvdfrts' => 'Brand Reposxdgvdfrts',
+  'Subadmin List' => 'Subadmin List',
+  'Add_New_Subadmin' => 'Add New Subadmin',
+  'Add_New_Admin' => 'Add New Admin',
+  'Admin_image' => 'Admin image',
+  'Admin_Image' => 'Admin Image',
 );

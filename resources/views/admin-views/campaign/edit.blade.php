@@ -36,7 +36,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="brand_id">{{ \App\CPU\translate('Brand')}}</label>
-                                    <select name="brand_id" id="brand_id" class="form-control @error('brand_id') is-invalid @enderror" required>
+                                    <select name="brand_id" id="brand_id" class="form-select form-control @error('brand_id') is-invalid @enderror" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         @foreach($sellers as $seller)
                                         <option value="{{ $seller->id }}" {{ old('brand_id', $campaign->brand_id) == $seller->id ? 'selected' : '' }}>{{ $seller->username }}</option>
@@ -140,7 +140,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="gender">{{ \App\CPU\translate('Gender')}}</label>
-                                    <select name="gender" id="gender" class="form-control @error('gender') is-invalid @enderror" required>
+                                    <select name="gender" id="gender" class="form-select form-control @error('gender') is-invalid @enderror" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="male" {{ old('gender', $campaign->gender) === 'male' ? 'selected' : '' }}>{{ \App\CPU\translate('Male')}}</option>
                                         <option value="female" {{ old('gender', $campaign->gender) === 'female' ? 'selected' : '' }}>{{ \App\CPU\translate('Female')}}</option>
@@ -151,7 +151,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="age_range">{{ \App\CPU\translate('Age Range')}}</label>
-                                    <select name="age_range" id="age_range" class="form-control @error('age_range') is-invalid @enderror" required>
+                                    <select name="age_range" id="age_range" class="form-select form-control @error('age_range') is-invalid @enderror" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="18-24" {{ old('age_range', $campaign->age_range) === '18-24' ? 'selected' : '' }}>18-24</option>
                                         <option value="25-34" {{ old('age_range', $campaign->age_range) === '25-34' ? 'selected' : '' }}>25-34</option>
@@ -166,7 +166,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
-                                    <select name="state" id="state" class="form-control @error('state') is-invalid @enderror" required>
+                                    <select name="state" id="state" class="form-select form-control @error('state') is-invalid @enderror" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="Andhra Pradesh" {{ old('state', $campaign->state) === 'Andhra Pradesh' ? 'selected' : '' }}>Andhra Pradesh</option>
                                         <option value="Arunachal Pradesh" {{ old('state', $campaign->state) === 'Arunachal Pradesh' ? 'selected' : '' }}>Arunachal Pradesh</option>
@@ -200,15 +200,33 @@
                                     @error('state') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <!-- <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="city">{{ \App\CPU\translate('City')}}</label>
                                     <div id="city">
-                                        <input type="text" name="city" class="form-control @error('city') is-invalid @enderror" value="{{ old('city', $campaign->city) }}" required>
+                                        <input type="text" name="city" class=" form-control @error('city') is-invalid @enderror" value="{{ old('city', $campaign->city) }}" required>
                                     </div>
                                     @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                 </div>
-                            </div>
+                            </div> -->
+                           <div class="col-md-4">
+    <div class="form-group">
+        <label for="city">{{ \App\CPU\translate('City')}}</label>
+
+        <select name="city" class="form-select form-control @error('city') is-invalid @enderror" required>
+            <option value="">Select City</option>
+
+            <option value="Delhi" {{ old('city', $campaign->city) == 'Delhi' ? 'selected' : '' }}>Delhi</option>
+            <option value="Mumbai" {{ old('city', $campaign->city) == 'Mumbai' ? 'selected' : '' }}>Mumbai</option>
+            <option value="Indore" {{ old('city', $campaign->city) == 'Indore' ? 'selected' : '' }}>Indore</option>
+            <option value="Bhopal" {{ old('city', $campaign->city) == 'Bhopal' ? 'selected' : '' }}>Bhopal</option>
+            <option value="Jaipur" {{ old('city', $campaign->city) == 'Jaipur' ? 'selected' : '' }}>Jaipur</option>
+
+        </select>
+
+        @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
+    </div>
+</div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guidelines">{{ \App\CPU\translate('Guidelines')}}</label>

@@ -62,10 +62,10 @@
                             <div class="col-md-6">
                                 <div class="form-group">
 
-                                    <label>{{ \App\CPU\translate('Image')}}</label>
+                                    <label>{{ \App\CPU\translate('Image')}} </label>
                                     <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 4:1 )</span>
 
-                                    <input
+                                    <input 
                                         type="file"
                                         name="image"
                                         id="mbimageFileUploader"
