@@ -21,5 +21,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           log-level: verbose
+          exclude: |
+            **/RoleMiddleware.php
          #server-dir: /   # ⚠️ IMPORTANT (test)
          
