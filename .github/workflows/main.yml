@@ -20,5 +20,5 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-         #server-dir: /   # ⚠️ IMPORTANT (test)
+         #server-dir: /   # ⚠️ IMPORTANT
          log-level: verbose
