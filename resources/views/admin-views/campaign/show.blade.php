@@ -121,7 +121,7 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label>Status</label>
-                        <select name="status" class="form-control change-status" data-id="{{ $campaign->id }}">
+                        <select name="status" class="form-select form-control change-status" data-id="{{ $campaign->id }}">
                             @php($statusLists=['pending','active','inactive','accepted','rejected','completed','paused','stopped','violated'])
                             @foreach($statusLists as $status)
                                 <option value="{{$status}}" {{ $status == $campaign->status ? 'selected' : '' }}>{{ucwords($status)}}</option>

@@ -40,14 +40,14 @@
                         <div class="row g-3">
 
                             <div class="col-md-6">
-                                <label class="form-label">{{\App\CPU\translate('Title')}}</label>
+                                <label class="form-label">{{\App\CPU\translate('Title')}} <span class="text-danger">*</span></label>
                                 <input type="text" name="title" class="form-control"
                                     placeholder="{{\App\CPU\translate('New notification')}}" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">User Type</label>
-                                <select name="user_type" class="form-control" required>
+                                <label class="form-label">User Type <span class="text-danger">*</span></label>
+                                <select name="user_type" class="form-control form-select" required>
                                     <option value="">--- Select User Type ---</option>
                                     <option value="sale">Sale</option>
                                     <option value="user">User</option>
@@ -68,7 +68,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">{{\App\CPU\translate('Description')}}</label>
+                                <label class="form-label">{{\App\CPU\translate('Description')}} <span class="text-danger">*</span></label>
                                 <textarea name="description" class="form-control" rows="4" required></textarea>
                             </div>
 

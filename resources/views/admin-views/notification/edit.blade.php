@@ -48,7 +48,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">
-                                    {{\App\CPU\translate('Title')}}
+                                    {{\App\CPU\translate('Title')}} <span class="text-danger">*</span>
                                 </label>
 
                                 <input type="text"
@@ -62,7 +62,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">
-                                    {{\App\CPU\translate('Description')}}
+                                    {{\App\CPU\translate('Description')}} <span class="text-danger">*</span>
                                 </label>
 
                                 <textarea name="description"

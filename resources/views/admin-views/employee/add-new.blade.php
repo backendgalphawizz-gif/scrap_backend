@@ -17,7 +17,7 @@
             <span class="page-title-icon bg-gradient-primary text-white me-2">
                 <i class="mdi mdi-account-plus"></i>
             </span>
-            {{\App\CPU\translate('Add_New_Employee')}}
+            {{\App\CPU\translate('Add_New_Admin')}}
         </h3>
 
         <nav aria-label="breadcrumb">
@@ -50,45 +50,59 @@
 
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="name">{{\App\CPU\translate('Full Name')}}</label>
-                                    <input type="text" name="name" class="form-control" id="name"
-                                        placeholder="{{\App\CPU\translate('Ex')}} : Jhon Doe"
-                                        value="{{old('name')}}" required>
+                                    <label for="name">{{\App\CPU\translate('Full Name')}} <span class="text-danger">*</span></label>
+                                   <input type="text" 
+       name="name" 
+       class="form-control" 
+       id="name"
+       placeholder="{{\App\CPU\translate('Ex')}} : John Doe"
+       value="{{ old('name') }}"
+       oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
+       pattern="[A-Za-z\s]+"
+       title="Only letters and spaces allowed"
+       required maxlength="25" minlength="3"> 
                                 </div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="phone">{{\App\CPU\translate('Phone')}}</label>
-                                    <input type="number" name="phone" value="{{old('phone')}}" class="form-control"
-                                        id="phone"
-                                        placeholder="{{\App\CPU\translate('Ex')}} : +88017********" required>
-                                </div>
+                                    <label for="phone">{{\App\CPU\translate('Phone')}} <span class="text-danger">*</span></label>
+                                    <input type="tel" 
+       name="phone" 
+       value="{{ old('phone') }}" 
+       class="form-control"
+       id="phone"
+       placeholder="Enter 10 digit mobile number"
+       maxlength="10"
+       pattern="[0-9]{10}"
+       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+       title="Enter exactly 10 digits"
+       required>  </div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>{{\App\CPU\translate('Role')}}</label>
-                                    <select class="form-control" name="role_id">
-                                        <option value="0" selected disabled>
-                                            ---{{\App\CPU\translate('select')}}---
-                                        </option>
+                                    <label>{{\App\CPU\translate('Role')}} <span class="text-danger">*</span></label>
+                                    <select class="form-control form-select" name="role_id" required>
+    <option value="" disabled selected>
+        ---{{\App\CPU\translate('select')}}---
+    </option>
 
-                                        @foreach($rls as $r)
-                                        @if($r->id != 3)
-                                        <option value="{{ $r->id }}"
-                                            {{ old('role_id') == $r->id ? 'selected' : '' }}>
-                                            {{ $r->name }}
-                                        </option>
-                                        @endif
-                                        @endforeach
-                                    </select>
+    @foreach($rls as $r)
+        @if($r->id != 3)
+            <option value="{{ $r->id }}"
+                {{ old('role_id') == $r->id ? 'selected' : '' }}>
+                {{ $r->name }}
+            </option>
+        @endif
+    @endforeach
+</select>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>{{\App\CPU\translate('employee_image')}}</label>
+                                    <label>{{\App\CPU\translate('Admin_Image')}} <span class="text-danger">*</span></label>
                                     <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 1:1 )</span>
 
                                     <input type="file" name="image" id="customFileUpload"
@@ -121,29 +135,40 @@
 
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>{{\App\CPU\translate('Email')}}</label>
-                                    <input type="email" name="email" value="{{old('email')}}" class="form-control"
+                                    <label>{{\App\CPU\translate('Email')}} <span class="text-danger">*</span></label>
+                                    <input maxlength="40" type="email" name="email" value="{{old('email')}}" class="form-control"
                                         id="email"
                                         placeholder="{{\App\CPU\translate('Ex')}} : ex@gmail.com" required>
                                 </div>
                             </div>
 
                             <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>{{\App\CPU\translate('password')}}</label>
-                                    <input type="text" name="password" class="form-control" id="password"
-                                        placeholder="{{\App\CPU\translate('Password')}}" required>
-                                </div>
-                            </div>
+    <div class="form-group">
+        <label>{{\App\CPU\translate('password')}} <span class="text-danger">*</span></label>
+        <input type="password" 
+               name="password" 
+               class="form-control" 
+               id="password"
+               placeholder="{{\App\CPU\translate('Password')}}"
+               minlength="6"
+               maxlength="20"
+               required>
+    </div>
+</div>
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>{{\App\CPU\translate('confirm_password')}}</label>
-                                    <input type="text" name="confirm_password" class="form-control"
-                                        id="confirm_password"
-                                        placeholder="{{\App\CPU\translate('Confirm Password')}}" required>
-                                </div>
-                            </div>
+<div class="col-md-4">
+    <div class="form-group">
+        <label>{{\App\CPU\translate('confirm_password')}} <span class="text-danger">*</span></label>
+        <input type="password" 
+               name="confirm_password" 
+               class="form-control"
+               id="confirm_password"
+               placeholder="{{\App\CPU\translate('Confirm Password')}}"
+               minlength="6"
+               maxlength="20"
+               required>
+    </div>
+</div>
 
                             <div class="col-md-12 d-flex justify-content-end gap-3">
                                 <button type="reset" id="reset" class="btn btn-secondary px-4">

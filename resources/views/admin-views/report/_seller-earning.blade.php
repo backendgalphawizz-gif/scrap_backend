@@ -31,7 +31,7 @@
                         <div class="row gy-3 gx-2 align-items-center text-left">
 
                             <div class="col-sm-6 col-md-3">
-                                <select class="form-control __form-control" name="date_type" id="date_type">
+                                <select class="form-select form-control __form-control" name="date_type" id="date_type">
                                     <option value="this_year" {{ $date_type == 'this_year'? 'selected' : '' }}>
                                         {{\App\CPU\translate('This_Year')}}
                                     </option>

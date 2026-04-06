@@ -30010,7 +30010,8 @@ dl li {
   flex-wrap: nowrap;
   flex-direction: column;
   margin-bottom: 60px;
-  padding-top: 5px;
+  /* padding-top: 5px; */
+   padding-top: 0px;
 }
 
 .sidebar .nav .nav-item {
@@ -30818,18 +30819,20 @@ dl li {
 }
 
 .sidebar .nav .nav-item {
-  margin: 10px;
+  /* margin: 10px; */
+   margin: 4px;
 }
 
 .sidebar .nav .nav-item .nav-link {
-  padding: 12px 0;
+  padding: 12px 0 10px 0;
 }
 
 .sidebar .nav .nav-item.active,
 .sidebar .nav .nav-item:hover {
   background: linear-gradient(to left, #D8B05E, #C6944F) !important;
   border-radius: 10px;
-  margin: 10px;
+  /* margin: 10px; */
+   margin: 4px;
 }
 
 

@@ -14,7 +14,7 @@
         <h3 class="page-title">
             <span class="page-title-icon bg-gradient-primary text-white me-2">
                 <i class="mdi mdi-cog"></i>
-            </span> Website Info
+            </span> Settings
         </h3>
         <nav aria-label="breadcrumb">
             <ul class="breadcrumb">
@@ -120,10 +120,10 @@
                             </div>
                             @php($tz=\App\Models\BusinessSetting::where('type','timezone')->first())
                             @php($tz=$tz?$tz->value:0)
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('time')}} {{\App\CPU\translate('zone')}}</label>
-                                    <select name="timezone" class="form-control js-select2-custom">
+                                    <select name="timezone" class="form-select form-control js-select2-custom">
                                         @php($timezones=\App\CPU\Helpers::getTimeZoneList())
                                         @foreach($timezones as $key => $timezone)
                                         <option value="{{ $key }}" {{$tz?($tz==$key?'selected':''):''}}>
@@ -133,7 +133,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 @php($company_web_logo=\App\CPU\Helpers::get_business_settings('company_web_logo'))
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('company_web_logo')}}</label>

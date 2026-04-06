@@ -54,7 +54,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="brand_id">{{ \App\CPU\translate('Brand')}}</label>
-                                    <select name="brand_id" id="brand_id" class="form-control" required>
+                                    <select name="brand_id" id="brand_id" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         @foreach($sellers as $seller)
                                         <option value="{{ $seller->id }}">{{ $seller->username }}</option>
@@ -156,7 +156,7 @@
 
                                 <div class="form-group">
                                     <label for="gender">{{ \App\CPU\translate('Gender')}}</label>
-                                    <select name="gender" id="gender" class="form-control" required>
+                                    <select name="gender" id="gender" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="male">{{ \App\CPU\translate('Male')}}</option>
                                         <option value="female">{{ \App\CPU\translate('Female')}}</option>
@@ -166,7 +166,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="age_range">{{ \App\CPU\translate('Age Range')}}</label>
-                                    <select name="age_range" id="age_range" class="form-control" required>
+                                    <select name="age_range" id="age_range" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="18-24">18-24</option>
                                         <option value="25-34">25-34</option>
@@ -180,7 +180,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
-                                    <select name="state" id="state" class="form-control" required>
+                                    <select name="state" id="state" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="Andhra Pradesh">Andhra Pradesh</option>
                                         <option value="Arunachal Pradesh">Arunachal Pradesh</option>

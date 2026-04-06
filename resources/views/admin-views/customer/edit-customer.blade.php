@@ -106,7 +106,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">{{ \App\CPU\translate('Gender') }}</label>
-                                    <select name="gender" class="form-control">
+                                    <select name="gender" class="form-control form-select">
                                         <option value="male" {{ $user->gender=='male'?'selected':'' }}>Male</option>
                                         <option value="female" {{ $user->gender=='female'?'selected':'' }}>Female</option>
                                         <option value="other" {{ $user->gender=='other'?'selected':'' }}>Other</option>
@@ -186,10 +186,10 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">UPI Status</label>
-                                    <select name="upi_status" class="form-control">
+                                    <select name="upi_status" class="form-control form-select">
                                         @foreach($panStatus as $pStat)
                                         <option value="{{$pStat}}" {{$user->upi_status==$pStat?'selected':''}}>
                                             {{$pStat}}
@@ -200,11 +200,12 @@
                             </div>
 
                             <!-- Bank -->
-                            <div class="col-md-4 mt-4">
+                            <div class="col-md-4">
                                 <div class="form-group">
+                                    <label class="form-label">&nbsp;</label>
                                     @if(isset($user->bank_detail))
                                     @foreach($user->bank_detail as $key=>$value)
-                                    <div class="form-control">
+                                    <div class="form-control mb-1">
                                         <strong>{{ucwords(str_replace('_',' ',$key))}}:</strong> {{$value}}
                                     </div>
                                     @endforeach
@@ -213,10 +214,10 @@
                             </div>
 
                             <!-- Bank -->
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">Bank Status</label>
-                                    <select name="bank_status" class="form-control">
+                                    <select name="bank_status" class="form-control form-select">
                                         @foreach($panStatus as $pStat)
                                         <option value="{{$pStat}}" {{$user->bank_status==$pStat?'selected':''}}>
                                             {{$pStat}}
@@ -235,10 +236,10 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">PAN Status</label>
-                                    <select name="pan_status" class="form-control">
+                                    <select name="pan_status" class="form-control form-select">
                                         @foreach($panStatus as $pStat)
                                         <option value="{{$pStat}}" {{$user->pan_status==$pStat?'selected':''}}>
                                             {{$pStat}}
@@ -261,10 +262,10 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">Aadhar Status</label>
-                                    <select name="aadhar_status" class="form-control">
+                                    <select name="aadhar_status" class="form-control form-select">
                                         @foreach($panStatus as $pStat)
                                         <option value="{{$pStat}}" {{$user->aadhar_status==$pStat?'selected':''}}>
                                             {{$pStat}}
