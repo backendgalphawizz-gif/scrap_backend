@@ -10,20 +10,19 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Deploying to GoDaddy via SSH
-        uses: appleboy/ssh-action@master
+        
         with:
           host: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
+          server-dir: ./
           script: |
-            cd /home/developmentalpha/deendari.developmentalphawizz.com
+            # cd /home/developmentalpha/deendari.developmentalphawizz.com
             
             # 1. GitHub se naya code aur pehle se bani hui build files lein
-            git fetch origin main
-            git reset --hard origin/main
+            # git fetch origin main
+            # git reset --hard origin/main
             
             # 2. PHP dependencies update karein (Agar composer.json badla hai)
             # Agar composer nahi chalta toh is line ko remove kar sakte hain
@@ -35,7 +34,7 @@ jobs:
             php artisan view:cache
             
             # 4. Verify karein ki build folder maujood hai
-            echo "Current Build Status:"
-            ls -la public/build/manifest.json
+            # echo "Current Build Status:"
+            # ls -la public/build/manifest.json
             
             echo "🚀 Website Updated Successfully!"
