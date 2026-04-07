@@ -170,6 +170,21 @@
         </li>
         @endif
 
+        <li class="nav-item ">
+            <a class="nav-link" data-bs-toggle="collapse" href="#support-ticket" aria-expanded="false" aria-controls="supportchat">
+                <span class="menu-title">Support Chat</span>
+                <i class="mdi mdi-chat menu-icon"></i>
+            </a>
+            <div class="collapse" id="support-ticket">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.support-ticket.view-support') }}"
+                        >Chat</a>
+                    </li>
+                </ul> 
+            </div>
+        </li>
+        
         @if(\App\CPU\Helpers::module_permission_check('business_settings'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#settings" aria-expanded="false" aria-controls="settings">
@@ -189,20 +204,7 @@
         </li>
         @endif
 
-          <li class="nav-item ">
-            <a class="nav-link" data-bs-toggle="collapse" href="#support-ticket" aria-expanded="false" aria-controls="supportchat">
-                <span class="menu-title">Support Chat</span>
-                <i class="mdi mdi-chat menu-icon"></i>
-            </a>
-            <div class="collapse" id="support-ticket">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.support-ticket.view-support') }}"
-                        >Chat</a>
-                    </li>
-                </ul> 
-            </div>
-        </li>
+          
 
 
         <li class="nav-item d-none">
