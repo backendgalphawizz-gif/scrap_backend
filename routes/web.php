@@ -135,10 +135,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     });
 
    
+// Support-ticket
+    Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])
+    ->name('admin.support-ticket.view-support');
 
-    Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])->name('admin.support-ticket.view-support');
+Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
+    ->name('admin.support-ticket.singleTicket');
 
-
+Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
+    ->name('admin.support-ticket.replay');
 });
 
 // SocialAuthController
