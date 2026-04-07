@@ -4,15 +4,9 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CommonResource;
 use App\Models\CampaignTransaction;
-use App\Models\CoinWallet;
-use App\CPU\ImageManager;
-use App\CPU\Helpers;
-use App\Models\User;
 use App\Models\Campaign;
-use Carbon\Carbon;
 
 
 class DashboardController extends Controller
@@ -143,7 +137,4 @@ class DashboardController extends Controller
             'total_campaigns' => $total_campaigns
         ]);
     }
-
-    
-
 }

@@ -397,6 +397,9 @@ class DashboardController extends Controller
                         'message' => Helpers::single_error_processor($validator)
                     ], 422);
                 }
+                $panSubmitted = $request->filled('pan_number') || $request->hasFile('pan_image');
+                $gstSubmitted = $request->filled('gst_number');
+
                 $user = Seller::create([
                     'f_name' => $request->f_name,
                     'l_name' => $request->l_name,
@@ -414,8 +417,10 @@ class DashboardController extends Controller
                     'category_id' => $request->filled('category_id') ? $request->category_id : null,
                     'sub_category_id' => $request->filled('sub_category_id') ? $request->sub_category_id : null,
                     'gst_number' => $request->gst_number ?? '',
+                    'gst_status' => $gstSubmitted ? 'Submitted' : 'Not Submitted',
                     'business_registeration_type' => $request->business_registeration_type ?? 'Proprietor',
                     'pan_number' => $request->pan_number ?? '',
+                    'pan_status' => $panSubmitted ? 'Submitted' : 'Not Submitted',
                     'primary_contact' => $request->primary_contact ?? '',
                     'alternate_contact' => $request->alternate_contact ?? '',
                     'full_address' => $request->full_address ?? '',

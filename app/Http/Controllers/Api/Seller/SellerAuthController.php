@@ -28,8 +28,8 @@ class SellerAuthController extends Controller
 
             // Check if mobile exists in deleted accounts
             $deletedSeller = Seller::onlyTrashed()
-                            ->where('phone', $request->mobile)
-                            ->first();
+                ->where('phone', $request->mobile)
+                ->first();
 
             if ($deletedSeller) {
                 return response()->json([
@@ -57,7 +57,7 @@ class SellerAuthController extends Controller
             $user = Seller::where('phone', $request->mobile)->first();
             if (!$user) {
                 $user = Seller::withTrashed()->where('phone', $request->mobile)->first();
-                if($user) {
+                if ($user) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Account Deleted.Please contact support.',
@@ -78,7 +78,7 @@ class SellerAuthController extends Controller
                 ], 404);
             }
 
-            if($user->status != 'approved') {
+            if ($user->status != 'approved') {
                 return response()->json([
                     'status' => false,
                     'message' => 'Your account is not approved yet. Please wait for approval.',
@@ -127,7 +127,7 @@ class SellerAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'mobile' => 'required|digits:10',
-            'otp'    => 'required|digits:4',
+            'otp' => 'required|digits:4',
         ]);
 
         if ($validator->fails()) {
@@ -137,10 +137,10 @@ class SellerAuthController extends Controller
             ], 422);
         }
 
-        $user = User::with('role:id,name')->select('id','name','role_id','image','mobile')->where('mobile', $request->mobile)
-                    ->where('otp', $request->otp)
-                    ->where('otp_expires_at', '>=', now())
-                    ->first();
+        $user = User::with('role:id,name')->select('id', 'name', 'role_id', 'image', 'mobile')->where('mobile', $request->mobile)
+            ->where('otp', $request->otp)
+            ->where('otp_expires_at', '>=', now())
+            ->first();
 
         if (!$user) {
             return response()->json([
@@ -153,7 +153,7 @@ class SellerAuthController extends Controller
         $user->otp_expires_at = null;
         $user->save();
 
-        $token =  $user->createToken('AdminToken')->accessToken;
+        $token = $user->createToken('AdminToken')->accessToken;
 
         return response()->json([
             'status' => true,
@@ -165,8 +165,8 @@ class SellerAuthController extends Controller
                 'mobile' => $user->mobile,
                 'image' => $user->image,
                 'role_id' => $user->role_id,
-                'status' => $user->status==1?'Active':'Suspended',
-                'role'=> $user->role
+                'status' => $user->status == 1 ? 'Active' : 'Suspended',
+                'role' => $user->role
             ]
         ]);
     }
@@ -200,10 +200,14 @@ class SellerAuthController extends Controller
                 ], 422);
             }
             $token = Str::random(50);
+            $pan_image = null;
 
-            if ($request->has('pan_image')) {
+            if ($request->hasFile('pan_image')) {
                 $pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
             }
+
+            $panSubmitted = $request->filled('pan_number') || $pan_image !== null;
+            $gstSubmitted = $request->filled('gst_number');
 
             $user = Seller::create([
                 'f_name' => $request->f_name,
@@ -221,9 +225,11 @@ class SellerAuthController extends Controller
                 'category_id' => $request->category_id ?? NULL,
                 'sub_category_id' => $request->sub_category_id ?? NULL,
                 'gst_number' => $request->gst_number ?? '',
+                'gst_status' => $gstSubmitted ? 'Submitted' : 'Not Submitted',
                 'business_registeration_type' => $request->business_registeration_type ?? 'Proprietor',
                 'pan_number' => $request->pan_number ?? NULL,
                 'pan_image' => $pan_image ?? NULL,
+                'pan_status' => $panSubmitted ? 'Submitted' : 'Not Submitted',
                 'primary_contact' => $request->primary_contact ?? NULL,
                 'alternate_contact' => $request->alternate_contact ?? NULL,
                 'full_address' => $request->full_address ?? NULL,
@@ -232,7 +238,7 @@ class SellerAuthController extends Controller
             ]);
 
             Helpers::systemActivity('new_register', $user, 'signup', 'New user registered', $user);
-            if(User::where('referral_code', $request->referral_code)->first()) {
+            if (User::where('referral_code', $request->referral_code)->first()) {
 
             }
 
@@ -249,7 +255,7 @@ class SellerAuthController extends Controller
             ]);
         }
     }
-    
+
     public function config()
     {
         $data = [

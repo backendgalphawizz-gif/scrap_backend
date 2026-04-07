@@ -7,23 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * role_id is defined on users in 0001_01_01_000000_create_users_table; this migration adds the foreign key after roles exists.
      */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
-            //  $table->unsignedBigInteger('role_id')->after('email');
-
-            // $table->foreign('role_id')
-            //       ->references('id')
-            //       ->on('roles')
-            //       ->onDelete('cascade');
-            $table->foreignId('role_id')
-              ->after('email')
-              ->constrained('roles')
-              ->restrictOnDelete();
-                  
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->restrictOnDelete();
         });
     }
 
@@ -33,9 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
-             $table->dropForeign(['role_id']);
-            $table->dropColumn('role_id');
+            $table->dropForeign(['role_id']);
         });
     }
 };

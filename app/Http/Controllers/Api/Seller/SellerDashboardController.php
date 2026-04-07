@@ -35,7 +35,7 @@ class SellerDashboardController extends Controller
             // $product_ids = Product::where(['user_id' => $seller['id'], 'added_by' => 'seller'])->pluck('id')->toArray();
 
             $shop = Seller::find($seller['id']);
-            
+
         } else {
             return response()->json([
                 'status' => false,
@@ -52,7 +52,7 @@ class SellerDashboardController extends Controller
 
         return response()->json($response, 200);
     }
-    
+
     public function statistics(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
@@ -63,42 +63,42 @@ class SellerDashboardController extends Controller
             $userId = $seller['id'];
 
             $walletAmount = SellerWallet::where('seller_id', $userId)->value('wallet_amount');
-    
+
             $rating = Feedback::where('brand_id', $userId)->avg('ratings');
-    
+
             $totalCampaigns = Campaign::where('brand_id', $userId)->count();
-    
-            $liveCampaigns = Campaign::where('brand_id', $userId)->where('status','live')->count();
-    
+
+            $liveCampaigns = Campaign::where('brand_id', $userId)->where('status', 'live')->count();
+
             $participants = CampaignTransaction::
-                                whereHas('campaign', function($q) use($userId) {
-                                    $q->where('brand_id', $userId);
-                                })
-                                ->count();
-    
-            $violated = Campaign::where('brand_id', $userId)->where('status','violated')->count();
-    
-            $campaignList = Campaign::where('brand_id', $userId)->select('id','title','status')->get();
-    
+                whereHas('campaign', function ($q) use ($userId) {
+                    $q->where('brand_id', $userId);
+                })
+                ->count();
+
+            $violated = Campaign::where('brand_id', $userId)->where('status', 'violated')->count();
+
+            $campaignList = Campaign::where('brand_id', $userId)->select('id', 'title', 'status')->get();
+
             $engagement = 0;
-    
+
             $avgFeedback = Feedback::where('brand_id', $userId)->avg('ratings');
-    
+
             $costPerClick = 0; // Campaign::avg('cpc');
-    
+
             $budget = Campaign::where('brand_id', $userId)->sum('total_campaign_budget');
-    
+
             $chartData = Campaign::where('brand_id', $userId)->selectRaw('DATE(created_at) as date, count(*) as value')
                 ->groupBy('date')
                 ->limit(7)
                 ->get();
-    
+
             return response()->json(
                 [
                     "status" => true,
                     "data" => new CommonResource([
                         'wallet_amount' => $walletAmount,
-                        'rating' => round($rating,1),
+                        'rating' => round($rating, 1),
                         'statistics' => [
                             'total_campaigns' => $totalCampaigns,
                             'live_campaigns' => $liveCampaigns,
@@ -120,30 +120,31 @@ class SellerDashboardController extends Controller
 
     }
 
-    public function getCampaignWiseChartData(Request $request, $campaignId) {
+    public function getCampaignWiseChartData(Request $request, $campaignId)
+    {
 
         $data = Helpers::get_seller_by_token($request);
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $userId = $seller['id'];
-            
+
             $campaignList = []; // Campaign::where('brand_id', $userId)->where('id', $campaignId)->select('id','title' ,'status')->get();
 
-            $chartData = CampaignTransaction::whereHas('campaign', function($q) use($userId, $campaignId) {
-                                                $q->where('brand_id', $userId)->where('id', $campaignId);
-                                            })
-                                            ->selectRaw('DATE(created_at) as date, count(*) as value')
-                                            ->groupBy('date')
-                                            ->get();
+            $chartData = CampaignTransaction::whereHas('campaign', function ($q) use ($userId, $campaignId) {
+                $q->where('brand_id', $userId)->where('id', $campaignId);
+            })
+                ->selectRaw('DATE(created_at) as date, count(*) as value')
+                ->groupBy('date')
+                ->get();
 
-            $engagement = CampaignTransaction::whereHas('campaign', function($q) use($userId, $campaignId) {
-                                                $q->where('brand_id', $userId)->where('id', $campaignId);
-                                            })->count();
+            $engagement = CampaignTransaction::whereHas('campaign', function ($q) use ($userId, $campaignId) {
+                $q->where('brand_id', $userId)->where('id', $campaignId);
+            })->count();
 
-            $avgFeedback = Feedback::whereHas('campaign', function($q) use($campaignId) {
-                                                $q->where('id', $campaignId);
-                                            })->avg('ratings');
+            $avgFeedback = Feedback::whereHas('campaign', function ($q) use ($campaignId) {
+                $q->where('id', $campaignId);
+            })->avg('ratings');
 
             $costPerClick = Campaign::where('id', $campaignId)->value('daily_budget_cap');
 
@@ -169,7 +170,7 @@ class SellerDashboardController extends Controller
                 'data' => []
             ], 401);
         }
-        
+
     }
 
     public function update(Request $request)
@@ -183,14 +184,20 @@ class SellerDashboardController extends Controller
 
             // website_url
             // visibility_status
-            $shop->update($request->only(['f_name', 'l_name', 'username', 'phone', 'email', 'city', 'state', 'instagram_username', 'facebook_username','website_url', 'visibility_status']));
-            
+            $shop->update($request->only(['f_name', 'l_name', 'username', 'phone', 'email', 'city', 'state', 'instagram_username', 'facebook_username', 'website_url', 'visibility_status']));
+
             $shop->category_id = $request->category_id ?: null;
             $shop->sub_category_id = $request->sub_category_id ?: null;
             $shop->gst_number = $request->gst_number ?? '';
+            if ($request->has('gst_number')) {
+                $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
+            }
             $shop->business_registeration_type = $request->business_registeration_type ?? 'Proprietor';
             $shop->pan_number = $request->pan_number ?? '';
-            if ($request->has('pan_image')) {
+            if ($request->has('pan_number') || $request->hasFile('pan_image')) {
+                $shop->pan_status = 'Submitted';
+            }
+            if ($request->hasFile('pan_image')) {
                 $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'), $shop->pan_image);
             }
             // $shop->pan_image = $request->pan_image ?? '';
@@ -201,7 +208,7 @@ class SellerDashboardController extends Controller
             $shop->website_link = $request->website_link ?? '';
             $shop->save();
 
-            if($request->hasFile('image')) {
+            if ($request->hasFile('image')) {
                 $shop->image = ImageManager::upload('profile/', 'png', $request->file('image'), $shop->image);
                 $shop->save();
             }
@@ -225,6 +232,45 @@ class SellerDashboardController extends Controller
         return response()->json($response, 200);
     }
 
+    public function updateKyc(Request $request)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => [],
+            ], 401);
+        }
+
+        $seller = $data['data'];
+        $shop = Seller::find($seller['id']);
+
+        if ($request->has('pan_number')) {
+            $shop->pan_number = $request->pan_number;
+            $shop->pan_status = 'Submitted';
+            if ($request->hasFile('pan_image')) {
+                $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'), $shop->pan_image);
+            }
+        }
+
+        if ($request->has('gst_number')) {
+            $shop->gst_number = $request->gst_number;
+            $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
+        }
+
+        $shop->save();
+
+        Helpers::systemActivity('kyc_updated', $shop, 'updated', 'Brand KYC updated successfully', $shop);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Brand KYC updated successfully',
+            'data' => new CommonResource($shop),
+        ], 200);
+    }
+
     public function createCampaign(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
@@ -235,19 +281,19 @@ class SellerDashboardController extends Controller
 
             $sellerWallet = Helpers::get_seller_wallet($seller['id']);
 
-            if($request->total_campaign_budget > $sellerWallet->wallet_amount) {
+            if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Insufficient fund. Please recharge wallet.',
                     'data' => [],
-                    'balance_sufficient'=> false,
-                    'current_balance'=> $sellerWallet->wallet_amount,
-                    'balance_required'=> $request->total_campaign_budget
+                    'balance_sufficient' => false,
+                    'current_balance' => $sellerWallet->wallet_amount,
+                    'balance_required' => $request->total_campaign_budget
                 ], 200);
             }
 
             $campaign = new Campaign;
-            if($request->hasFile('thumbnail')) {
+            if ($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
             }
             if ($request->file('images')) {
@@ -262,7 +308,7 @@ class SellerDashboardController extends Controller
                     }
                 }
                 $campaign->images = implode(',', $product_images);
-            }            
+            }
             $campaign->brand_id = $seller['id'];
             $campaign->title = $request->caption;
             $campaign->post_type = $request->post_type ?? 'post';
@@ -343,7 +389,7 @@ class SellerDashboardController extends Controller
             // Logic to create campaign
 
             $campaign = Campaign::find($id);
-            if($request->hasFile('thumbnail')) {
+            if ($request->hasFile('thumbnail')) {
                 try {
                     //code...
                     $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
@@ -423,7 +469,7 @@ class SellerDashboardController extends Controller
             // Logic to create campaign
 
             $campaign = Campaign::find($id);
-            
+
             $campaign->status = $request->status;
             $campaign->save();
 
@@ -451,7 +497,7 @@ class SellerDashboardController extends Controller
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $campaigns = Campaign::where('brand_id', $seller['id'])
-                ->when($request->has('status'), function($query) use ($request) {
+                ->when($request->has('status'), function ($query) use ($request) {
                     // pending, active, completed
                     $query->where('status', $request->input('status'));
                     // if ($request->status == 'active') {
@@ -511,7 +557,8 @@ class SellerDashboardController extends Controller
         }
     }
 
-    public function deleteAccount(Request $request) {
+    public function deleteAccount(Request $request)
+    {
         $data = Helpers::get_seller_by_token($request);
 
         if ($data['success'] == 1) {
@@ -538,7 +585,8 @@ class SellerDashboardController extends Controller
         }
     }
 
-    public function notifications(Request $request) {
+    public function notifications(Request $request)
+    {
 
         $limit = $request->limit ?? 25;
         $notifications = Notification::where(['status' => 1, 'type' => 'brand'])->orderBy('id', 'DESC')->paginate($limit);

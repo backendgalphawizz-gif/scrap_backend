@@ -13,7 +13,6 @@ use App\CPU\Helpers;
 use App\Models\User;
 use App\Models\Seller;
 use App\Models\Notification;
-use Carbon\Carbon;
 
 
 class UserProfileController extends Controller
@@ -50,9 +49,9 @@ class UserProfileController extends Controller
             ], 422);
         }
 
-        $user->update($request->only(['name', 'email', 'mobile','dob','gender','profession', 'address','city','state', 'native_state', 'native_city', 'instagram_username','facebook_username']));
-        
-        if($request->hasFile('image')) {
+        $user->update($request->only(['name', 'email', 'mobile', 'dob', 'gender', 'profession', 'address', 'city', 'state', 'native_state', 'native_city', 'instagram_username', 'facebook_username']));
+
+        if ($request->hasFile('image')) {
             $user->image = ImageManager::upload('profile/', 'png', $request->file('image'), $user->image);
             $user->save();
         }
@@ -88,40 +87,42 @@ class UserProfileController extends Controller
         // }
 
         // $user->update($request->only(['name', 'email', 'mobile','dob','gender','profession', 'address','city','state', 'native_state', 'native_city', 'instagram_username','facebook_username']));
-        if($request->has('pan_number')) {
+        if ($request->has('pan_number')) {
             $user->pan_number = $request->pan_number;
             $user->pan_status = 'Submitted';
-            if($request->hasFile('pan_image')) {
+            if ($request->hasFile('pan_image')) {
                 $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
             }
         }
-        if($request->has('aadhar_number')) {
+        
+        if ($request->has('aadhar_number')) {
             $user->aadhar_number = $request->aadhar_number;
             $user->aadhar_status = 'Submitted';
             $aadhar_images = [];
-            if($request->hasFile('aadhar_image')) {
-                foreach($request->file('aadhar_image') as $img) {
+            if ($request->hasFile('aadhar_image')) {
+                foreach ($request->file('aadhar_image') as $img) {
                     $aadhar_images[] = ImageManager::upload('profile/', 'png', $img, $user->image);
                 }
                 $user->aadhar_image = implode(',', $aadhar_images);
             }
         }
-        if($request->has('upi_id')) {
+
+        if ($request->has('upi_id')) {
             $user->upi_id = $request->upi_id;
             $user->upi_status = 'Submitted';
         }
-        if($request->has('bank_name') || $request->has('ifsc_code')) {
+        if ($request->has('bank_name') || $request->has('ifsc_code')) {
             $user->bank_detail = json_encode([
-                                'bank_name' => $request->bank_name,
-                                'ifsc_code' => $request->ifsc_code,
-                                'account_number' => $request->account_number,
-                                'branch_name' => $request->branch_name
-                            ]);
-            
+                'bank_name' => $request->bank_name,
+                'ifsc_code' => $request->ifsc_code,
+                'account_number' => $request->account_number,
+                'branch_name' => $request->branch_name
+            ]);
+
             $user->bank_status = $request->bank_name != '' ? 'Submitted' : 'Not Submitted';
         }
         $user->save();
-        
+
         return response()->json([
             'status' => true,
             'message' => 'User KYC updated successfully',
@@ -134,12 +135,12 @@ class UserProfileController extends Controller
         try {
             //code...
             $user = $request->user();
-    
+
             CoinWallet::firstOrCreate(
                 ['user_id' => $user->id],
                 ['balance' => 0]
             );
-            
+
             $wallet = $user->coinWallet;
             return response()->json([
                 'status' => true,
@@ -164,10 +165,10 @@ class UserProfileController extends Controller
             $status = $request->status ?? '';
 
             $user = $request->user();
-            $transactions = $user->coinWallet->transactions()->when($status!='', function($q) use($status) {
+            $transactions = $user->coinWallet->transactions()->when($status != '', function ($q) use ($status) {
                 $q->where('status', $status);
             })->latest()->get();
-    
+
             return response()->json([
                 'status' => true,
                 'message' => 'Wallet transactions retrieved successfully',
@@ -183,37 +184,38 @@ class UserProfileController extends Controller
         }
     }
 
-    public function debitWalletCoin(Request $request) {
+    public function debitWalletCoin(Request $request)
+    {
         try {
             $user = $request->user();
-            
+
             $rules = [
                 'coins' => 'required|numeric|min:1',
                 'type' => 'required',
                 'value' => 'required'
             ];
-            
+
             $validator = Validator::make($request->all(), $rules);
-            
+
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
                     'message' => Helpers::single_error_processor($validator)
                 ], 422);
             }
-            
+
             $wallet = $user->coinWallet;
-            
+
             if ($wallet->balance < $request->coins) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Insufficient balance'
                 ], 422);
             }
-            
+
             $wallet->balance -= $request->coins;
             $wallet->save();
-            
+
             $transaction = $wallet->transactions()->create([
                 'coin' => $request->coins ?? 0,
                 'amount' => $request->amount ?? 0,
@@ -227,7 +229,7 @@ class UserProfileController extends Controller
                 'value' => $request->value,
                 'description' => $request->input('description'),
             ]);
-            
+
             return response()->json([
                 'status' => true,
                 'message' => 'Debit request created successfully',
@@ -254,7 +256,8 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function getBrandFeedbackQuestion(Request $request, $id) {
+    public function getBrandFeedbackQuestion(Request $request, $id)
+    {
         $brand = Seller::findOrFail($id);
         $questions = $brand->questions()->where('status', 1)->get();
 
@@ -265,7 +268,8 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function submitCampaignFeedback(Request $request) {
+    public function submitCampaignFeedback(Request $request)
+    {
         $user = $request->user();
 
         $rules = [
@@ -298,9 +302,10 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function listCampaignFeedback(Request $request) {
+    public function listCampaignFeedback(Request $request)
+    {
         $user = $request->user();
-        $feedbacks = Feedback::with(['campaign','brand', 'user'])->where('user_id', $user->id)->latest()->get();
+        $feedbacks = Feedback::with(['campaign', 'brand', 'user'])->where('user_id', $user->id)->latest()->get();
 
         return response()->json([
             'status' => true,
@@ -309,7 +314,8 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function notifications(Request $request) {
+    public function notifications(Request $request)
+    {
         $limit = $request->limit ?? 25;
         $notifications = Notification::where(['status' => 1, 'type' => 'user'])->orderBy('id', 'DESC')->paginate($limit);
         return response()->json([
@@ -319,13 +325,14 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function deleteAccount(Request $request) {
+    public function deleteAccount(Request $request)
+    {
         $id = $request->user()->id;
 
         $user = User::find($id);
         $user->delete();
 
-         return response()->json([
+        return response()->json([
             'status' => true,
             'message' => 'Account deleted successfully',
             'data' => []
