@@ -485,4 +485,8 @@
   'Close' => 'Close',
   'open' => 'Open',
   'view' => 'View',
+  'List' => 'List',
+  'All' => 'All',
+  'Leave_a_Message' => 'Leave a Message',
+  'Reply' => 'Reply',
 );

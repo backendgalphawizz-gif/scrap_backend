@@ -7,26 +7,30 @@
 @endpush
 
 @section('content')
-    <div class="content container-fluid">
-        <!-- Page Title -->
-        <div class="mb-3">
-            <h2 class="h1 mb-0 text-capitalize d-flex align-items-baseline gap-2">
-               
-                <a class="textfont-set" href="{{route('admin.dashboard')}}"> 
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="24" fill="none">
-                    <path d="M10.2988 18.2985L4.24883 12.2745L10.2988 6.24951" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20px"/>
-                </svg>Back</a>
-                {{\App\CPU\translate('support_ticket')}}
-                <span class="badge badge-soft-dark radius-50 fz-14">{{ $tickets->total() }}</span>
-            </h2>
-        </div>  
+   <div class="content-wrapper">
+    <div class="page-header">
+        <h3 class="page-title">
+            <span class="page-title-icon bg-gradient-primary text-white me-2">
+                <i class="mdi mdi-chat"></i>
+            </span> {{\App\CPU\translate('support_ticket')}} ({{ $tickets->total() }})
+        </h3>
+
+      
+
+
+
+      
+    </div>
+       
+
+        
 
         <!-- End Page Title -->
 
         <div class="row mt-20">
             <div class="col-md-12">
                 <div class="">
-                    <div class="px-3 py-4 mb-3 border-bottom">
+                    <div class=" mb-3 border-bottom">
                         <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
                             <div class="">
                                 <!-- Search -->
@@ -34,13 +38,15 @@
                                     <div class="input-group input-group-merge input-group-custom">
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
-                                                <i class="tio-search"></i>
+                                                <i class="mdi mdi-magnify"></i>
                                             </div>
                                         </div>
-                                       
+                                        <input id="datatableSearch_" type="search" name="search" class="form-control"
+                                               placeholder="{{\App\CPU\translate('Search Ticket by Subject or status...')}}"
+                                               aria-label="Search orders" >
                                         <button type="submit"
                                                 class="btn btn--primary">
-                                                <!-- {{\App\CPU\translate('search')}} -->
+                                            {{\App\CPU\translate('search')}} 
                                             </button>
                                     </div>
                                 </form>
@@ -48,20 +54,12 @@
                             </div>
                             <div class="">
                                 <div class="d-flex flex-wrap flex-sm-nowrap gap-3 justify-content-end">
-                                    @php($priority=request()->has('priority')?request()->input('priority'):'')
-                                    <select class="form-control border-color-c1 w-160"
-                                            onchange="filter_tickets('priority',this.value)">
-                                        <option value="all">{{\App\CPU\translate('All_Priority')}}</option>
-                                        <option value="low" {{$priority=='low'?'selected':''}}>{{\App\CPU\translate('Low')}}</option>
-                                        <option value="medium" {{$priority=='medium'?'selected':''}}>{{\App\CPU\translate('Medium')}}</option>
-                                        <option value="high" {{$priority=='high'?'selected':''}}>{{\App\CPU\translate('High')}}</option>
-                                        <option value="urgent" {{$priority=='urgent'?'selected':''}}>{{\App\CPU\translate('Urgent')}}</option>
-                                    </select>
+                                  
 
                                     @php($status=request()->has('status')?request()->input('status'):'')
-                                    <select class="form-control border-color-c1 w-160"
+                                    <select class="form-control border-color-c1 w-160 form-select"
                                             onchange="filter_tickets('status',this.value)">
-                                        <option value="all">{{\App\CPU\translate('All_Status')}}</option>
+                                        <option value="all">{{\App\CPU\translate('All_Status')}} &nbsp;&nbsp;&nbsp;&nbsp;</option>
                                         <option value="open" {{$status=='open'?'selected':''}}>{{\App\CPU\translate('Open')}}</option>
                                         <option value="close" {{$status=='close'?'selected':''}}>{{\App\CPU\translate('Close')}}</option>
                                     </select>
@@ -76,17 +74,16 @@
                                 <div
                                     class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
                                     <div class="media gap-3">
-                                        <img class="avatar avatar-lg"
-                                             src="{{asset('storage/app/public/profile')}}/{{$ticket->customer->image??""}}"
+                                        <img class="avatar avatar-lg" height="60" width="60"
+                                             src="https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w="
                                              alt="">
                                         <div class="media-body">
-                                            <h6 class="mb-0 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->customer->f_name??""}} {{$ticket->customer->l_name??""}}</h6>
-                                            <div class="mb-2 fz-12 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->customer->email??""}}</div>
+                                            <h6 class="mb-0 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->name??""}}</h6>
+                                            <div class="mb-2 fz-12 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->mobile??""}}</div>
                                             <div class="d-flex flex-wrap gap-2 align-items-center">
+ 
                                                 <span
-                                                    class="badge-soft-danger fz-12 font-weight-bold px-2 radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->priority))}}</span>
-                                                <span
-                                                    class="badge-soft-info fz-12 font-weight-bold px-2 radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->status))}}</span>
+                                                    class="badge-soft-info fz-12 font-weight-bold radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->status))}}</span>
                                                 <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
                                                 <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
                                                     {{date('d/M/Y H:i a',strtotime($ticket->created_at))}}
@@ -95,22 +92,23 @@
                                         </div>
                                     </div>
 
-                                    <label class="switcher">
+                                    <!-- <label class="switcher">
                                         <input class="switcher_input status" type="checkbox"
                                                {{$ticket->status=='open'?'checked':''}} id="{{$ticket->id}}">
                                         <span class="switcher_control"></span>
-                                    </label>
+                                    </label> -->
                                 </div>
                                 <div
                                     class="card-body align-items-end d-flex flex-wrap flex-md-nowrap justify-content-between gap-4">
                                     <div>
-                                        {{$ticket->description}}
+                                        {{$ticket->subject}}
                                     </div>
                                     <div class="text-nowrap">
-                                        <a class="btn btn--primary"
-                                           >
-                                            <i class="tio-open-in-new"></i> {{\App\CPU\translate('view')}}
-                                        </a>
+                                       
+                                      <a class="btn btn--primary"
+   href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
+    <i class="tio-open-in-new"></i> View
+</a>
                                     </div>
                                 </div>
                             </div>
@@ -121,7 +119,8 @@
                 <div class="table-responsive mt-4">
                     <div class="px-4 d-flex justify-content-lg-end">
                         <!-- Pagination -->
-                        {{$tickets->links()}}
+                       
+                        {{ $tickets->links() }}
                     </div>
                 </div>
 
