@@ -601,4 +601,55 @@ class SellerDashboardController extends Controller
         ]);
     }
 
+    public function reportViolation(Request $request, $id)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => []
+            ], 401);
+        }
+
+        $seller = $data['data'];
+
+        $transaction = CampaignTransaction::with('campaign')->find($id);
+
+        if (!$transaction) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Transaction not found',
+            ], 404);
+        }
+
+        $campaign = Campaign::where('id', $transaction->campaign_id)
+            ->where('brand_id', $seller['id'])
+            ->first();
+
+        if (!$campaign) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized: this transaction does not belong to your campaign',
+            ], 403);
+        }
+
+        if (!in_array($transaction->status, ['active'])) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Violation can only be reported on active transactions',
+            ], 422);
+        }
+
+        $transaction->status = 'flagged';
+        $transaction->violation_reason = $request->input('reason');
+        $transaction->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Violation reported successfully. It will be reviewed by admin.',
+        ]);
+    }
+
 }

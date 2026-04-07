@@ -17,7 +17,10 @@ class CampaignTransaction extends Model
         'status',
         'earning',
         'start_date',
-        'end_date'
+        'end_date',
+        'unique_code',
+        'violation_reason',
+        'post_url',
     ];
 
     // protected $appends = ['left_days'];

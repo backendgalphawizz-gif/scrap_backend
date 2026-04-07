@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Asset URL
+    |--------------------------------------------------------------------------
+    |
+    | When set, the asset() helper uses this host for every generated asset URL
+    | (useful for a CDN or when the API runs locally but must expose public URLs).
+    | Leave unset to use the same root as other URLs (after forceRootUrl below).
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

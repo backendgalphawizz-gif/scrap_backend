@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\CommonResource;
 use App\Models\CampaignTransaction;
 use App\Models\Campaign;
+use Illuminate\Support\Str;
 
 
 class DashboardController extends Controller
@@ -93,26 +94,29 @@ class DashboardController extends Controller
                 'message' => 'Campaign not found or inactive'
             ], 404);
         }
-        if(!CampaignTransaction::where([
+
+        $transaction = CampaignTransaction::where([
             'user_id' => $user->id,
             'campaign_id' => $campaign->id,
             'shared_on' => $request->share_on
-        ])->first()) {
-            // Here you can implement the logic to track the share action, e.g., increment share count, log user activity, etc.
-            CampaignTransaction::create([
+        ])->first();
+
+        if (!$transaction) {
+            $transaction = CampaignTransaction::create([
                 'user_id' => $user->id,
                 'campaign_id' => $campaign->id,
                 'shared_on' => $request->share_on,
-                'status' => 'pending',
+                'status' => 'active',
                 'earning' => $campaign->coins ?? 0,
-                'start_date' => date('Y-m-d H:i:s'),
-                'end_date' => date('Y-m-d H:i:s', strtotime('+'.$campaign->left_days.' days'))
+                'start_date' => date('Y-m-d'),
+                'end_date' => date('Y-m-d', strtotime('+7 days')),
+                'unique_code' => $request->unique_code,
             ]);
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'Campaign shared successfully'
+            'message' => 'Campaign joined successfully',
         ]);
     }
 
