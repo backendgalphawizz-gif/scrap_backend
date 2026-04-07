@@ -10,7 +10,7 @@ class SupportTicketController extends Controller
 {
     public function index(){
 
-        $tickets = SupportTicket::with('user:id,name,mobile', 'seller:id,name,mobile')->paginate(10);
+        $tickets = SupportTicket::with('user:id,name,mobile,image', 'seller:id,name,mobile,image')->paginate(10);
     //  dd($tickets);
         return view('admin-views.support-ticket.view', compact('tickets'));
         

@@ -74,9 +74,10 @@
                                 <div
                                     class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
                                     <div class="media gap-3">
-                                        <img class="avatar avatar-lg" height="60" width="60"
-                                             src="https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w="
-                                             alt="">
+                                       <img class="avatar avatar-lg" height="60" width="60"
+     src="{{ $ticket->user->image ?? 'https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=' }}"
+     onerror="this.src='https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=''"
+     alt="User Avatar">
                                         <div class="media-body">
                                             <h6 class="mb-0 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->name??""}}</h6>
                                             <div class="mb-2 fz-12 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->mobile??""}}</div>

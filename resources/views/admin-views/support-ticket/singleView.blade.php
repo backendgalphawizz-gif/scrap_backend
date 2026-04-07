@@ -26,10 +26,10 @@
         <div class="card-header d-flex justify-content-between align-items-center">
 
             <div class="d-flex align-items-center gap-3">
-                <img class="rounded-circle avatar"
-                     src="{{asset('storage/app/public/profile/'.$ticket->user->image)}}"
-                     width="50"
-                     onerror="this.src='{{asset('https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=')}}'">
+<img class="rounded-circle avatar"
+     src="{{ $ticket->user->image ? asset('storage/app/public/profile/'.$ticket->user->image) : 'https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=' }}"
+     width="50"
+     onerror="this.src='https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=''">
 
                 <div>
                     <h6>{{ $ticket->user->name ?? '' }}</h6>
