@@ -73,7 +73,7 @@
                                         stroke-linejoin="round" />
                                 </svg>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CPU\translate('Dashboard')}} fdgsdfhgshdfghsdfiu
+                                    {{\App\CPU\translate('Dashboard')}} 
                                 </span>
                             </a>
                         </li>

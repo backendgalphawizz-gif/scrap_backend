@@ -11,15 +11,16 @@
         <!-- Page Title -->
         <div class="mb-3">
             <h2 class="h1 mb-0 text-capitalize d-flex align-items-baseline gap-2">
-                <!-- <img width="20" src="{{asset('/public/assets/back-end/img/support_ticket.png')}}" alt=""> -->
-                <a class="textfont-set" href="{{route('admin.dashboard.index')}}"> 
+               
+                <a class="textfont-set" href="{{route('admin.dashboard')}}"> 
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="24" fill="none">
                     <path d="M10.2988 18.2985L4.24883 12.2745L10.2988 6.24951" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20px"/>
                 </svg>Back</a>
                 {{\App\CPU\translate('support_ticket')}}
                 <span class="badge badge-soft-dark radius-50 fz-14">{{ $tickets->total() }}</span>
             </h2>
-        </div>
+        </div>  
+
         <!-- End Page Title -->
 
         <div class="row mt-20">
@@ -36,11 +37,11 @@
                                                 <i class="tio-search"></i>
                                             </div>
                                         </div>
-                                        <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                               placeholder="{{\App\CPU\translate('Search Ticket by Subject or status...')}}"
-                                               aria-label="Search orders" value="{{ $search }}">
+                                       
                                         <button type="submit"
-                                                class="btn btn--primary">{{\App\CPU\translate('search')}}</button>
+                                                class="btn btn--primary">
+                                                <!-- {{\App\CPU\translate('search')}} -->
+                                            </button>
                                     </div>
                                 </form>
                                 <!-- End Search -->
@@ -107,7 +108,7 @@
                                     </div>
                                     <div class="text-nowrap">
                                         <a class="btn btn--primary"
-                                           href="{{route('admin.support-ticket.singleTicket',$ticket['id'])}}">
+                                           >
                                             <i class="tio-open-in-new"></i> {{\App\CPU\translate('view')}}
                                         </a>
                                     </div>
@@ -166,7 +167,7 @@
                         }
                     });
                     $.ajax({
-                        url: "{{route('admin.support-ticket.status')}}",
+                        url: "",
                         method: 'POST',
                         data: {
                             id: id,
