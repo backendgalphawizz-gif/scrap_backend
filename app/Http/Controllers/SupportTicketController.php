@@ -8,13 +8,36 @@ use Illuminate\Http\Request;
 use App\Models\SupportTicketMessage;
 class SupportTicketController extends Controller
 {
-    public function index(){
+public function index(Request $request)
+{
+    $tickets = SupportTicket::with('user:id,name,mobile,image', 'seller:id,f_name,phone,image');
 
-        $tickets = SupportTicket::with('user:id,name,mobile,image', 'seller:id,name,mobile,image')->paginate(10);
-    //  dd($tickets);
-        return view('admin-views.support-ticket.view', compact('tickets'));
-        
+    // 1️⃣ Search filter (only if search not empty)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $tickets->where(function($query) use ($search){
+            $query->where('subject', 'like', '%'.$search.'%')
+                  ->orWhereHas('user', function($q) use ($search) {
+                      $q->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('mobile', 'like', '%'.$search.'%');
+                  })
+                  ->orWhereHas('seller', function($q) use ($search) {
+                      $q->where('f_name', 'like', '%'.$search.'%')
+                        ->orWhere('phone', 'like', '%'.$search.'%');
+                  });
+        });
     }
+
+    // 2️⃣ Status filter
+    if ($request->filled('status') && $request->status != 'all') {
+        $tickets->where('status', $request->status);
+    }
+
+    // 3️⃣ Latest first + paginate + preserve query string
+    $tickets = $tickets->latest()->paginate(10)->withQueryString();
+
+    return view('admin-views.support-ticket.view', compact('tickets'));
+}
 
 
 public function view($id)

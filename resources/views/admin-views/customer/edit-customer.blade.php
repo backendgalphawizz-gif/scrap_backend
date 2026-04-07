@@ -186,7 +186,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <!-- <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">UPI Status</label>
                                     <select name="upi_status" class="form-control form-select">
@@ -197,7 +197,22 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>
+                            </div> -->
+<div class="col-md-4">
+    <div class="form-group">
+        <label class="form-label">UPI Status</label>
+        <select name="upi_status" class="form-control form-select status-select" data-target="#upi_reason">
+            @foreach($panStatus as $pStat)
+                <option value="{{$pStat}}" {{$user->upi_status == $pStat ? 'selected' : ''}}>
+                    {{$pStat}}
+                </option>
+            @endforeach
+        </select>
+        <input type="text" name="upi_reason" id="upi_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->upi_reason ?? ''}}" style="display: {{$user->upi_status == 'Rejected' ? 'block' : 'none'}};">
+    </div>
+</div>
+
+
 
                             <!-- Bank -->
                             <div class="col-md-4">
@@ -214,18 +229,19 @@
                             </div>
 
                             <!-- Bank -->
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">Bank Status</label>
-                                    <select name="bank_status" class="form-control form-select">
-                                        @foreach($panStatus as $pStat)
-                                        <option value="{{$pStat}}" {{$user->bank_status==$pStat?'selected':''}}>
-                                            {{$pStat}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                           <div class="col-md-4">
+    <div class="form-group">
+        <label class="form-label">Bank Status</label>
+        <select name="bank_status" class="form-control form-select status-select" data-target="#bank_reason">
+            @foreach($panStatus as $pStat)
+                <option value="{{$pStat}}" {{$user->bank_status == $pStat ? 'selected' : ''}}>
+                    {{$pStat}}
+                </option>
+            @endforeach
+        </select>
+        <input type="text" name="bank_reason" id="bank_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->bank_reason ?? ''}}" style="display: {{$user->bank_status == 'Rejected' ? 'block' : 'none'}};">
+    </div>
+</div>
 
                             <!-- PAN -->
                             <div class="col-md-4">
@@ -236,18 +252,19 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">PAN Status</label>
-                                    <select name="pan_status" class="form-control form-select">
-                                        @foreach($panStatus as $pStat)
-                                        <option value="{{$pStat}}" {{$user->pan_status==$pStat?'selected':''}}>
-                                            {{$pStat}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                           <div class="col-md-4">
+    <div class="form-group">
+        <label class="form-label">PAN Status</label>
+        <select name="pan_status" class="form-control form-select status-select" data-target="#pan_reason">
+            @foreach($panStatus as $pStat)
+                <option value="{{$pStat}}" {{$user->pan_status == $pStat ? 'selected' : ''}}>
+                    {{$pStat}}
+                </option>
+            @endforeach
+        </select>
+        <input type="text" name="pan_reason" id="pan_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->pan_reason ?? ''}}" style="display: {{$user->pan_status == 'Rejected' ? 'block' : 'none'}};">
+    </div>
+</div>
 
                             <!-- Aadhar -->
                             <div class="col-md-4">
@@ -262,18 +279,19 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">Aadhar Status</label>
-                                    <select name="aadhar_status" class="form-control form-select">
-                                        @foreach($panStatus as $pStat)
-                                        <option value="{{$pStat}}" {{$user->aadhar_status==$pStat?'selected':''}}>
-                                            {{$pStat}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                           <div class="col-md-4">
+    <div class="form-group">
+        <label class="form-label">Aadhar Status</label>
+        <select name="aadhar_status" class="form-control form-select status-select" data-target="#aadhar_reason">
+            @foreach($panStatus as $pStat)
+                <option value="{{$pStat}}" {{$user->aadhar_status == $pStat ? 'selected' : ''}}>
+                    {{$pStat}}
+                </option>
+            @endforeach
+        </select>
+        <input type="text" name="aadhar_reason" id="aadhar_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->aadhar_reason ?? ''}}" style="display: {{$user->aadhar_status == 'Rejected' ? 'block' : 'none'}};">
+    </div>
+</div>
 
 
 
@@ -302,5 +320,17 @@
     </div>
 
 </div>
-
+<script>
+document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', function() {
+        const target = document.querySelector(this.dataset.target);
+        if (this.value === 'Rejected') {
+            target.style.display = 'block';
+        } else {
+            target.style.display = 'none';
+            target.value = ''; 
+        }
+    });
+});
+</script>
 @endsection

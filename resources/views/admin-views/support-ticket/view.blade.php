@@ -1,211 +1,149 @@
 @extends('layouts.back-end.app')
 @section('title', \App\CPU\translate('Support Ticket'))
+
 @push('css_or_js')
-    <!-- Custom styles for this page -->
-    <link href="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
-    <link href="{{asset('public/assets/back-end/css/croppie.css')}}" rel="stylesheet">
+<!-- Custom styles for this page -->
+<link href="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link href="{{asset('public/assets/back-end/css/croppie.css')}}" rel="stylesheet">
 @endpush
 
 @section('content')
-   <div class="content-wrapper">
+<div class="content-wrapper">
     <div class="page-header">
         <h3 class="page-title">
             <span class="page-title-icon bg-gradient-primary text-white me-2">
                 <i class="mdi mdi-chat"></i>
             </span> {{\App\CPU\translate('support_ticket')}} ({{ $tickets->total() }})
         </h3>
-
-      
-
-
-
-      
     </div>
-       
 
-        
+    <div class="row mt-20">
+        <div class="col-md-12">
+            <div class="">
+                <div class="mb-3 border-bottom">
+                    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                        <div class="">
+                            <!-- Search Form -->
+                            <form action="{{ url()->current() }}" method="GET" id="ticketFilterForm">
+                                <div class="input-group input-group-merge input-group-custom">
 
-        <!-- End Page Title -->
+                                    <!-- Search Input -->
+                                    <input type="search" name="search" class="form-control"
+                                        value="{{ request('search') }}"
+                                        placeholder="Search Ticket by Subject or status..."
+                                        oninput="if(this.value===''){document.getElementById('ticketFilterForm').submit();}">
 
-        <div class="row mt-20">
-            <div class="col-md-12">
-                <div class="">
-                    <div class=" mb-3 border-bottom">
-                        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                            <div class="">
-                                <!-- Search -->
-                                <form action="{{ url()->current() }}" method="GET">
-                                    <div class="input-group input-group-merge input-group-custom">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                <i class="mdi mdi-magnify"></i>
-                                            </div>
-                                        </div>
-                                        <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                               placeholder="{{\App\CPU\translate('Search Ticket by Subject or status...')}}"
-                                               aria-label="Search orders" >
-                                        <button type="submit"
-                                                class="btn btn--primary">
-                                            {{\App\CPU\translate('search')}} 
-                                            </button>
-                                    </div>
-                                </form>
-                                <!-- End Search -->
-                            </div>
-                            <div class="">
-                                <div class="d-flex flex-wrap flex-sm-nowrap gap-3 justify-content-end">
-                                  
-
-                                    @php($status=request()->has('status')?request()->input('status'):'')
-                                    <select class="form-control border-color-c1 w-160 form-select"
-                                            onchange="filter_tickets('status',this.value)">
-                                        <option value="all">{{\App\CPU\translate('All_Status')}} &nbsp;&nbsp;&nbsp;&nbsp;</option>
-                                        <option value="open" {{$status=='open'?'selected':''}}>{{\App\CPU\translate('Open')}}</option>
-                                        <option value="close" {{$status=='close'?'selected':''}}>{{\App\CPU\translate('Close')}}</option>
+                                    <!-- Status Dropdown -->
+                                    <select class="form-control border-color-c1 w-160 form-select" name="status"
+                                        onchange="document.getElementById('ticketFilterForm').submit()">
+                                        <option value="all" {{ request('status','all')=='all'?'selected':'' }}>All Status</option>
+                                        <option value="open" {{ request('status')=='open'?'selected':'' }}>Open</option>
+                                        <option value="close" {{ request('status')=='close'?'selected':'' }}>Close</option>
                                     </select>
+
+                                    <!-- Submit Button -->
+                                    <button type="submit" class="btn btn--primary">Search</button>
                                 </div>
+                            </form>
+                            <!-- End Search Form -->
+                        </div>
+
+                        <!-- <div class="">
+                            <div class="d-flex flex-wrap flex-sm-nowrap gap-3 justify-content-end">
+                                @php($status = request()->get('status','all'))
+                                <select class="form-control border-color-c1 w-160 form-select"
+                                    onchange="filter_tickets(this.value)">
+                                    <option value="all" {{$status=='all'?'selected':''}}>{{\App\CPU\translate('All_Status')}}</option>
+                                    <option value="open" {{$status=='open'?'selected':''}}>{{\App\CPU\translate('Open')}}</option>
+                                    <option value="close" {{$status=='close'?'selected':''}}>{{\App\CPU\translate('Close')}}</option>
+                                </select>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+
+                <!-- Tickets Listing -->
+                @foreach($tickets as $key =>$ticket)
+                <div class="border-bottom mb-3 pb-3">
+                    <div class="card">
+                        <div class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
+                            <div class="media gap-3">
+                                <img class="rounded-circle avatar" style="width:50px; height:50px; object-fit:cover;"
+                                    src="{{ 
+        $ticket->user && $ticket->user->image
+            ? asset($ticket->user->image)
+            : ($ticket->seller && $ticket->seller->image
+                ? asset($ticket->seller->image)
+                : 'https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w='
+            )
+    }}"
+                                    onerror="this.src='https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w='"
+                                    alt="User Avatar">
+                                <div class="media-body">
+                                    <h6 class="mb-0 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->name ?? $ticket->seller->f_name}}</h6>
+                                    <div class="mb-2 fz-12 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->mobile ?? $ticket->seller->phone}}</div>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        <span class="badge-soft-info fz-12 font-weight-bold radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->status))}}</span>
+                                        <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
+                                        <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
+                                            {{date('d/M/Y H:i a',strtotime($ticket->created_at))}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body align-items-end d-flex flex-wrap flex-md-nowrap justify-content-between gap-4">
+                            <div>{{$ticket->subject}}</div>
+                            <div class="text-nowrap">
+                                <a class="btn btn--primary" href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
+                                    <i class="tio-open-in-new"></i> View
+                                </a>
                             </div>
                         </div>
                     </div>
-
-                    @foreach($tickets as $key =>$ticket)
-                        <div class="border-bottom mb-3 pb-3">
-                            <div class="card">
-                                <div
-                                    class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
-                                    <div class="media gap-3">
-                                       <img class="avatar avatar-lg" height="60" width="60"
-     src="{{ $ticket->user->image ?? 'https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=' }}"
-     onerror="this.src='https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=''"
-     alt="User Avatar">
-                                        <div class="media-body">
-                                            <h6 class="mb-0 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->name??""}}</h6>
-                                            <div class="mb-2 fz-12 {{Session::get('direction') === "rtl" ? 'text-right' : 'text-left'}}">{{$ticket->user->mobile??""}}</div>
-                                            <div class="d-flex flex-wrap gap-2 align-items-center">
- 
-                                                <span
-                                                    class="badge-soft-info fz-12 font-weight-bold radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->status))}}</span>
-                                                <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
-                                                <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
-                                                    {{date('d/M/Y H:i a',strtotime($ticket->created_at))}}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- <label class="switcher">
-                                        <input class="switcher_input status" type="checkbox"
-                                               {{$ticket->status=='open'?'checked':''}} id="{{$ticket->id}}">
-                                        <span class="switcher_control"></span>
-                                    </label> -->
-                                </div>
-                                <div
-                                    class="card-body align-items-end d-flex flex-wrap flex-md-nowrap justify-content-between gap-4">
-                                    <div>
-                                        {{$ticket->subject}}
-                                    </div>
-                                    <div class="text-nowrap">
-                                       
-                                      <a class="btn btn--primary"
-   href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
-    <i class="tio-open-in-new"></i> View
-</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
                 </div>
+                @endforeach
 
+                <!-- Pagination -->
                 <div class="table-responsive mt-4">
                     <div class="px-4 d-flex justify-content-lg-end">
-                        <!-- Pagination -->
-                       
                         {{ $tickets->links() }}
                     </div>
                 </div>
 
-                @if(count($tickets)==0)
-                    <div class="text-center p-4">
-                        <img class="mb-3 w-160"
-                             src="{{asset('public/assets/back-end')}}/svg/illustrations/sorry.svg"
-                             alt="Image Description">
-                        <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
-                    </div>
+                <!-- No Data -->
+                @if(count($tickets) == 0)
+                <div class="text-center p-4">
+                    <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
+                </div>
                 @endif
             </div>
         </div>
-    @endsection
+    </div>
+</div>
+@endsection
 
-    @push('script')
-        <!-- Page level plugins -->
-            <script src="{{asset('public/assets/back-end')}}/vendor/datatables/jquery.dataTables.min.js"></script>
-            <script
-                src="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+@push('script')
+<!-- Page level plugins -->
+<script src="{{asset('public/assets/back-end')}}/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
-            <script>
-                // Call the dataTables jQuery plugin
-                $(document).ready(function () {
-                    $('#dataTable').DataTable();
-                });
-            </script>
+<script>
+    // Status Filter with search preservation
+    function filter_tickets(status) {
+        let url = new URL(window.location.href);
+        let searchParams = url.searchParams;
 
-            <!-- Page level custom scripts -->
-            <script src="{{asset('public/assets/back-end/js/croppie.js')}}"></script>
-            <script>
-                $(document).on('change', '.status', function () {
-                    var id = $(this).attr("id");
-                    if ($(this).prop("checked") === true) {
-                        var status = 'open';
-                    } else if ($(this).prop("checked") === false) {
-                        var status = 'close';
-                    }
+        // Preserve the current search term
+        let searchValue = document.querySelector('input[name="search"]').value;
+        searchParams.set('status', status);
+        searchParams.set('search', searchValue);
 
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                        }
-                    });
-                    $.ajax({
-                        url: "",
-                        method: 'POST',
-                        data: {
-                            id: id,
-                            status: status
-                        },
-                        success: function (data) {
-                            console.log(data);
-                            toastr.success('Ticket closed successfully');
-                        }
-                    });
-                });
+        // Redirect
+        window.location.href = url.pathname + '?' + searchParams.toString();
+    }
+</script>
 
-                function filter_tickets(param, value) {
-                    let text = window.location;
-                    let redirect_to = '';
-                    let polished = removeURLParameter(text.toString(), param);
-                    if (polished.includes('?')) {
-                        redirect_to = polished + '&' + param + '=' + value;
-                    } else {
-                        redirect_to = polished + '?' + param + '=' + value;
-                    }
-
-                    location.href = redirect_to;
-                }
-
-                function removeURLParameter(url, parameter) {
-                    var urlparts = url.split('?');
-                    if (urlparts.length >= 2) {
-                        var prefix = encodeURIComponent(parameter) + '=';
-                        var pars = urlparts[1].split(/[&;]/g);
-                        for (var i = pars.length; i-- > 0;) {
-                            if (pars[i].lastIndexOf(prefix, 0) !== -1) {
-                                pars.splice(i, 1);
-                            }
-                        }
-                        return urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
-                    }
-                    return url;
-                }
-            </script>
-    @endpush
+<!-- Croppie -->
+<script src="{{asset('public/assets/back-end/js/croppie.js')}}"></script>
+@endpush
