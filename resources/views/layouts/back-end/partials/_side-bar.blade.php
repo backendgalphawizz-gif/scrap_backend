@@ -188,6 +188,23 @@
             </div>
         </li>
         @endif
+
+          <li class="nav-item ">
+            <a class="nav-link" data-bs-toggle="collapse" href="#support-ticket" aria-expanded="false" aria-controls="supportchat">
+                <span class="menu-title">Support Chat</span>
+                <i class="mdi mdi-chat menu-icon"></i>
+            </a>
+            <div class="collapse" id="support-ticket">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.support-ticket.view-support') }}"
+                        >Chat</a>
+                    </li>
+                </ul> 
+            </div>
+        </li>
+
+
         <li class="nav-item d-none">
             <a class="nav-link" data-bs-toggle="collapse" href="#forms" aria-expanded="false" aria-controls="forms">
                 <span class="menu-title">Forms</span>

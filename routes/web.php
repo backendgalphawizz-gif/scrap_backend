@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomRoleController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SupportTicketController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -132,6 +133,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('resend-notification', [NotificationController::class, 'resendNotification'])->name('resend-notification');
         Route::post('delete', [NotificationController::class, 'delete'])->name('delete');
     });
+
+   
+
+    Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])->name('admin.support-ticket.view-support');
+
 
 });
 
