@@ -15,6 +15,7 @@ class SocialAuthController extends Controller
 {
 
     public function redirect($provider) {
+        // comment
         return Socialite::driver($provider)->redirect();
     }
 
