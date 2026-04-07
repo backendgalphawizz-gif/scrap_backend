@@ -14,7 +14,6 @@ use App\Http\Controllers\Api\User\SocialAuthController;
 use App\Http\Controllers\Api\Seller\SellerAuthController;
 use App\Http\Controllers\Api\Seller\SellerWalletController;
 use App\Http\Controllers\Api\Seller\SellerDashboardController;
-use App\Http\Controllers\Api\Seller\UserProfileController as SellerProfileController;
 use App\Http\Controllers\Api\Seller\FeedBackQuestionController as FeedbackQuestionController;
 
 use App\Http\Controllers\Api\Sale\AuthController as SaleAuthController;
@@ -37,7 +36,7 @@ Route::post('/optimize-clear', function () {
             'message' => 'Unauthorized'
         ], 401);
     }
-   
+
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
     Artisan::call('route:clear');
@@ -57,8 +56,6 @@ Route::post('/admin/login', [AdminAuthController::class, 'login']);
 Route::prefix('admin')
     ->middleware(['auth:api'])
     ->group(function () {
-
-
         // Dashboard
         Route::get('/dashboard-count', [DashboardController::class, 'index']);
 
@@ -85,19 +82,15 @@ Route::prefix('admin')
         Route::delete('/support-tickets/{id}', [AdminSupportTicketController::class, 'destroy']);
         Route::post('/support-tickets/{id}/messages', [AdminSupportTicketController::class, 'sendMessage']);
 
-        //
-
         // Route::middleware('admin:create_user')
         //     ->post('/users', [UserController::class, 'store']);
-
+    
         // Route::middleware('admin:view_users')
         //     ->get('/users', [UserController::class, 'index']);
-
+    
         // Route::middleware('admin:create_role')
         //     ->post('/roles', [RoleController::class, 'store']);
-
-});
-
+    });
 
 Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('profile', [UserProfileController::class, 'index']);
@@ -115,7 +108,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);
-    
+
     Route::get('notifications', [UserProfileController::class, 'notifications']);
 
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
@@ -126,7 +119,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
 });
-    
+
 Route::get('categories', [UserAuthController::class, 'categories']);
 Route::get('professions', [UserAuthController::class, 'professions']);
 Route::get('banners', [UserAuthController::class, 'banners']);
@@ -139,9 +132,6 @@ Route::post('auth/register', [UserAuthController::class, 'register']);
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
 
 Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
-
-
-
 
 Route::group(['prefix' => 'brand'], function () {
     Route::post('auth/send-otp', [SellerAuthController::class, 'sendOtp']);
@@ -166,7 +156,7 @@ Route::group(['prefix' => 'brand'], function () {
     Route::get('/wallet', [SellerWalletController::class, 'index']);
     Route::post('/wallet/create', [SellerWalletController::class, 'createWalletTransaction']);
     Route::get('/wallet/transactions', [SellerWalletController::class, 'walletTransactionList']);
-    
+
     // Feedback Question Crud
     Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store']);
     Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index']);
@@ -192,21 +182,17 @@ Route::group(['prefix' => 'sale'], function () {
     Route::post('auth/forgot-password', [SaleAuthController::class, 'forgotPassword']);
     Route::post('auth/reset-password', [SaleAuthController::class, 'resetPassword']);
 
-
-
     Route::get('profile', [SaleDashboardController::class, 'index']);
     Route::post('update-profile', [SaleDashboardController::class, 'update']);
     Route::post('update-kyc', [SaleDashboardController::class, 'updatekyc']);
     Route::post('create-withdrawl-request', [SaleDashboardController::class, 'createWithdrawl']);
-
 
     Route::post('campaign/create', [SaleDashboardController::class, 'createCampaign']);
     Route::post('campaign/update/{id}', [SaleDashboardController::class, 'updateCampaign']);
     Route::get('campaign/detail/{id}', [SaleDashboardController::class, 'detailCampaign']);
     Route::get('campaign/list', [SaleDashboardController::class, 'listCampaign']);
     Route::get('campaign/delete/{id}', [SaleDashboardController::class, 'deleteCampaign']);
-    
-    
+
     Route::post('brand/create', [SaleDashboardController::class, 'registerBrand']);
     Route::get('brand/list', [SaleDashboardController::class, 'listBrand']);
     Route::get('brand/detail/{id}', [SaleDashboardController::class, 'detailBrand']);

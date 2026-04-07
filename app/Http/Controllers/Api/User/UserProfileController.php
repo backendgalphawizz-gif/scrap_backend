@@ -87,15 +87,15 @@ class UserProfileController extends Controller
         // }
 
         // $user->update($request->only(['name', 'email', 'mobile','dob','gender','profession', 'address','city','state', 'native_state', 'native_city', 'instagram_username','facebook_username']));
-        if ($request->has('pan_number')) {
+        if ($request->has('pan_number') && $user->pan_status !== 'Verified') {
             $user->pan_number = $request->pan_number;
             $user->pan_status = 'Submitted';
             if ($request->hasFile('pan_image')) {
                 $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
             }
         }
-        
-        if ($request->has('aadhar_number')) {
+
+        if ($request->has('aadhar_number') && $user->aadhar_status !== 'Verified') {
             $user->aadhar_number = $request->aadhar_number;
             $user->aadhar_status = 'Submitted';
             $aadhar_images = [];
@@ -107,11 +107,11 @@ class UserProfileController extends Controller
             }
         }
 
-        if ($request->has('upi_id')) {
+        if ($request->has('upi_id') && $user->upi_status !== 'Verified') {
             $user->upi_id = $request->upi_id;
             $user->upi_status = 'Submitted';
         }
-        if ($request->has('bank_name') || $request->has('ifsc_code')) {
+        if (($request->has('bank_name') || $request->has('ifsc_code')) && $user->bank_status !== 'Verified') {
             $user->bank_detail = json_encode([
                 'bank_name' => $request->bank_name,
                 'ifsc_code' => $request->ifsc_code,
@@ -121,11 +121,17 @@ class UserProfileController extends Controller
 
             $user->bank_status = $request->bank_name != '' ? 'Submitted' : 'Not Submitted';
         }
-        $user->save();
+
+        $kycDirty = $user->isDirty();
+        if ($kycDirty) {
+            $user->save();
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'User KYC updated successfully',
+            'message' => $kycDirty
+                ? 'User KYC updated successfully'
+                : 'No KYC fields were updated (verified items cannot be changed).',
             'data' => new CommonResource($user)
         ]);
     }

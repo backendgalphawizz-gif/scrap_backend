@@ -36,10 +36,12 @@ return new class extends Migration
             $table->integer('sub_category_id')->nullable();
             $table->string('gst_number', 45)->nullable();
             $table->enum('gst_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('gst_rejection_reason')->nullable();
             $table->enum('business_registeration_type', ['Proprietor', 'Pvt Ltd', 'LLP'])->default('Proprietor');
             $table->string('pan_number', 45)->nullable();
             $table->mediumText('pan_image')->nullable();
             $table->enum('pan_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('pan_rejection_reason')->nullable();
             $table->string('primary_contact', 45)->nullable();
             $table->string('alternate_contact', 45)->nullable();
             $table->mediumText('full_address')->nullable();

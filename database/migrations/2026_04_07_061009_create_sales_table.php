@@ -26,9 +26,12 @@ return new class extends Migration
             $table->string('pan_number', 45)->nullable();
             $table->mediumText('pan_image')->nullable();
             $table->enum('pan_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('pan_rejection_reason')->nullable();
             $table->mediumText('bank_detail')->nullable();
             $table->enum('bank_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
-            $table->enum('kyc_status', ['pending', 'verified'])->nullable()->default('pending');
+            $table->text('bank_rejection_reason')->nullable();
+            $table->enum('kyc_status', ['pending', 'verified', 'rejected'])->nullable()->default('pending');
+            $table->text('kyc_rejection_reason')->nullable();
         });
     }
 

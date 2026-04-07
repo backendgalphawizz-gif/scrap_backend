@@ -247,7 +247,7 @@ class SellerDashboardController extends Controller
         $seller = $data['data'];
         $shop = Seller::find($seller['id']);
 
-        if ($request->has('pan_number')) {
+        if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
             $shop->pan_number = $request->pan_number;
             $shop->pan_status = 'Submitted';
             if ($request->hasFile('pan_image')) {
@@ -255,18 +255,22 @@ class SellerDashboardController extends Controller
             }
         }
 
-        if ($request->has('gst_number')) {
+        if ($request->has('gst_number') && $shop->gst_status !== 'Verified') {
             $shop->gst_number = $request->gst_number;
             $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
         }
 
-        $shop->save();
-
-        Helpers::systemActivity('kyc_updated', $shop, 'updated', 'Brand KYC updated successfully', $shop);
+        $kycDirty = $shop->isDirty();
+        if ($kycDirty) {
+            $shop->save();
+            Helpers::systemActivity('kyc_updated', $shop, 'updated', 'Brand KYC updated successfully', $shop);
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Brand KYC updated successfully',
+            'message' => $kycDirty
+                ? 'Brand KYC updated successfully'
+                : 'No KYC fields were updated (verified items cannot be changed).',
             'data' => new CommonResource($shop),
         ], 200);
     }

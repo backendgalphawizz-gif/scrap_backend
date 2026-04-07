@@ -95,29 +95,36 @@ class DashboardController extends Controller
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $shop = Sale::find($seller['id']);
-            if($request->has('pan_number')) {
+            if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
                 $shop->pan_number = $request->pan_number;
                 $shop->pan_status = 'Submitted';
-                if($request->hasFile('pan_image')) {
+                if ($request->hasFile('pan_image')) {
                     $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
                 }
             }
-            
-            if($request->has('bank_name') || $request->has('ifsc_code')) {
+
+            if (($request->has('bank_name') || $request->has('ifsc_code')) && $shop->bank_status !== 'Verified') {
                 $shop->bank_detail = json_encode([
-                                    'bank_name' => $request->bank_name,
-                                    'ifsc_code' => $request->ifsc_code,
-                                    'account_number' => $request->account_number,
-                                    'branch_name' => $request->branch_name
-                                ]);
-                
+                    'bank_name' => $request->bank_name,
+                    'ifsc_code' => $request->ifsc_code,
+                    'account_number' => $request->account_number,
+                    'branch_name' => $request->branch_name
+                ]);
+
                 $shop->bank_status = $request->bank_name != '' ? 'Submitted' : 'Not Submitted';
             }
-            $shop->save();
-            Helpers::systemActivity('profile_updated', $shop, 'updated', 'Sale Profile KYC updated successfully', $shop);
+
+            $kycDirty = $shop->isDirty();
+            if ($kycDirty) {
+                $shop->save();
+                Helpers::systemActivity('profile_updated', $shop, 'updated', 'Sale Profile KYC updated successfully', $shop);
+            }
+
             return response()->json([
                 'status' => true,
-                'message' => 'Sale KYC updated successfully',
+                'message' => $kycDirty
+                    ? 'Sale KYC updated successfully'
+                    : 'No KYC fields were updated (verified items cannot be changed).',
                 'data' => new CommonResource($shop)
             ], 200);
         } else {

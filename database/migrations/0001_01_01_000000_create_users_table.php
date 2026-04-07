@@ -45,11 +45,15 @@ return new class extends Migration
             $table->string('pan_number', 45)->nullable();
             $table->mediumText('pan_image')->nullable();
             $table->enum('pan_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('pan_rejection_reason')->nullable();
             $table->string('aadhar_number', 45)->nullable();
             $table->mediumText('aadhar_image')->nullable();
             $table->enum('aadhar_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('aadhar_rejection_reason')->nullable();
             $table->enum('bank_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('bank_rejection_reason')->nullable();
             $table->enum('upi_status', ['Not Submitted', 'Submitted', 'Under Verification', 'Verified', 'Rejected'])->default('Not Submitted');
+            $table->text('upi_rejection_reason')->nullable();
             $table->json('bank_detail')->nullable();
             $table->string('upi_id', 120)->nullable();
             $table->string('device_type', 45)->nullable();

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // Import the trait
 
 class User extends Authenticatable
 {
-    use SoftDeletes, HasApiTokens,HasFactory, Notifiable;
+    use SoftDeletes, HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +20,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-       'name',
+        'name',
         'email',
         'password',
         'role_id',
@@ -39,12 +39,14 @@ class User extends Authenticatable
         "gender",
         'city',
         'state',
-        'native_state', 
+        'native_state',
         'native_city',
         'referral_code',
         'friends_code',
         'provider',
-        'provider_id', 'instagram_username','facebook_username'
+        'provider_id',
+        'instagram_username',
+        'facebook_username'
     ];
 
     /**
@@ -80,7 +82,7 @@ class User extends Authenticatable
     // {
     //     return $this->belongsTo(Role::class);
     // }
-    
+
     public function coinWallet()
     {
         return $this->hasOne(CoinWallet::class);
@@ -96,12 +98,12 @@ class User extends Authenticatable
         // return $this->role
         //     && $this->role->permissions->contains('name', $permission);
 
-    //     if ($this->role && $this->role->name === 'admin') {
-    //     return true;
-    // }
+        //     if ($this->role && $this->role->name === 'admin') {
+        //     return true;
+        // }
 
         return $this->role
-        && $this->role->permissions->contains('name', $permission);
+            && $this->role->permissions->contains('name', $permission);
     }
 
     public function getBankDetailAttribute($value)
@@ -111,12 +113,12 @@ class User extends Authenticatable
 
     public function getImageAttribute($value)
     {
-        return (strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . ( $value ?: 'def.png'));
+        return (strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . ($value ?: 'def.png'));
     }
 
     public function getPanImageAttribute($value)
     {
-        return (strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . ( $value ?: 'def.png'));
+        return $value ? ((strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . $value)) : null;
     }
 
     public function getAadharImageAttribute($images)
@@ -124,7 +126,7 @@ class User extends Authenticatable
         $newArr = [];
         $images = explode(',', $images);
         foreach ($images as $key => $value) {
-            $newArr[] =  (strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . ( $value ?: 'def.png'));
+            $newArr[] = $value ? ((strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . $value)) : null;
         }
         return $newArr;
     }
