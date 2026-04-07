@@ -93,7 +93,7 @@
                             </div>
                         </div>
                         <div class="card-body align-items-end d-flex flex-wrap flex-md-nowrap justify-content-between gap-4">
-                            <div>{{$ticket->subject}}</div>
+                            <div class="text-truncate" style="max-width: 100%;">{{$ticket->subject}}</div>
                             <div class="text-nowrap">
                                 <a class="btn btn--primary" href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
                                     <i class="tio-open-in-new"></i> View
@@ -147,3 +147,18 @@
 <!-- Croppie -->
 <script src="{{asset('public/assets/back-end/js/croppie.js')}}"></script>
 @endpush
+
+
+<style>
+@media (max-width: 768px) {
+    #ticketFilterForm .input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    #ticketFilterForm .form-control,
+    #ticketFilterForm .form-select,
+    #ticketFilterForm .btn {
+        width: 100% !important;
+    }
+}
+</style>

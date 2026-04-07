@@ -22,16 +22,16 @@
         </div>
         <ul class="navbar-nav navbar-nav-right">
             <li class="nav-item nav-profile dropdown">
-                <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <div class="nav-profile-img">
-                        <img src="{{ auth('admin')->user()->image }}" alt="image">
-                        <span class="availability-status online"></span>
-                    </div>
-                    <div class="nav-profile-text">
-                        <p class="mb-1 text-white">{{ auth('admin')->user()->name }}</p>
-                    </div>
-                </a>
+              <a class="nav-link dropdown-toggle d-flex align-items-center" id="profileDropdown" href="#" data-bs-toggle="dropdown"
+   aria-expanded="false">
+    <div class="nav-profile-img me-2"> <!-- me-2 adds margin-right -->
+        <img src="{{ auth('admin')->user()->image }}" alt="image">
+        <span class="availability-status online"></span>
+    </div>
+    <div class="nav-profile-text me-1"> <!-- optional spacing before dropdown arrow -->
+        <p class="mb-0 text-white">{{ auth('admin')->user()->name }}</p>
+    </div>
+</a>
                 <div class="dropdown-menu navbar-dropdown" aria-labelledby="profileDropdown">
                     <a class="dropdown-item" href="{{ route('admin.profile') }}">
                         <i class="mdi mdi-cached me-2 text-primary"></i> Profile

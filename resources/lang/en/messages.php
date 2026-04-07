@@ -489,4 +489,7 @@
   'All' => 'All',
   'Leave_a_Message' => 'Leave a Message',
   'Reply' => 'Reply',
+  'add_Campaign' => 'Add Campaign',
+  'Admin List' => 'Admin List',
+  'Admin Listaa' => 'Admin Listaa',
 );
