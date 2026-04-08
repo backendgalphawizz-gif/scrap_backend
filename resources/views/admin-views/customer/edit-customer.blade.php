@@ -33,7 +33,17 @@
     <div class="row">
 
         <div class="col-lg-12">
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
 
+@if(session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+@endif
             <form action="{{ route('admin.user.update',$user->id) }}" method="post" enctype="multipart/form-data">
                 @csrf
 
@@ -57,7 +67,7 @@
                                     <input type="text" name="name"
                                         value="{{ $user->name ?? old('name') }}"
                                         class="form-control"
-                                        placeholder="Enter Name" required>
+                                        placeholder="Enter Name" >
                                 </div>
                             </div>
 
@@ -332,5 +342,14 @@ document.querySelectorAll('.status-select').forEach(select => {
         }
     });
 });
+</script>
+<script>
+@if(session('success'))
+    toastr.success("{{ session('success') }}");
+@endif
+
+@if(session('error'))
+    toastr.error("{{ session('error') }}");
+@endif
 </script>
 @endsection

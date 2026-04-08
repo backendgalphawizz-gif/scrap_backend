@@ -96,7 +96,7 @@ class BannerController extends Controller
         }
         $banner->save();
 
-        Toastr::success('Banner updated successfully!');
+        //Toastr::success('Banner updated successfully!');
         return redirect()->route('admin.banner.list');
     }
 

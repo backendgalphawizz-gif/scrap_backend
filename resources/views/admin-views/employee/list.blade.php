@@ -15,7 +15,7 @@
         </h3>
 
         <!-- Search + Add -->
-        <div class=" d-flex gap-2">
+        <!-- <div class=" d-flex gap-2">
             <div class="">
                 <form action="{{ url()->current() }}" method="GET">
                     <div class="input-group input-group-merge input-group-custom">
@@ -35,8 +35,13 @@
                     <span>{{\App\CPU\translate('Add')}} {{\App\CPU\translate('New')}}</span>
                 </a>
             </div>
-        </div>
-
+        </div> -->
+ <div class="">
+                <a href="{{route('admin.employee.add-new')}}" class="btn btn-primary">
+                    <i class="tio-add"></i>
+                    <span>{{\App\CPU\translate('Add')}} {{\App\CPU\translate('New')}}</span>
+                </a>
+            </div>
 
         <nav aria-label="breadcrumb">
             <ul class="breadcrumb">
@@ -48,6 +53,27 @@
         </nav>
     </div>
 
+     <div class=" d-flex gap-2 mb-2">
+            <div class="">
+                <form action="{{ url()->current() }}" method="GET">
+                    <div class="input-group input-group-merge input-group-custom">
+                        <input type="search" name="search" class="form-control"
+                            placeholder="{{\App\CPU\translate('search_by_name_or_email_or_phone')}}"
+                            value="{{$search}}" required>
+
+                        <button type="submit" class="btn btn-primary">
+                            {{\App\CPU\translate('search')}}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- <div class="">
+                <a href="{{route('admin.employee.add-new')}}" class="btn btn-primary">
+                    <i class="tio-add"></i>
+                    <span>{{\App\CPU\translate('Add')}} {{\App\CPU\translate('New')}}</span>
+                </a>
+            </div> -->
+        </div>
     <!-- Table -->
     <div class="row">
         <div class="col-lg-12">

@@ -69,16 +69,40 @@ class DashboardController extends Controller
         return view('admin-views.customer.edit-customer', compact('user'));
     }
 
+    // public function updateUser(Request $request) {
+    //     $user = User::find($request->id);
+
+    //     $request->validate([
+    //         'name' => 'required',
+    //         'email' => 'required|email|unique:users,email,'.$user->id,
+    //         'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
+    //     ]);
+
+    //     $request->validate([
+    //         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    //     ]);
+
+    //     $request->has('image') && $user->image = ImageManager::upload('profile/', 'png', $request->file('image'), $user->image);
+    //     $user->dob = $request->dob;
+    //     $user->gender = $request->gender;
+    //     $user->profession = $request->profession;
+    //     $user->instagram_username = $request->instagram_username;
+    //     $user->facebook_username = $request->facebook_username;
+    //     $user->name = $request->name;
+    //     $user->email = $request->email;
+    //     $user->mobile = $request->phone;
+    //     $user->save();
+    //     return redirect()->back();
+    // }
+
     public function updateUser(Request $request) {
+    try {
         $user = User::find($request->id);
 
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
-        ]);
-
-        $request->validate([
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -92,9 +116,14 @@ class DashboardController extends Controller
         $user->email = $request->email;
         $user->mobile = $request->phone;
         $user->save();
-        return redirect()->back();
-    }
 
+        // ✅ Success message
+        return redirect()->back()->with('success', 'User updated successfully!');
+    } catch (\Exception $e) {
+        // ❌ Error message
+        return redirect()->back()->with('error', 'Something went wrong: '.$e->getMessage());
+    }
+}
     public function brands(Request $request) {
         $sellers = Seller::orderBy('id', 'DESC')->paginate(25);
         return view('admin-views.seller.index', compact('sellers'));
