@@ -106,9 +106,9 @@ class NotificationController extends Controller
             
 
             Helpers::send_push_notif_to_topic($notification, $tokens);
-            Toastr::success('Notification sent successfully!');
+            //Toastr::success('Notification sent successfully!');
         } catch (\Exception $e) {
-            Toastr::warning('Push notification failed!');
+            //Toastr::warning('Push notification failed!');
         }
 
         return back();
@@ -135,7 +135,7 @@ class NotificationController extends Controller
         $notification->image = $request->has('image')? ImageManager::update('notification/', $notification->image, 'png', $request->file('image')):$notification->image;
         $notification->save();
 
-        Toastr::success('Notification updated successfully!');
+        //Toastr::success('Notification updated successfully!');
         return redirect('/admin/notification/add-new');
     }
 
