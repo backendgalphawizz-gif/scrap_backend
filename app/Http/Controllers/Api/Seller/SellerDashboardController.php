@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Seller;
 
 use App\CPU\Helpers;
 use App\CPU\ImageManager;
-use App\CPU\ProductManager;
 use App\Http\Controllers\Controller;
 
 use App\Models\Seller;
@@ -15,11 +14,7 @@ use App\Models\Notification;
 use App\Models\CampaignTransaction;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use function App\CPU\translate;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CommonResource;
 
 
@@ -282,6 +277,26 @@ class SellerDashboardController extends Controller
         if ($data['success'] == 1) {
             $seller = $data['data'];
             // Logic to create campaign
+
+            $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
+            $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
+            if ($maxPerWindow > 0 && $windowHours > 0) {
+                $recentCount = Campaign::where('brand_id', $seller['id'])
+                    ->where('created_at', '>=', now()->subHours($windowHours))
+                    ->count();
+                if ($recentCount >= $maxPerWindow) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => translate('You have reached the maximum number of campaigns allowed for your brand in the current period. Please try again later.'),
+                        'data' => [],
+                        'campaign_rate_limit' => [
+                            'max_campaigns_per_timeframe' => $maxPerWindow,
+                            'timeframe_hours' => $windowHours,
+                            'campaigns_created_in_window' => $recentCount,
+                        ],
+                    ], 200);
+                }
+            }
 
             $sellerWallet = Helpers::get_seller_wallet($seller['id']);
 

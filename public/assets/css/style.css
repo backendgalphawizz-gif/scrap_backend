@@ -30784,10 +30784,23 @@ dl li {
     width: 100%;
   }
 }
+@media (max-width: 567px) {
+  .content-wrapper {
+    background: #EDF1F3;
+    padding: 10px !important;
+    width: 100%;
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
+  }
+  .form-group {
+     margin-bottom: 0.76rem; 
+}
+}
 
 .content-wrapper {
   background: #EDF1F3;
-  padding: 30px;
+   padding: 30px;
+  /* padding: 30px; */
   width: 100%;
   -webkit-flex-grow: 1;
   flex-grow: 1;
@@ -30943,8 +30956,8 @@ dl li {
 }
 
 .auth form .auth-form-btn {
-  background: #19AA97;
-  background-color: #15786C;
+  background: linear-gradient(315deg, rgba(31, 92, 146, 1) 50%, rgba(5, 44, 78, 1) 100%);
+  /* background-color: #15786C; */
   border-radius: 100px;
 }
 

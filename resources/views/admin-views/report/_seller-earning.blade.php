@@ -61,7 +61,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-6 col-md-3">
+                            <div class="col-sm-6 col-md-2">
                                 <button type="submit" class="btn btn-primary px-4 w-100">
                                     {{ \App\CPU\translate('Filter')}}
                                 </button>

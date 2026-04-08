@@ -145,7 +145,9 @@ Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
 Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
     ->name('admin.support-ticket.replay');
 });
-
+Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])
+    ->name('admin.support-ticket.close');
+ 
 // SocialAuthController
 Route::get('auth/{service}', [SocialAuthController::class, 'redirectToProvider'])->name('service-login');
 Route::get('auth/{service}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('service-callback');

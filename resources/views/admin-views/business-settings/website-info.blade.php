@@ -154,6 +154,8 @@
                             @php($brand_wise_posting_limits=\App\Models\BusinessSetting::where('type','brand_wise_posting_limits')->first()->value ?? '')
                             @php($cost_per_post=\App\Models\BusinessSetting::where('type','cost_per_post')->first()->value ?? '')
                             @php($cool_down_period_between_campaigns=\App\Models\BusinessSetting::where('type','cool_down_period_between_campaigns')->first()->value ?? '')
+                            @php($brand_max_campaigns_per_timeframe=optional(\App\Models\BusinessSetting::where('type','brand_max_campaigns_per_timeframe')->first())->value ?? '0')
+                            @php($brand_campaign_creation_timeframe_hours=optional(\App\Models\BusinessSetting::where('type','brand_campaign_creation_timeframe_hours')->first())->value ?? '24')
                             @php($post_sharing_reward=\App\Models\BusinessSetting::where('type','post_sharing_reward')->first()->value ?? '')
                             @php($feedback_incentive=\App\Models\BusinessSetting::where('type','feedback_incentive')->first()->value ?? '')
                             @php($platform_commission=\App\Models\BusinessSetting::where('type','platform_commission')->first()->value ?? '')
@@ -189,6 +191,18 @@
                                 <div class="form-group">
                                     <label class="title-color d-flex">Cool-down period between campaigns</label>
                                     <input class="form-control" type="text" name="cool_down_period_between_campaigns" value="{{ $cool_down_period_between_campaigns }}">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Max campaigns per brand (per rolling window)</label>
+                                    <input class="form-control" type="text" name="brand_max_campaigns_per_timeframe" value="{{ $brand_max_campaigns_per_timeframe }}" placeholder="0 = unlimited">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Campaign creation rolling window (hours)</label>
+                                    <input class="form-control" type="text" name="brand_campaign_creation_timeframe_hours" value="{{ $brand_campaign_creation_timeframe_hours }}">
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">

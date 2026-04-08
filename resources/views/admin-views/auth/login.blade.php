@@ -59,7 +59,7 @@
       <div class="content-wrapper d-flex align-items-center auth adminLoginBackGround">
         <div class="row flex-grow">
           <div class="col-lg-5 mx-auto">
-            <div class="auth-form-light text-left px-5 py-4">
+            <div class="auth-form-light text-left px-4 py-4">
               <div class="brand-logo d-flex justify-content-center">
                 <img src="{{ asset('assets/logo/logo-3.png') }}">
               </div>
@@ -69,7 +69,7 @@
                 {{ csrf_field() }}
                 <div class="form-group position-relative">
                   <i class="mdi mdi-account-outline input-icon"></i>
-                  <input
+                  <input required
                     type="email"
                     name="email"
                     class="form-control form-control-lg icon-input"
@@ -80,7 +80,7 @@
                 <div class="form-group position-relative">
                   <i class="mdi mdi-lock-outline input-icon"></i>
 
-                  <input
+                  <input required
                     type="password"
                     name="password"
                     class="form-control form-control-lg icon-input"

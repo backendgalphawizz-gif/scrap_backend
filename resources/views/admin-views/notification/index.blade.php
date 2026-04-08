@@ -74,7 +74,7 @@
 
                         </div>
 
-                        <div class="row mt-3">
+                        <div class="row mt-3 g-3">
                             <div class="col-md-12 d-flex justify-content-end gap-3">
                                 <button type="reset" class="btn btn-secondary px-4">
                                     {{\App\CPU\translate('reset')}}

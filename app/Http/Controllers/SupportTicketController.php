@@ -67,5 +67,14 @@ public function reply(Request $request, $id)
 
     return back()->with('success', 'Reply sent successfully');
 }
+   
+public function close($id)
+{
+    $ticket = SupportTicket::findOrFail($id);
+    $ticket->status = 'closed';
+    $ticket->save();
+
+    return back()->with('success', 'Ticket closed successfully');
     
+}
 }

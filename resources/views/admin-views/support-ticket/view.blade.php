@@ -20,9 +20,9 @@
     <div class="row mt-20">
         <div class="col-md-12">
             <div class="">
-                <div class="mb-3 border-bottom">
+                <div class="mb-2 border-bottom">
                     <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                        <div class="">
+                        <div class="w-100">
                             <!-- Search Form -->
                             <form action="{{ url()->current() }}" method="GET" id="ticketFilterForm">
                                 <div class="input-group input-group-merge input-group-custom">
@@ -38,7 +38,7 @@
                                         onchange="document.getElementById('ticketFilterForm').submit()">
                                         <option value="all" {{ request('status','all')=='all'?'selected':'' }}>All Status</option>
                                         <option value="open" {{ request('status')=='open'?'selected':'' }}>Open</option>
-                                        <option value="close" {{ request('status')=='close'?'selected':'' }}>Close</option>
+                                        <option value="closed" {{ request('status')=='closed'?'selected':'' }}>Close</option>
                                     </select>
 
                                     <!-- Submit Button -->
@@ -64,7 +64,7 @@
 
                 <!-- Tickets Listing -->
                 @foreach($tickets as $key =>$ticket)
-                <div class="border-bottom mb-3 pb-3">
+                <div class="border-bottom mb-2 pb-2">
                     <div class="card">
                         <div class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
                             <div class="media gap-3">
@@ -86,20 +86,44 @@
                                         <span class="badge-soft-info fz-12 font-weight-bold radius-50">{{\App\CPU\translate(str_replace('_',' ',$ticket->status))}}</span>
                                         <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
                                         <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
-                                            {{date('d/M/Y H:i a',strtotime($ticket->created_at))}}
+                                            <!-- {{date('d/M/Y H:i a',strtotime($ticket->created_at))}} -->
+                                       {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            
                         </div>
-                        <div class="card-body align-items-end d-flex flex-wrap flex-md-nowrap justify-content-between gap-4">
-                            <div>{{$ticket->subject}}</div>
-                            <div class="text-nowrap">
-                                <a class="btn btn--primary" href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
-                                    <i class="tio-open-in-new"></i> View
-                                </a>
-                            </div>
-                        </div>
+                       <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    
+    <!-- Subject -->
+    <div class="text-truncate w-75">
+        {{$ticket->subject}}
+    </div>
+
+    <!-- Button -->
+   <div class="w-auto text-end d-flex gap-2 justify-content-end align-items-center">
+
+    <a class="btn btn--primary btn-sm py-2 px-3"
+       href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
+        <i class="tio-open-in-new"></i> View
+    </a>
+
+    
+    @if($ticket->status != 'closed')
+        <form action="{{ route('admin.support-ticket.close', $ticket->id) }}" method="POST" class="m-0 ticket-close-form">
+            @csrf
+            <button type="button" class="btn btn-danger btn-sm py-2 px-3 close-btn">
+                Close Ticket
+            </button>
+        </form>
+    @else
+        <span class="btn btn-success btn-sm py-2 px-3 border-0">Closed</span>
+    @endif
+
+</div>
+
+</div>
                     </div>
                 </div>
                 @endforeach
@@ -114,7 +138,7 @@
                 <!-- No Data -->
                 @if(count($tickets) == 0)
                 <div class="text-center p-4">
-                    <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
+                    <p class="mb-0">{{\App\CPU\translate('No data found')}}</p>
                 </div>
                 @endif
             </div>
@@ -144,6 +168,86 @@
     }
 </script>
 
+
 <!-- Croppie -->
 <script src="{{asset('public/assets/back-end/js/croppie.js')}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".close-btn").forEach(function(button) {
+
+        button.addEventListener("click", function () {
+
+            let form = this.closest("form");
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to close this ticket!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'rgba(5, 44, 78, 1)',
+                cancelButtonColor: '#c82333',
+                confirmButtonText: 'Yes, close it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+
+        });
+
+    });
+
+});
+</script>
+@if(session('success'))
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Success',
+    text: "{{ session('success') }}",
+    timer: 2000,
+    showConfirmButton: false
+});
+</script>
+@endif
 @endpush
+
+
+<style>
+@media (max-width: 768px) {
+    #ticketFilterForm .input-group {
+        /* flex-direction: column; */
+        gap: 0.5rem;
+    }
+    #ticketFilterForm .form-control,
+    #ticketFilterForm .form-select,
+    #ticketFilterForm .btn {
+        width: 100% !important;
+    }
+}
+@media (max-width: 767px) {
+    .ticket-filter-mobile {
+        width: 100%;
+    }
+
+    .ticket-filter-mobile .input-group {
+        /* flex-direction: column; */
+        width: 100%;
+    }
+
+    .ticket-filter-mobile input,
+    .ticket-filter-mobile select,
+    .ticket-filter-mobile button {
+        width: 100% !important;
+        margin-top: 8px;
+    }
+
+    .ticket-filter-mobile select:first-of-type,
+    .ticket-filter-mobile button:first-of-type {
+        margin-top: 8px;
+    }
+}
+</style>

@@ -15,9 +15,9 @@
             </span> {{\App\CPU\translate('Campaign List')}}
         </h3>
         <div id="banner-btn">
-            <a href="{{ route('admin.campaign.add') }}" class="btn btn-primary text-nowrap">
+            <a href="{{ route('admin.campaign.add') }}" class="btn btn-primary ">
                 <i class="tio-add"></i>
-                {{ \App\CPU\translate('add_campaign')}}
+                {{ \App\CPU\translate('add_Campaign')}}
             </a>
         </div>
         <nav aria-label="breadcrumb">
