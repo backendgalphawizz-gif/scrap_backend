@@ -183,14 +183,22 @@
                             </tr>
                             @endforeach
                         </tbody>
-                        <tfoot>
+                            
+                        <!-- <tfoot>
+
                             <tr>
                                 <th>
                                     {{ $campaigns->links() }}
                                 </th>
                             </tr>
-                        </tfoot>
+                        </tfoot> -->
                     </table>
+                </div>
+                  <div class="table-responsive mt-4">
+                    <div class="px-4 d-flex justify-content-lg-end">
+                        <!-- Pagination -->
+                         {{ $campaigns->links() }}
+                    </div>
                 </div>
             </div>
         </div>
