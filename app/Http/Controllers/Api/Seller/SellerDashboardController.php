@@ -227,6 +227,29 @@ class SellerDashboardController extends Controller
         return response()->json($response, 200);
     }
 
+    public function updateSocials(Request $request)
+    {
+        $data = Helpers::get_seller_by_token($request);
+        if ($data['success'] == 1) {
+            $seller = $data['data'];
+            $shop = Seller::find($seller['id']);
+        }
+        if ($request->has('instagram_username') && $shop->instagram_status !== 'Verified') {
+            $shop->instagram_username = $request->instagram_username;
+            $shop->instagram_status = 'Submitted';
+        }
+        if ($request->has('facebook_username') && $shop->facebook_status !== 'Verified') {
+            $shop->facebook_username = $request->facebook_username;
+            $shop->facebook_status = 'Submitted';
+        }
+        $shop->save();
+        return response()->json([
+            'status' => true,
+            'message' => 'Seller socials updated successfully',
+            'data' => [new CommonResource($shop)]
+        ], 200);
+    }
+
     public function updateKyc(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
