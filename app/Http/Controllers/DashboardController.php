@@ -221,6 +221,13 @@ class DashboardController extends Controller
         DB::table('business_settings')->updateOrInsert(['type' => 'cool_down_period_between_campaigns'], [
             'value' => $request['cool_down_period_between_campaigns']
         ]);
+
+        DB::table('business_settings')->updateOrInsert(['type' => 'brand_max_campaigns_per_timeframe'], [
+            'value' => $request['brand_max_campaigns_per_timeframe'] ?? '0',
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'brand_campaign_creation_timeframe_hours'], [
+            'value' => $request['brand_campaign_creation_timeframe_hours'] ?? '24',
+        ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'post_sharing_reward'], [
             'value' => $request['post_sharing_reward']
         ]);

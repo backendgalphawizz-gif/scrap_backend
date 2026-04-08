@@ -106,7 +106,7 @@ class DashboardController extends Controller
                 'user_id' => $user->id,
                 'campaign_id' => $campaign->id,
                 'shared_on' => $request->share_on,
-                'status' => 'active',
+                'status' => 'pending',
                 'earning' => $campaign->coins ?? 0,
                 'start_date' => date('Y-m-d'),
                 'end_date' => date('Y-m-d', strtotime('+7 days')),
