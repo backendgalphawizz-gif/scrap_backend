@@ -492,4 +492,6 @@
   'add_Campaign' => 'Add Campaign',
   'Admin List' => 'Admin List',
   'Admin Listaa' => 'Admin Listaa',
+  'closed' => 'Closed',
+  'No data found' => 'No data found',
 );
