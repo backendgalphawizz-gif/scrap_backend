@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CommonResource;
 use App\Models\CampaignTransaction;
 use App\Models\Campaign;
-use Illuminate\Support\Str;
+use App\Models\UserCampaignSkip;
+use Illuminate\Support\Carbon;
 
 
 class DashboardController extends Controller
@@ -55,7 +57,13 @@ class DashboardController extends Controller
             ->when($state!='', function($q) use($state) {
                 $q->where('state', $state);
             })
-            ->where(['status' => 'active'])->paginate($request->input('limit', 10));
+            ->where(['status' => 'active'])
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('user_campaign_skips')
+                    ->where('user_id', $user->id);
+            })
+            ->paginate($request->input('limit', 10));
         return response()->json([
             'status' => true,
             'message' => 'Campaign Lists retrieved successfully',
@@ -66,6 +74,13 @@ class DashboardController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
+
+        if (UserCampaignSkip::where('user_id', $user->id)->where('campaign_id', $id)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Campaign not found or inactive',
+            ], 404);
+        }
 
         $campaigns = Campaign::with(['brand', 'campaign_transactions' => function($q) use($user) {
             $q->where('user_id', $user->id);
@@ -102,6 +117,13 @@ class DashboardController extends Controller
         ])->first();
 
         if (!$transaction) {
+            if (Carbon::parse($campaign->end_date)->endOfDay()->isPast()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'This campaign has ended; you can no longer participate.',
+                ], 422);
+            }
+
             $transaction = CampaignTransaction::create([
                 'user_id' => $user->id,
                 'campaign_id' => $campaign->id,
@@ -117,6 +139,33 @@ class DashboardController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Campaign joined successfully',
+        ]);
+    }
+
+    public function skipCampaign(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'campaign_id' => 'required|integer|exists:campaigns,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = $request->user();
+        $campaignId = (int) $request->input('campaign_id');
+
+        UserCampaignSkip::firstOrCreate([
+            'user_id' => $user->id,
+            'campaign_id' => $campaignId,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Campaign skipped successfully',
         ]);
     }
 

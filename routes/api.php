@@ -105,11 +105,15 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('campaign/detail/{id}', [UserDashboardController::class, 'show']);
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
+    Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);
 
     Route::get('notifications', [UserProfileController::class, 'notifications']);
+
+    Route::post('verify-social', [UserProfileController::class, 'verifySocial']);
+    Route::get('social-verification-status', [UserProfileController::class, 'socialVerificationStatus']);
 
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
 

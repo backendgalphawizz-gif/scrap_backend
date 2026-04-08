@@ -10,6 +10,12 @@ class CoinWallet extends Model
     protected $fillable = [
         'user_id',
         'balance',
+        'withdrawal_frozen',
+    ];
+
+    protected $casts = [
+        'withdrawal_frozen' => 'boolean',
+        'status' => 'boolean',
     ];
 
     protected $appends = [
