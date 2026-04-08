@@ -73,10 +73,10 @@
                                             {{ \App\CPU\translate('save')}}
                                         </button>
 
-                                        <button id="update"
+                                        <!-- <button id="update"
                                             class="btn btn-primary d--none text-white px-4">
                                             {{ \App\CPU\translate('update')}}
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </div>
 
