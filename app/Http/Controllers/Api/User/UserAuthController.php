@@ -236,7 +236,6 @@ class UserAuthController extends Controller
             'max_posts_per_user' => Helpers::get_business_settings('max_posts_per_user'),
             'brand_wise_posting_limits' => Helpers::get_business_settings('brand_wise_posting_limits'),
             'cost_per_post' => Helpers::get_business_settings('cost_per_post'),
-            'cool_down_period_between_campaigns' => Helpers::get_business_settings('cool_down_period_between_campaigns'),
             'post_sharing_reward' => Helpers::get_business_settings('post_sharing_reward'),
             'feedback_incentive' => Helpers::get_business_settings('feedback_incentive'),
             'platform_commission' => Helpers::get_business_settings('platform_commission'),

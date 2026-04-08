@@ -37,6 +37,7 @@
                             <th>{{\App\CPU\translate('mobile')}}</th>
                             <th>{{\App\CPU\translate('Wallet Balance')}} </th>
                             <th>{{\App\CPU\translate('Wallet Status')}} </th>
+                            <th>{{\App\CPU\translate('Withdrawal')}}</th>
                             <th>{{\App\CPU\translate('Total')}} {{\App\CPU\translate('Campaign')}} </th>
                             <th>{{\App\CPU\translate('block')}} / {{\App\CPU\translate('unblock')}}</th>
                             <th class="text-center">{{\App\CPU\translate('Action')}}</th>
@@ -88,6 +89,23 @@
                                     @else
                                         <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
                                             <span class="update-wallet-status" data-id="{{ $customer->id }}"><label class="badge badge-gradient-danger">In-Active</label></span>
+                                        </label>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($customer->coinWallet)
+                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
+                                            <span class="update-wallet-withdrawal-freeze cursor-pointer" data-id="{{ $customer->id }}" title="{{ \App\CPU\translate('Click to toggle withdrawal freeze') }}">
+                                                {!! $customer->coinWallet->withdrawal_frozen
+                                                    ? '<label class="badge badge-danger">'.\App\CPU\translate('Frozen').'</label>'
+                                                    : '<label class="badge badge-gradient-success">'.\App\CPU\translate('Allowed').'</label>' !!}
+                                            </span>
+                                        </label>
+                                    @else
+                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
+                                            <span class="update-wallet-withdrawal-freeze cursor-pointer" data-id="{{ $customer->id }}" title="{{ \App\CPU\translate('Click to create wallet and set freeze') }}">
+                                                <label class="badge badge-soft-dark">{{\App\CPU\translate('N/A')}}</label>
+                                            </span>
                                         </label>
                                     @endif
                                 </td>
@@ -182,6 +200,45 @@
                         success: function (response) {
                             if(response.status){
                                 swal.fire('', '{{\App\CPU\translate('Status updated successfully')}}', 'success').then((result) => {
+                                    location.reload();
+                                });
+                            } else {
+                                swal.fire('', response.message, 'error');
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        $(document).on('click', '.update-wallet-withdrawal-freeze', function () {
+            let id = $(this).attr("data-id");
+
+            Swal.fire({
+                title: '{{\App\CPU\translate('Are you sure')}}?',
+                text: '{{\App\CPU\translate('want_to_change_status')}}',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'No',
+                confirmButtonText: 'Yes',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: "{{ route('admin.user.update-wallet-withdrawal-freeze') }}",
+                        method: 'POST',
+                        data: { id: id },
+                        dataType:'json',
+                        success: function (response) {
+                            if(response.status){
+                                swal.fire('', response.message || '{{\App\CPU\translate('Status updated successfully')}}', 'success').then((result) => {
                                     location.reload();
                                 });
                             } else {

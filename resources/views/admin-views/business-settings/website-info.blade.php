@@ -153,7 +153,6 @@
                             @php($max_posts_per_user=\App\Models\BusinessSetting::where('type','max_posts_per_user')->first()->value ?? '')
                             @php($brand_wise_posting_limits=\App\Models\BusinessSetting::where('type','brand_wise_posting_limits')->first()->value ?? '')
                             @php($cost_per_post=\App\Models\BusinessSetting::where('type','cost_per_post')->first()->value ?? '')
-                            @php($cool_down_period_between_campaigns=\App\Models\BusinessSetting::where('type','cool_down_period_between_campaigns')->first()->value ?? '')
                             @php($brand_max_campaigns_per_timeframe=optional(\App\Models\BusinessSetting::where('type','brand_max_campaigns_per_timeframe')->first())->value ?? '0')
                             @php($brand_campaign_creation_timeframe_hours=optional(\App\Models\BusinessSetting::where('type','brand_campaign_creation_timeframe_hours')->first())->value ?? '24')
                             @php($post_sharing_reward=\App\Models\BusinessSetting::where('type','post_sharing_reward')->first()->value ?? '')
@@ -189,12 +188,6 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">Cool-down period between campaigns</label>
-                                    <input class="form-control" type="text" name="cool_down_period_between_campaigns" value="{{ $cool_down_period_between_campaigns }}">
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6 col-sm-12">
-                                <div class="form-group">
                                     <label class="title-color d-flex">Max campaigns per brand (per rolling window)</label>
                                     <input class="form-control" type="text" name="brand_max_campaigns_per_timeframe" value="{{ $brand_max_campaigns_per_timeframe }}" placeholder="0 = unlimited">
                                 </div>
@@ -225,7 +218,7 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">Cool-down period between campaigns</label>
+                                    <label class="title-color d-flex">Platform commission</label>
                                     <input class="form-control" type="text" name="platform_commission" value="{{ $platform_commission }}">
                                 </div>
                             </div>

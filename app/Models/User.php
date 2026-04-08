@@ -46,7 +46,9 @@ class User extends Authenticatable
         'provider',
         'provider_id',
         'instagram_username',
-        'facebook_username'
+        'facebook_username',
+        'instagram_status',
+        'facebook_status',
     ];
 
     /**
@@ -62,6 +64,16 @@ class User extends Authenticatable
     public function campaigns()
     {
         return $this->hasMany(CampaignTransaction::class, 'user_id');
+    }
+
+    public function campaignSkips()
+    {
+        return $this->hasMany(UserCampaignSkip::class, 'user_id');
+    }
+
+    public function socialVerifications()
+    {
+        return $this->hasMany(SocialVerificationTransaction::class, 'user_id');
     }
 
     /**

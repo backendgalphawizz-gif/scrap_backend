@@ -25767,6 +25767,7 @@ code {
 .btn-outline-primary:active {
   background: #15786C;
   color: #fff !important;
+  
 }
 
 .btn-inverse-secondary {
@@ -31072,7 +31073,9 @@ a:hover {
   background: #19AA97;
   background-color: #15786C;
   border-color: #15786C;
-  color: #fff !important;
+  color: #15786C !important;
+  
+  
 }
 
 .btn-outline-danger {
@@ -31081,9 +31084,14 @@ a:hover {
 }
 
 .btn-outline-danger:hover {
-  border-color: #c82333;
+  /* border-color: #c82333;
   background: #c82333;
-  color: #fff !important;
+  color: #fff !important; */
+      background: #fff !important;
+    background-color: #fff !important;
+    border-color: #15786C;
+    color: #15786C !important;
+    
 }
 
 .badge {
@@ -31105,9 +31113,13 @@ a:hover {
 }
 
 .btn-outline-info:hover {
-  border-color: #C6944F;
+      background: #fff !important;
+    background-color: #fff !important;
+    border-color: #15786C;
+    color: #15786C !important;
+  /* border-color: #C6944F;
   color: #fff !important;
-  background: #C6944F;
+  background: #C6944F; */
 }
 
 .cardText{

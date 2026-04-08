@@ -12,6 +12,7 @@ use App\Models\BusinessSetting;
 use App\Models\Campaign;
 use App\Models\CampaignTransaction;
 use App\Models\CoinTransaction;
+use App\Models\CoinWallet;
 use App\Models\Seller;
 use App\Models\User;
 use App\Http\Resources\CommonResource;
@@ -218,10 +219,6 @@ class DashboardController extends Controller
             'value' => $request['cost_per_post']
         ]);
 
-        DB::table('business_settings')->updateOrInsert(['type' => 'cool_down_period_between_campaigns'], [
-            'value' => $request['cool_down_period_between_campaigns']
-        ]);
-
         DB::table('business_settings')->updateOrInsert(['type' => 'brand_max_campaigns_per_timeframe'], [
             'value' => $request['brand_max_campaigns_per_timeframe'] ?? '0',
         ]);
@@ -271,6 +268,34 @@ class DashboardController extends Controller
             'status' => false,
             'message' => 'User or wallet not found',
             'data' => []
+        ]);
+    }
+
+    public function updateUserWalletWithdrawalFreeze(Request $request)
+    {
+        $user = User::find($request->id);
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+                'data' => [],
+            ]);
+        }
+
+        $wallet = CoinWallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+
+        $wallet->withdrawal_frozen = ! $wallet->withdrawal_frozen;
+        $wallet->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => $wallet->withdrawal_frozen
+                ? 'Withdrawals frozen for this wallet'
+                : 'Withdrawals enabled for this wallet',
+            'data' => new CommonResource($wallet->fresh()),
         ]);
     }
 

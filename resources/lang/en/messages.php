@@ -494,4 +494,10 @@
   'Admin Listaa' => 'Admin Listaa',
   'closed' => 'Closed',
   'No data found' => 'No data found',
+  'Withdrawal' => 'Withdrawal',
+  'Click to toggle withdrawal freeze' => 'Click to toggle withdrawal freeze',
+  'Allowed' => 'Allowed',
+  'Click to create wallet and set freeze' => 'Click to create wallet and set freeze',
+  'N/A' => 'N/A',
+  'Frozen' => 'Frozen',
 );

@@ -13,6 +13,8 @@ use App\CPU\Helpers;
 use App\Models\User;
 use App\Models\Seller;
 use App\Models\Notification;
+use App\Models\SocialVerificationTransaction;
+use Illuminate\Support\Str;
 
 
 class UserProfileController extends Controller
@@ -210,7 +212,17 @@ class UserProfileController extends Controller
                 ], 422);
             }
 
-            $wallet = $user->coinWallet;
+            $wallet = CoinWallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
+
+            if ($wallet->withdrawal_frozen) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Withdrawals are disabled for this wallet. Contact support if you need help.',
+                ], 403);
+            }
 
             if ($wallet->balance < $request->coins) {
                 return response()->json([
@@ -342,6 +354,93 @@ class UserProfileController extends Controller
             'status' => true,
             'message' => 'Account deleted successfully',
             'data' => []
+        ]);
+    }
+
+    public function verifySocial(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'platform' => 'required|in:instagram,facebook',
+            'username' => 'required|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $platform = $request->platform;
+        $statusField = $platform . '_status';
+
+        if ($user->$statusField === SocialVerificationTransaction::STATUS_VERIFIED) {
+            return response()->json([
+                'status' => false,
+                'message' => ucfirst($platform) . ' account is already verified.',
+            ], 422);
+        }
+
+        // Cancel any existing pending transaction for this platform
+        SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', $platform)
+            ->where('status', SocialVerificationTransaction::STATUS_PENDING)
+            ->update(['status' => SocialVerificationTransaction::STATUS_NOT_VERIFIED]);
+
+        $transaction = SocialVerificationTransaction::create([
+            'user_id'      => $user->id,
+            'platform'     => $platform,
+            'username'     => $request->username,
+            'unique_code'  => $request->unique_code,
+            'status'       => SocialVerificationTransaction::STATUS_PENDING,
+            'submitted_at' => now(),
+            'end_date'     => now()->addDays(7)->toDateString(),
+        ]);
+
+        $user->$statusField = SocialVerificationTransaction::STATUS_PENDING;
+        $user->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Verification initiated. Post this unique code on your ' . ucfirst($platform) . ' account.',
+            'data'    => [
+                'unique_code' => $request->unique_code,
+                'platform'    => $platform,
+                'username'    => $request->username,
+                'end_date'    => $transaction->end_date,
+            ],
+        ]);
+    }
+
+    public function socialVerificationStatus(Request $request)
+    {
+        $user = $request->user();
+
+        $instagram = SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_INSTAGRAM)
+            ->latest()
+            ->first();
+
+        $facebook = SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_FACEBOOK)
+            ->latest()
+            ->first();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Social verification status retrieved successfully',
+            'data'    => [
+                'instagram' => [
+                    'status'           => $user->instagram_status,
+                    'username'         => $user->instagram_username,
+                ],
+                'facebook' => [
+                    'status'           => $user->facebook_status,
+                    'username'         => $user->facebook_username,
+                ],
+            ],
         ]);
     }
 

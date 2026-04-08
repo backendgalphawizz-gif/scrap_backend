@@ -13,3 +13,9 @@ Schedule::command('campaign:process-results')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Check scraped posts daily for pending social username verifications
+Schedule::command('social:process-verifications')
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->runInBackground();
