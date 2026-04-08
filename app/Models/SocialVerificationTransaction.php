@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Seller;
 
 class SocialVerificationTransaction extends Model
 {
@@ -15,6 +16,7 @@ class SocialVerificationTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'seller_id',
         'platform',
         'username',
         'unique_code',
@@ -33,5 +35,10 @@ class SocialVerificationTransaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function seller()
+    {
+        return $this->belongsTo(Seller::class, 'seller_id');
     }
 }

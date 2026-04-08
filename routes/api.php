@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Sale\DashboardController as SaleDashboardController
 use App\Http\Controllers\Api\AdminSupportTicketController;
 use App\Http\Controllers\Api\User\SupportTicketController as UserSupportTicketController;
 use App\Http\Controllers\Api\Seller\SupportTicketController as BrandSupportTicketController;
+use App\Http\Controllers\Api\Seller\SellerSocialVerificationController;
 
 
 Route::get('/user', function (Request $request) {
@@ -172,6 +173,9 @@ Route::group(['prefix' => 'brand'], function () {
     Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
 
     Route::get('notifications', [SellerDashboardController::class, 'notifications']);
+
+    Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
+    Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
 
     Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
     Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
