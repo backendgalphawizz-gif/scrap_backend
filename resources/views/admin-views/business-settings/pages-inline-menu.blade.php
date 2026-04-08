@@ -5,6 +5,27 @@
     border-color: #15786C !important;
     color: #15786C !important;
     }
+
+   
+.inline-page-menu ul {
+    flex-wrap: wrap; /* allow buttons to wrap on smaller screens */
+}
+
+.inline-page-menu ul li {
+    margin-bottom: 0.5rem; /* vertical spacing for wrapped buttons */
+}
+
+/* Optional: mobile full width */
+@media (max-width: 768px) {
+    .inline-page-menu ul li {
+        width: 100%;
+    }
+    .inline-page-menu ul li a {
+        width: 100%;
+        text-align: center; /* center the text */
+    }
+}
+
     </style>
 
 <div class="inline-page-menu mb-3">
