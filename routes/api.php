@@ -149,6 +149,7 @@ Route::group(['prefix' => 'brand'], function () {
     Route::get('statistics', [SellerDashboardController::class, 'statistics']);
     Route::get('campaign-wise-report/{campaignId}', [SellerDashboardController::class, 'getCampaignWiseChartData']);
     Route::post('update-profile', [SellerDashboardController::class, 'update']);
+    Route::post('update-socials', [SellerDashboardController::class, 'updateSocials']);
     Route::post('update-kyc', [SellerDashboardController::class, 'updateKyc']);
     Route::post('campaign/create', [SellerDashboardController::class, 'createCampaign']);
     Route::post('campaign/update/{id}', [SellerDashboardController::class, 'updateCampaign']);

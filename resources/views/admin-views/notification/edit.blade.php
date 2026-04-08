@@ -38,9 +38,9 @@
                 <div class="card-body">
 
                     <form action="{{route('admin.notification.update',[$notification['id']])}}"
-                          method="post"
-                          enctype="multipart/form-data"
-                          style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
+                        method="post"
+                        enctype="multipart/form-data"
+                        style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
 
                         @csrf
 
@@ -52,11 +52,11 @@
                                 </label>
 
                                 <input type="text"
-                                       value="{{$notification['title']}}"
-                                       name="title"
-                                       class="form-control"
-                                       placeholder="{{\App\CPU\translate('New notification')}}"
-                                       required>
+                                    value="{{$notification['title']}}"
+                                    name="title"
+                                    class="form-control"
+                                    placeholder="{{\App\CPU\translate('New notification')}}"
+                                    required>
                             </div>
 
 
@@ -66,9 +66,9 @@
                                 </label>
 
                                 <textarea name="description"
-                                          class="form-control"
-                                          rows="4"
-                                          required>{{$notification['description']}}</textarea>
+                                    class="form-control"
+                                    rows="4"
+                                    required>{{$notification['description']}}</textarea>
                             </div>
 
 
@@ -79,16 +79,16 @@
                                 </label>
 
                                 <input type="file"
-                                       name="image"
-                                       id="customFileEg1"
-                                       class="form-control"
-                                       accept=".jpg,.png,.jpeg,.gif,.bmp,.tif,.tiff|image/*">
+                                    name="image"
+                                    id="customFileEg1"
+                                    class="form-control"
+                                    accept=".jpg,.png,.jpeg,.gif,.bmp,.tif,.tiff|image/*">
 
                                 <img id="viewer"
-                                     src="{{asset('storage/app/public/notification')}}/{{$notification['image']}}"
-                                     onerror="this.src='{{asset('public/assets/back-end/img/160x160/img2.jpg')}}'"
-                                     class="img-thumbnail mt-2"
-                                     style="max-width:200px;">
+                                    src="{{asset('storage/app/public/notification')}}/{{$notification['image']}}"
+                                    onerror="this.src='https://demofree.sirv.com/nope-not-here.jpg'"
+                                    class="img-thumbnail mt-2"
+                                    style="max-width:200px;">
 
                             </div>
 
@@ -100,12 +100,12 @@
                             <div class="col-md-12 d-flex justify-content-end gap-3">
 
                                 <button type="reset"
-                                        class="btn btn-secondary px-4">
+                                    class="btn btn-secondary px-4">
                                     {{\App\CPU\translate('reset')}}
                                 </button>
 
                                 <button type="submit"
-                                        class="btn btn-primary px-4">
+                                    class="btn btn-primary px-4">
                                     {{\App\CPU\translate('Update')}}
                                 </button>
 
@@ -129,21 +129,21 @@
 
 @push('script_2')
 <script>
-function readURL(input) {
-    if (input.files && input.files[0]) {
+    function readURL(input) {
+        if (input.files && input.files[0]) {
 
-        var reader = new FileReader();
+            var reader = new FileReader();
 
-        reader.onload = function (e) {
-            $('#viewer').attr('src', e.target.result);
+            reader.onload = function(e) {
+                $('#viewer').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(input.files[0]);
         }
-
-        reader.readAsDataURL(input.files[0]);
     }
-}
 
-$("#customFileEg1").change(function () {
-    readURL(this);
-});
+    $("#customFileEg1").change(function() {
+        readURL(this);
+    });
 </script>
 @endpush
