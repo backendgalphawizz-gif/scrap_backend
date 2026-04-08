@@ -186,14 +186,20 @@
                             </tr>
                             @endforeach
                         </tbody>
-                        <tfoot>
+                        <!-- <tfoot>
                             <tr>
                                 <th colspan="7">
                                     {{ $posts->links() }}
                                 </th>
                             </tr>
-                        </tfoot>
+                        </tfoot> -->
                     </table>
+                </div>
+                 <div class="table-responsive mt-4">
+                    <div class="px-4 d-flex justify-content-lg-end">
+                        <!-- Pagination -->
+                        {{ $posts->links() }}
+                    </div>
                 </div>
             </div>
         </div>

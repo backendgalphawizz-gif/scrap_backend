@@ -87,43 +87,43 @@
                                         <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
                                         <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
                                             <!-- {{date('d/M/Y H:i a',strtotime($ticket->created_at))}} -->
-                                       {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
+                                            {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                         </div>
-                       <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-    
-    <!-- Subject -->
-    <div class="text-truncate w-75">
-        {{$ticket->subject}}
-    </div>
+                        <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
 
-    <!-- Button -->
-   <div class="w-auto text-end d-flex gap-2 justify-content-end align-items-center">
+                            <!-- Subject -->
+                            <div class="text-truncate w-75">
+                                {{$ticket->subject}}
+                            </div>
 
-    <a class="btn btn--primary btn-sm py-2 px-3"
-       href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
-        <i class="tio-open-in-new"></i> View
-    </a>
+                            <!-- Button -->
+                            <div class="w-auto text-end d-flex gap-2 justify-content-end align-items-center">
 
-    
-    @if($ticket->status != 'closed')
-        <form action="{{ route('admin.support-ticket.close', $ticket->id) }}" method="POST" class="m-0 ticket-close-form">
-            @csrf
-            <button type="button" class="btn btn-danger btn-sm py-2 px-3 close-btn">
-                Close Ticket
-            </button>
-        </form>
-    @else
-        <span class="btn btn-success btn-sm py-2 px-3 border-0">Closed</span>
-    @endif
+                                <a class="btn btn--primary btn-sm py-2 px-3"
+                                    href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">
+                                    <i class="tio-open-in-new"></i> View
+                                </a>
 
-</div>
 
-</div>
+                                @if($ticket->status != 'closed')
+                                <form action="{{ route('admin.support-ticket.close', $ticket->id) }}" method="POST" class="m-0 ticket-close-form">
+                                    @csrf
+                                    <button type="button" class="btn btn-danger btn-sm py-2 px-3 close-btn">
+                                        Close Ticket
+                                    </button>
+                                </form>
+                                @else
+                                <span class="btn btn-success btn-sm py-2 px-3 border-0">Closed</span>
+                                @endif
+
+                            </div>
+
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -173,81 +173,83 @@
 <script src="{{asset('public/assets/back-end/js/croppie.js')}}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
 
-    document.querySelectorAll(".close-btn").forEach(function(button) {
+        document.querySelectorAll(".close-btn").forEach(function(button) {
 
-        button.addEventListener("click", function () {
+            button.addEventListener("click", function() {
 
-            let form = this.closest("form");
+                let form = this.closest("form");
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You want to close this ticket!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: 'rgba(5, 44, 78, 1)',
-                cancelButtonColor: '#c82333',
-                confirmButtonText: 'Yes, close it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You want to close this ticket!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'rgba(5, 44, 78, 1)',
+                    cancelButtonColor: '#c82333',
+                    confirmButtonText: 'Yes, close it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+
             });
 
         });
 
     });
-
-});
 </script>
 @if(session('success'))
 <script>
-Swal.fire({
-    icon: 'success',
-    title: 'Success',
-    text: "{{ session('success') }}",
-    timer: 2000,
-    showConfirmButton: false
-});
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: "{{ session('success') }}",
+        timer: 2000,
+        showConfirmButton: false
+    });
 </script>
 @endif
 @endpush
 
 
 <style>
-@media (max-width: 768px) {
-    #ticketFilterForm .input-group {
-        /* flex-direction: column; */
-        gap: 0.5rem;
-    }
-    #ticketFilterForm .form-control,
-    #ticketFilterForm .form-select,
-    #ticketFilterForm .btn {
-        width: 100% !important;
-    }
-}
-@media (max-width: 767px) {
-    .ticket-filter-mobile {
-        width: 100%;
+    @media (max-width: 768px) {
+        #ticketFilterForm .input-group {
+            /* flex-direction: column; */
+            gap: 0.5rem;
+        }
+
+        #ticketFilterForm .form-control,
+        #ticketFilterForm .form-select,
+        #ticketFilterForm .btn {
+            width: 100% !important;
+        }
     }
 
-    .ticket-filter-mobile .input-group {
-        /* flex-direction: column; */
-        width: 100%;
-    }
+    @media (max-width: 767px) {
+        .ticket-filter-mobile {
+            width: 100%;
+        }
 
-    .ticket-filter-mobile input,
-    .ticket-filter-mobile select,
-    .ticket-filter-mobile button {
-        width: 100% !important;
-        margin-top: 8px;
-    }
+        .ticket-filter-mobile .input-group {
+            /* flex-direction: column; */
+            width: 100%;
+        }
 
-    .ticket-filter-mobile select:first-of-type,
-    .ticket-filter-mobile button:first-of-type {
-        margin-top: 8px;
+        .ticket-filter-mobile input,
+        .ticket-filter-mobile select,
+        .ticket-filter-mobile button {
+            width: 100% !important;
+            margin-top: 8px;
+        }
+
+        .ticket-filter-mobile select:first-of-type,
+        .ticket-filter-mobile button:first-of-type {
+            margin-top: 8px;
+        }
     }
-}
 </style>
