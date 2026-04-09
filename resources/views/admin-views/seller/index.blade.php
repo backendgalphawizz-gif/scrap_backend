@@ -97,8 +97,8 @@
                     </table>
                 </div>
 
-                <div class="table-responsive mt-4">
-                    <div class="px-4 d-flex justify-content-center justify-content-md-end">
+                    <div class="table-responsive mt-4">
+                    <div class="px-4 d-flex justify-content-lg-end">
                         <!-- Pagination -->
                         {!! $sellers->links() !!}
                     </div>
