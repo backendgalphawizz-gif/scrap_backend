@@ -4,20 +4,22 @@
 
 @push('css_or_js')
 <style>
-    .message-box {
-        border-radius: 10px;
-        font-size: 14px;
-    }
+   .chat-box {
+    width: 70%;       /* Desktop / Tablet fixed width */
+    max-width: 70%;
+    border-radius: 10px;
+    font-size: 14px;
+    word-wrap: break-word;
+    padding: 10px;
+}
 
+/* Mobile screens */
+@media (max-width: 767px) {
     .chat-box {
-        max-width: 70%;
+        width: 90% !important;   /* Mobile responsive width */
+        max-width: 90% !important;
     }
-
-    @media (max-width: 767px) {
-        .chat-box {
-            max-width: 90% !important;
-        }
-    }
+}
 </style>
 @endpush
 
@@ -74,7 +76,7 @@
 
                 <!-- Ticket First Message -->
                 <div class="d-flex mb-4">
-                    <div class="bg-light p-3 rounded shadow-sm chat-box">
+                    <div class="bg-light p-3 rounded shadow-sm chat-box" style="width: 70%;">
                         <p class="mb-1 font-weight-bold text-dark">
                             {{ $ticket->subject }}
                         </p>
@@ -88,9 +90,9 @@
                 @foreach($ticket->messages as $message)
 
                 {{-- USER / SELLER --}}
-                @if($message->sender_type == 'user' || $message->sender_type == 'seller')
+                @if($message->sender_type == 'user' || $message->sender_type == 'brand')
                 <div class="d-flex mb-3">
-                    <div class="bg-light p-3 rounded shadow-sm chat-box">
+                    <div class="bg-light p-3 rounded shadow-sm chat-box" style="width: 70%;"> 
                         <p class="mb-1 text-dark">
                             {{ $message->body }}
                         </p>
@@ -104,7 +106,7 @@
                 {{-- ADMIN --}}
                 @if($message->sender_type == 'admin')
                 <div class="d-flex justify-content-end mb-3">
-                    <div class="bg-primary text-white p-3 rounded shadow-sm chat-box">
+                    <div class="bg-primary text-white p-3 rounded shadow-sm chat-box" style="width: 70%;">
                         <p class="mb-1">
                             {{ $message->body }}
                         </p>

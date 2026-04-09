@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\SocialVerificationTransaction;
+use App\Models\Seller;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -66,8 +67,14 @@ class ProcessSocialVerifications extends Command
         $transaction->save();
 
         $statusField = $transaction->platform . '_status';
-        User::where('id', $transaction->user_id)
-            ->update([$statusField => SocialVerificationTransaction::STATUS_VERIFIED]);
+        if ($transaction->user_id) {
+            User::where('id', $transaction->user_id)
+                ->update([$statusField => SocialVerificationTransaction::STATUS_VERIFIED]);
+        }
+        if ($transaction->seller_id) {
+            Seller::where('id', $transaction->seller_id)
+                ->update([$statusField => SocialVerificationTransaction::STATUS_VERIFIED]);
+        }
     }
 
     private function markNotVerified(SocialVerificationTransaction $transaction): void
@@ -76,7 +83,13 @@ class ProcessSocialVerifications extends Command
         $transaction->save();
 
         $statusField = $transaction->platform . '_status';
-        User::where('id', $transaction->user_id)
-            ->update([$statusField => SocialVerificationTransaction::STATUS_NOT_VERIFIED]);
+        if ($transaction->user_id) {
+            User::where('id', $transaction->user_id)
+                ->update([$statusField => SocialVerificationTransaction::STATUS_NOT_VERIFIED]);
+        }
+        if ($transaction->seller_id) {
+            Seller::where('id', $transaction->seller_id)
+                ->update([$statusField => SocialVerificationTransaction::STATUS_NOT_VERIFIED]);
+        }
     }
 }
