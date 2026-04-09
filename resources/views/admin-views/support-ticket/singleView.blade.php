@@ -88,7 +88,7 @@
                 @foreach($ticket->messages as $message)
 
                 {{-- USER / SELLER --}}
-                @if($message->sender_type == 'user' || $message->sender_type == 'seller')
+                @if($message->sender_type == 'user' || $message->sender_type == 'brand')
                 <div class="d-flex mb-3">
                     <div class="bg-light p-3 rounded shadow-sm chat-box">
                         <p class="mb-1 text-dark">

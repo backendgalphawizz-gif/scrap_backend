@@ -12,6 +12,7 @@ use App\Models\Feedback;
 use App\Models\SellerWallet;
 use App\Models\Notification;
 use App\Models\CampaignTransaction;
+use App\Models\SocialVerificationTransaction;
 
 use Illuminate\Http\Request;
 use function App\CPU\translate;
@@ -236,11 +237,11 @@ class SellerDashboardController extends Controller
         }
         if ($request->has('instagram_username') && $shop->instagram_status !== 'Verified') {
             $shop->instagram_username = $request->instagram_username;
-            $shop->instagram_status = 'Submitted';
+            $shop->instagram_status = 'pending';
         }
         if ($request->has('facebook_username') && $shop->facebook_status !== 'Verified') {
             $shop->facebook_username = $request->facebook_username;
-            $shop->facebook_status = 'Submitted';
+            $shop->facebook_status = 'pending';
         }
         $shop->save();
         return response()->json([
@@ -299,7 +300,24 @@ class SellerDashboardController extends Controller
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            // Logic to create campaign
+            $shop = Seller::find($seller['id']);
+
+            $verifiedSocial = SocialVerificationTransaction::STATUS_VERIFIED;
+            if ($shop->instagram_status !== $verifiedSocial || $shop->facebook_status !== $verifiedSocial) {
+                return response()->json([
+                    'status' => false,
+                    'message' => translate('Please verify your Instagram and Facebook accounts before creating a campaign.'),
+                    'data' => [],
+                ], 200);
+            }
+
+            if ($shop->pan_status !== 'Verified') {
+                return response()->json([
+                    'status' => false,
+                    'message' => translate('Please complete KYC verification before creating a campaign.'),
+                    'data' => [],
+                ], 200);
+            }
 
             $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
             $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
@@ -352,7 +370,8 @@ class SellerDashboardController extends Controller
                 $campaign->images = implode(',', $product_images);
             }
             $campaign->brand_id = $seller['id'];
-            $campaign->title = $request->caption;
+            $caption = (string) ($request->caption ?? '');
+            $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
             $campaign->post_type = $request->post_type ?? 'post';
             $campaign->descriptions = $request->caption;
             $campaign->tags = $request->hashtags;
