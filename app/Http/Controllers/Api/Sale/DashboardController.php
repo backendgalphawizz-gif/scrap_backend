@@ -22,7 +22,7 @@ class DashboardController extends Controller
 {
    
     public function index(Request $request) {
-        // check city 
+        // check city test
         $data = Helpers::get_sale_by_token($request);
         if ($data['success'] == 1) {
             $seller = $data['data'];
