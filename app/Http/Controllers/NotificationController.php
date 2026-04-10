@@ -8,12 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\Seller;
 use App\Model\DeliveryMan;
-use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 // use App\Traits\CommonTrait;
+use App\Models\User;
+use App\Models\Sale;
+use App\Models\Brand;
 class NotificationController extends Controller
 {
     // use CommonTrait;
