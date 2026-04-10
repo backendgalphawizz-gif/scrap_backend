@@ -105,10 +105,15 @@ class NotificationController extends Controller
                 $tokens = array_merge($tokens, $desktop_tokens);
             }
 
-            
+            $data = [
+                'title' => $request->title,
+                'description' => $request->description,
+                'user_type' => $request->user_type,
+                'image' => '',
+            ];
 
             // Helpers::send_push_notif_to_topic($notification, $tokens);
-            Helpers::send_push_notif_to_device($notification, $tokens);
+            Helpers::send_push_notif_to_device($tokens , $data);
             //Toastr::success('Notification sent successfully!');
         } catch (\Exception $e) {
             //Toastr::warning('Push notification failed!');
