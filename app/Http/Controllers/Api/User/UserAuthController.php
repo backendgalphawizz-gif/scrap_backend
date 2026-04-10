@@ -126,6 +126,7 @@ class UserAuthController extends Controller
 
         $user->otp = null;
         $user->otp_expires_at = null;
+        $user->fcm_id = $request->fcm_id??null;
         $user->save();
 
         $token =  $user->createToken('AdminToken')->accessToken;
