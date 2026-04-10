@@ -433,12 +433,6 @@ class SellerDashboardController extends Controller
                 'data' => []
             ], 401);
         }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Campaign updated successfully',
-            'data' => []
-        ], 200);
     }
 
     public function updateCampaign(Request $request, $id)
