@@ -69,11 +69,11 @@ class NotificationController extends Controller
         try {
 
             $tokens = [];
-            if($request->user_type == 'Customers') {
-                $tokens = User::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
-            } else if($request->user_type == 'Resturants') {
+            if($request->user_type == 'user') {
+                $tokens = User::where('fcm_id', '!=', '')->get()->pluck('fcm_id')->toArray();
+            } else if($request->user_type == 'sale') {
                 $tokens = Seller::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
-            } else if($request->user_type == 'Riders') {
+            } else if($request->user_type == 'brand') {
                 $tokens = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('fcm_token')->toArray();
                 $ids = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('id')->toArray();
 
