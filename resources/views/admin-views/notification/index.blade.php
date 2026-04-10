@@ -230,3 +230,56 @@
 
 </div>
 @endsection
+
+@push('script')
+<script>
+    function resendNotification(el) {
+        var id = el.getAttribute('data-id');
+        if (!id) {
+            return;
+        }
+        Swal.fire({
+            title: '{{ \App\CPU\translate("Resend") }}?',
+            text: '{{ \App\CPU\translate("This will send the push notification again to all recipients.") }}',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '{{ \App\CPU\translate("Yes") }}',
+            cancelButtonText: '{{ \App\CPU\translate("Cancel") }}'
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+            $.ajax({
+                url: '{{ route('admin.notification.resend-notification') }}',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    _token: $('meta[name="_token"]').attr('content'),
+                    id: id
+                },
+                beforeSend: function () {
+                    $(el).addClass('disabled').css('pointer-events', 'none');
+                },
+                complete: function () {
+                    $(el).removeClass('disabled').css('pointer-events', '');
+                },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: res.message || '{{ \App\CPU\translate("Success") }}' });
+                        var cell = document.getElementById('count-' + id);
+                        if (cell) {
+                            var n = parseInt(cell.textContent.trim(), 10);
+                            cell.textContent = (isNaN(n) ? 0 : n) + 1;
+                        }
+                    } else {
+                        Swal.fire({ icon: 'error', title: res.message || '{{ \App\CPU\translate("Failed") }}' });
+                    }
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: '{{ \App\CPU\translate("Request failed") }}' });
+                }
+            });
+        });
+    }
+</script>
+@endpush

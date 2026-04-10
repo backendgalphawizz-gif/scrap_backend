@@ -500,4 +500,8 @@
   'Click to create wallet and set freeze' => 'Click to create wallet and set freeze',
   'N/A' => 'N/A',
   'Frozen' => 'Frozen',
+  'This will send the push notification again to all recipients.' => 'This will send the push notification again to all recipients.',
+  'Success' => 'Success',
+  'Failed' => 'Failed',
+  'Request failed' => 'Request failed',
 );

@@ -74,46 +74,42 @@ class NotificationController extends Controller
             if($request->user_type == 'user') {
                 $tokens = User::where('fcm_id', '!=', '')->get()->pluck('fcm_id')->toArray();
             } else if($request->user_type == 'sale') {
-                $tokens = Seller::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
+                $tokens = Sale::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
             } else if($request->user_type == 'brand') {
-                $tokens = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('fcm_token')->toArray();
-                $ids = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('id')->toArray();
+                $tokens = Seller::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
+                // $ids = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('id')->toArray();
 
-                if(!empty($ids)) {
-                    foreach($ids as $driver_id) {
-                        $data = [
-                            'title' => $request->title,
-                            'description' => $request->description,
-                            'order_id' => '',
-                            'image' => '',
-                        ];
+                // if(!empty($ids)) {
+                //     foreach($ids as $driver_id) {
+                //         $data = [
+                //             'title' => $request->title,
+                //             'description' => $request->description,
+                //             'order_id' => '',
+                //             'image' => '',
+                //         ];
         
-                        self::add_deliveryman_push_notification($data, $driver_id);
-                    }
-                }
+                //         self::add_deliveryman_push_notification($data, $driver_id);
+                //     }
+                // }
 
             }
 
-            $desktop_tokens = [];
-            if($request->user_type == 'Resturants') {
-                $desktop_tokens = Seller::where('desktop_firebase_token', '!=', '')->get()->pluck('desktop_firebase_token')->toArray();
-            } else if($request->user_type == 'Customers') {
-                $desktop_tokens = User::where('desktop_token', '!=', '')->get()->pluck('desktop_token')->toArray();
+            // $desktop_tokens = [];
+            // if($request->user_type == 'Resturants') {
+            //     $desktop_tokens = Seller::where('desktop_firebase_token', '!=', '')->get()->pluck('desktop_firebase_token')->toArray();
+            // } else if($request->user_type == 'Customers') {
+            //     $desktop_tokens = User::where('desktop_token', '!=', '')->get()->pluck('desktop_token')->toArray();
+            // }
+
+            // if(!empty($desktop_tokens)) {
+            //     $tokens = array_merge($tokens, $desktop_tokens);
+            // }
+
+            
+            foreach($tokens as $token) {
+                $result[] = Helpers::send_push_notif_to_topic($token,$request->title, $request->description);
             }
-
-            if(!empty($desktop_tokens)) {
-                $tokens = array_merge($tokens, $desktop_tokens);
-            }
-
-            $data = [
-                'title' => $request->title,
-                'description' => $request->description,
-                'user_type' => $request->user_type,
-                'image' => '',
-            ];
-
-            // Helpers::send_push_notif_to_topic($notification, $tokens);
-            Helpers::send_push_notif_to_device($tokens , $data);
+            // return $result;
             //Toastr::success('Notification sent successfully!');
         } catch (\Exception $e) {
             //Toastr::warning('Push notification failed!');
@@ -165,14 +161,17 @@ class NotificationController extends Controller
         try {
 
             $tokens = [];
-            if($notification->user_type == 'Customers') {
-                $tokens = User::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
-            } else if($notification->user_type == 'Restaurants') {
+            if($notification->user_type == 'user') {
+                $tokens = User::where('fcm_id', '!=', '')->get()->pluck('fcm_id')->toArray();
+            } else if($notification->user_type == 'sale') {
+                $tokens = Sale::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
+            } else if($notification->user_type == 'brand') {
                 $tokens = Seller::where('cm_firebase_token', '!=', '')->get()->pluck('cm_firebase_token')->toArray();
-            } else if($notification->user_type == 'Riders') {
-                $tokens = DeliveryMan::where('fcm_token', '!=', '')->get()->pluck('fcm_token')->toArray();
             }
-            Helpers::send_push_notif_to_topic($notification, $tokens);
+            // Helpers::send_push_notif_to_topic($notification, $tokens);
+            foreach($tokens as $token) {
+                $result[] = Helpers::send_push_notif_to_topic($token,$notification->title, $notification->description);
+            }
             $notification->notification_count += 1;
             $notification->save();
 
