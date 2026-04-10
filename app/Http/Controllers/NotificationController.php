@@ -107,7 +107,8 @@ class NotificationController extends Controller
 
             
 
-            Helpers::send_push_notif_to_topic($notification, $tokens);
+            // Helpers::send_push_notif_to_topic($notification, $tokens);
+            Helpers::send_push_notif_to_device($notification, $tokens);
             //Toastr::success('Notification sent successfully!');
         } catch (\Exception $e) {
             //Toastr::warning('Push notification failed!');
