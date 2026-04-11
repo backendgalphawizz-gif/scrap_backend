@@ -90,6 +90,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/update-seller-status', [DashboardController::class, 'updateSellerStatus'])->name('admin.seller.update-account-status');
     // update-wallet-status
 
+    
     // Route::get('/static-pages', [DashboardController::class, 'staticPages'])->name('admin.static-pages');
 
     Route::get('/website-info/terms_condition', [DashboardController::class, 'terms_condition'])->name('admin.business-settings.terms-condition');

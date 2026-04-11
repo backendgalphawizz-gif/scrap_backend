@@ -271,7 +271,8 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/error-500.html"> 500 </a>
-                    </li>
+                    </li> 
+                    
                 </ul>
             </div>
         </li>
