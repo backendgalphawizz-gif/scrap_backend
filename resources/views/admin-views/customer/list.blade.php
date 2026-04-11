@@ -214,7 +214,7 @@
             }
         }
 
-       
+      
     </style>
 @endpush
 
@@ -229,7 +229,7 @@
             <nav aria-label="breadcrumb">
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item active" aria-current="page">
-                        <span></span>Users sddddd <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
+                        <span></span>Users <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
                     </li>
                 </ul>
             </nav>
@@ -343,7 +343,7 @@
                     </table>
                     </div>
 
-                    <div class="premium-pagination-wrap">
+                    <div class="premium-pagination-wrap" style="margin-top: 30px; float:right;">
                         <div class="premium-pagination-shell">
                             <div class="premium-pagination-inline">
                                 {!! $customers->onEachSide(1)->links('vendor.pagination.premium') !!}
