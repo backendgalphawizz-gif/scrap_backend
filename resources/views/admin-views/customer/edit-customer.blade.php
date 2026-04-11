@@ -9,6 +9,11 @@
 @section('content')
 
 <div class="content-wrapper">
+    @php($userImage = blank($user->image)
+        ? asset('public/assets/front-end/img/image-place-holder.png')
+        : (\Illuminate\Support\Str::startsWith($user->image, ['http://', 'https://'])
+            ? $user->image
+            : asset('storage/profile/' . ltrim($user->image, '/'))))
 
     <!-- Page Header -->
     <div class="page-header">
@@ -169,10 +174,10 @@
                                         accept=".jpg,.png,.jpeg,.gif,.bmp,.tif,.tiff|image/*">
 
                                     <img id="viewer"
-                                        src="{{ $user->image }}"
+                                        src="{{ $userImage }}"
                                         class="img-thumbnail mt-2"
                                         style="max-width:100px"
-                                        onerror="this.onerror=null; this.src='{{ asset('assets/logo/logo-2.png') }}';">
+                                        onerror="this.onerror=null;this.src=&quot;{{ asset('public/assets/front-end/img/image-place-holder.png') }}&quot;;">
                                 </div>
                             </div>
 
@@ -218,7 +223,7 @@
                 </option>
             @endforeach
         </select>
-        <input type="text" name="upi_reason" id="upi_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->upi_reason ?? ''}}" style="display: {{$user->upi_status == 'Rejected' ? 'block' : 'none'}};">
+        <input type="text" name="upi_reason" id="upi_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->upi_rejection_reason ?? ''}}" style="display: {{$user->upi_status == 'Rejected' ? 'block' : 'none'}};">
     </div>
 </div>
 
@@ -249,7 +254,7 @@
                 </option>
             @endforeach
         </select>
-        <input type="text" name="bank_reason" id="bank_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->bank_reason ?? ''}}" style="display: {{$user->bank_status == 'Rejected' ? 'block' : 'none'}};">
+        <input type="text" name="bank_reason" id="bank_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->bank_rejection_reason ?? ''}}" style="display: {{$user->bank_status == 'Rejected' ? 'block' : 'none'}};">
     </div>
 </div>
 
@@ -272,7 +277,7 @@
                 </option>
             @endforeach
         </select>
-        <input type="text" name="pan_reason" id="pan_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->pan_reason ?? ''}}" style="display: {{$user->pan_status == 'Rejected' ? 'block' : 'none'}};">
+        <input type="text" name="pan_reason" id="pan_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->pan_rejection_reason ?? ''}}" style="display: {{$user->pan_status == 'Rejected' ? 'block' : 'none'}};">
     </div>
 </div>
 
@@ -299,7 +304,7 @@
                 </option>
             @endforeach
         </select>
-        <input type="text" name="aadhar_reason" id="aadhar_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->aadhar_reason ?? ''}}" style="display: {{$user->aadhar_status == 'Rejected' ? 'block' : 'none'}};">
+        <input type="text" name="aadhar_reason" id="aadhar_reason" class="form-control mt-2 reason-input" placeholder="Enter reason" value="{{$user->aadhar_rejection_reason ?? ''}}" style="display: {{$user->aadhar_status == 'Rejected' ? 'block' : 'none'}};">
     </div>
 </div>
 
@@ -310,12 +315,12 @@
                         <!-- Buttons -->
                         <div class="d-flex justify-content-end gap-3 mt-4">
 
-                            <button type="reset" class="btn btn-secondary px-4">
-                                {{ \App\CPU\translate('reset') }}
+                            <button type="button" class="btn btn-secondary px-4" onclick="window.history.back()">
+                                Back
                             </button>
 
                             <button type="submit" class="btn btn-primary px-4">
-                                {{ \App\CPU\translate('submit') }}
+                                Update
                             </button>
 
                         </div>

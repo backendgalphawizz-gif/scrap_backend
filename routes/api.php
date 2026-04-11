@@ -128,6 +128,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
 Route::get('categories', [UserAuthController::class, 'categories']);
 Route::get('professions', [UserAuthController::class, 'professions']);
 Route::get('banners', [UserAuthController::class, 'banners']);
+Route::get('popup-banner', [UserAuthController::class, 'popupBanner']);
 Route::get('config', [UserAuthController::class, 'config']);
 Route::post('auth/send-otp', [UserAuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [UserAuthController::class, 'verifyOtp']);

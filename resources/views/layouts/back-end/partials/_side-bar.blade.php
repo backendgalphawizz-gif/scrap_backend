@@ -199,6 +199,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.business-settings.privacy-policy') }}">Static Pages</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.business-settings.popup-banner') }}">Popup Banner</a>
+                    </li>
                 </ul>
             </div>
         </li>
