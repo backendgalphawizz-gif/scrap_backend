@@ -1829,10 +1829,10 @@
                         @endif
                         <!--Reports & Analytics section End-->
 
-                        <li class=" navbar-vertical-aside-has-menu {{(Request::is('admin/business-settings/web-config') || Request::is('admin/business-settings/web-config/app-settings') || Request::is('admin/product-settings/inhouse-shop') || Request::is('admin/business-settings/seller-settings') || Request::is('admin/customer/customer-settings') || Request::is('admin/refund-section/refund-index') || Request::is('admin/business-settings/shipping-method/setting') || Request::is('admin/business-settings/order-settings/index') || Request::is('admin/product-settings') || Request::is('admin/business-settings/web-config/delivery-restriction') || Request::is('admin/business-settings/cookie-settings') || Request::is('admin/business-settings/otp-setup') || Request::is('admin/business-settings/all-pages-banner*') || Request::is('admin/business-settings/delivery-restriction'))?'active':''}}"
+                        <li class=" navbar-vertical-aside-has-menu {{(Request::is('admin/settings') || Request::is('admin/business-settings/popup-banner'))?'active':''}}"
                             title="{{\App\CPU\translate('Settings')}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
-                                href="{{route('admin.business-settings.web-config.index')}}"
+                                href="{{route('admin.settings')}}"
                                 title="{{\App\CPU\translate('Business_Setup')}}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none">
@@ -2332,24 +2332,7 @@
                             </ul>
                         </li>
 
-                        <li
-                            class="d-none navbar-vertical-aside-has-menu {{(Request::is('admin/business-settings/web-config/environment-setup') || Request::is('admin/business-settings/web-config/mysitemap') || Request::is('admin/business-settings/analytics-index') || Request::is('admin/currency/view') || Request::is('admin/business-settings/web-config/db-index') || Request::is('admin/business-settings/language*') || Request::is('admin/business-settings/web-config/theme/setup')  || Request::is('admin/system-settings/software-update'))?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link"
-                                title="{{\App\CPU\translate('System_Setup')}}"
-                                href="{{route('admin.business-settings.web-config.environment-setup')}}">
 
-
-                                <!-- ================================================== -->
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path d="M21.9946 5.28623C21.9946 4.97924 21.9565 4.67762 21.8137 4.39703C21.3591 3.50636 20.6337 3.04049 19.6345 3.00187C19.5372 2.99796 19.4394 3.00139 19.3421 3.00139C14.375 3.00139 9.40742 3.00187 4.4403 3.00041C4.05069 3.00041 3.67184 3.05614 3.32427 3.23359C2.56461 3.62221 2.07333 4.2098 2 5.09118C2 8.42069 2 11.7502 2 15.0802C2.04497 15.3075 2.04497 15.5431 2.15399 15.7587C2.61301 16.666 3.34676 17.1587 4.36306 17.1656C6.49539 17.1802 8.6282 17.17 10.7605 17.17C10.8255 17.17 10.8906 17.1724 10.9556 17.1705C11.0837 17.1661 11.1472 17.2184 11.1467 17.3533C11.1453 17.7106 11.1477 18.0685 11.1457 18.4258C11.1453 18.5446 11.0944 18.6077 10.9707 18.6072C10.9057 18.6067 10.8407 18.6086 10.7757 18.6086C9.65086 18.6091 8.52604 18.6072 7.40121 18.6101C7.13626 18.6106 7.09373 18.6541 7.09031 18.9156C7.08591 19.2275 7.08884 19.5399 7.08933 19.8518C7.08982 20.279 7.10155 20.2912 7.52391 20.2912C10.5014 20.2917 13.4795 20.2912 16.457 20.2912C16.4893 20.2912 16.522 20.2912 16.5543 20.2907C16.8427 20.2854 16.8838 20.2472 16.8867 19.9647C16.8901 19.6724 16.8877 19.3795 16.8877 19.0867C16.8877 18.6081 16.8872 18.6081 16.4155 18.6081C15.3038 18.6081 14.1917 18.6091 13.0801 18.6072C12.8528 18.6067 12.8332 18.5871 12.8308 18.3637C12.8278 18.0386 12.8337 17.7136 12.8283 17.3885C12.8259 17.2321 12.8841 17.1573 13.0449 17.169C13.1094 17.1739 13.1749 17.1695 13.2399 17.1695C15.3723 17.1695 17.5051 17.171 19.6374 17.169C20.9265 17.1675 22.0054 16.1019 22 14.8817C21.9868 11.6837 21.9966 8.48472 21.9946 5.28623ZM19.4981 15.5485C14.4923 15.5485 9.48661 15.5485 4.48087 15.5485C3.86004 15.5485 3.56038 15.2498 3.55989 14.6314C3.55989 11.6021 3.55989 8.57223 3.55989 5.54287C3.55989 4.92253 3.85858 4.62287 4.47794 4.62287C6.98081 4.62287 9.48368 4.62287 11.9865 4.62287C14.4894 4.62287 16.9923 4.62287 19.4952 4.62287C20.116 4.62287 20.4156 4.92156 20.4161 5.53994C20.4161 8.56929 20.4161 11.5991 20.4161 14.6285C20.4161 15.2488 20.1175 15.5485 19.4981 15.5485Z" fill="white"/>
-                                </svg>
-
-
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CPU\translate('System_Setup')}}
-                                </span>
-                            </a>
-                        </li>
                         <li class="navbar-vertical-aside-has-menu">
                             <a class="js-navbar-vertical-aside-menu-link nav-link" href="javascript:" onclick="Swal.fire({
                                     title: '{{\App\CPU\translate('Do_you_want_to_logout')}}?',

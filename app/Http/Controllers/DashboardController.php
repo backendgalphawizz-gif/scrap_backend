@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Http\Resources\CommonResource;
 use DB;
 use App\CPU\ImageManager;
+use Carbon\Carbon;
 // use Gregwar\Captcha\PhraseBuilder;
 
 class DashboardController extends Controller
@@ -32,9 +33,45 @@ class DashboardController extends Controller
         $totalCampaignBudgetSpent = Campaign::where('status', 'completed')->sum('total_campaign_budget');
         $totalCampaignparticipants = CampaignTransaction::count();
 
+        $trendLabels = [];
+        $campaignTrend = [];
+        $participantTrend = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = Carbon::now()->subMonths($i);
+            $start = $monthDate->copy()->startOfMonth();
+            $end = $monthDate->copy()->endOfMonth();
+
+            $trendLabels[] = $monthDate->format('M Y');
+            $campaignTrend[] = Campaign::whereBetween('created_at', [$start, $end])->count();
+            $participantTrend[] = CampaignTransaction::whereBetween('created_at', [$start, $end])->count();
+        }
+
+        $statusKeys = ['active', 'completed', 'inactive'];
+        $statusLabels = ['Active', 'Completed', 'Inactive'];
+        $statusSeries = [];
+
+        foreach ($statusKeys as $status) {
+            $statusSeries[] = Campaign::where('status', $status)->count();
+        }
+
 
         $campaigns = Campaign::with(['brand'])->where('start_date', '<=', now())->where('end_date', '>=', now())->orderBy('id', 'DESC')->limit(5)->get();
-        return view('admin-views.system.dashboard', compact('totalCampaignparticipants', 'totalCampaignBudget', 'totalCampaignBudgetSpent','liveCampaignCount', 'userCount', 'brandCount', 'campaignCount', 'campaigns'));
+        return view('admin-views.system.dashboard', compact(
+            'totalCampaignparticipants',
+            'totalCampaignBudget',
+            'totalCampaignBudgetSpent',
+            'liveCampaignCount',
+            'userCount',
+            'brandCount',
+            'campaignCount',
+            'campaigns',
+            'trendLabels',
+            'campaignTrend',
+            'participantTrend',
+            'statusLabels',
+            'statusSeries'
+        ));
     }
 
     public function updateProfile(Request $request) {
@@ -104,6 +141,14 @@ class DashboardController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'upi_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'bank_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'pan_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'aadhar_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'upi_reason' => 'nullable|string|max:255',
+            'bank_reason' => 'nullable|string|max:255',
+            'pan_reason' => 'nullable|string|max:255',
+            'aadhar_reason' => 'nullable|string|max:255',
         ]);
 
         $request->has('image') && $user->image = ImageManager::upload('profile/', 'png', $request->file('image'), $user->image);
@@ -115,6 +160,17 @@ class DashboardController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->phone;
+
+        // KYC fields from admin edit user page
+        $user->upi_status = $request->upi_status;
+        $user->bank_status = $request->bank_status;
+        $user->pan_status = $request->pan_status;
+        $user->aadhar_status = $request->aadhar_status;
+        $user->upi_rejection_reason = $request->upi_status === 'Rejected' ? $request->upi_reason : null;
+        $user->bank_rejection_reason = $request->bank_status === 'Rejected' ? $request->bank_reason : null;
+        $user->pan_rejection_reason = $request->pan_status === 'Rejected' ? $request->pan_reason : null;
+        $user->aadhar_rejection_reason = $request->aadhar_status === 'Rejected' ? $request->aadhar_reason : null;
+
         $user->save();
 
         // ✅ Success message
@@ -433,4 +489,53 @@ class DashboardController extends Controller
 
     }
 
+    public function popupBanner(Request $request)
+    {
+        $popupBanner = \App\CPU\Helpers::get_business_settings('popup_banner');
+        if ($popupBanner && is_string($popupBanner)) {
+            $popupBanner = json_decode($popupBanner, true);
+        }
+        return view('admin-views.business-settings.popup-banner', compact('popupBanner'));
+    }
+
+    public function popupBannerUpdate(Request $request)
+    {
+        try {
+            $existing = \App\CPU\Helpers::get_business_settings('popup_banner');
+            $existingData = [];
+            if (is_string($existing)) {
+                $decoded = json_decode($existing, true);
+                $existingData = is_array($decoded) ? $decoded : [];
+            } elseif (is_array($existing)) {
+                $existingData = $existing;
+            } elseif (is_object($existing)) {
+                $existingData = (array) $existing;
+            }
+
+            $popupBannerData = [
+                'status' => $request->has('status') ? 1 : 0,
+                'title' => $request->title ?? '',
+                'description' => $request->description ?? '',
+                'image' => $existingData['image'] ?? null,
+            ];
+
+            // Handle image upload
+            if ($request->hasFile('image') && $request->file('image')->isValid()) {
+                 $image = ImageManager::upload('popup_banner/', 'png', $request->file('image'));
+                $popupBannerData['image'] = $image;
+            }
+
+            // Store in database
+            BusinessSetting::where('type', 'popup_banner')->updateOrInsert(
+                ['type' => 'popup_banner'],
+                ['value' => json_encode($popupBannerData)]
+            );
+
+            return redirect()->back()->with('success', 'Popup Banner settings updated successfully!');
+        } catch (\Throwable $th) {
+            return redirect()->back()->with('error', 'Error updating popup banner settings: ' . $th->getMessage());
+        }
+    }
+
 }
+

@@ -292,6 +292,44 @@ class UserAuthController extends Controller
         ]);
     }
 
+    public function popupBanner()
+    {
+        $popupBanner = Helpers::get_business_settings('popup_banner');
+
+        if (is_string($popupBanner)) {
+            $decoded = json_decode($popupBanner, true);
+            $popupBanner = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($popupBanner)) {
+            $popupBanner = [];
+        }
+
+        $image = $popupBanner['image'] ?? null;
+        $imageUrl = null;
+
+        if (!empty($image)) {
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                $imageUrl = $image;
+            } elseif (str_starts_with($image, '/')) {
+                $imageUrl = asset(ltrim($image, '/'));
+            } else {
+                $imageUrl = asset('storage/popup_banner/' . ltrim($image, '/'));
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Popup banner retrieved successfully',
+            'data' => [
+                'status' => (int) ($popupBanner['status'] ?? 0),
+                'title' => $popupBanner['title'] ?? '',
+                'description' => $popupBanner['description'] ?? '',
+                'image' => $imageUrl,
+            ]
+        ]);
+    }
+
     public function professions()
     {
         $banners = Profession::where('status', 1)->latest()->get();

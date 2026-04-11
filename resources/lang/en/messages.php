@@ -504,4 +504,11 @@
   'Success' => 'Success',
   'Failed' => 'Failed',
   'Request failed' => 'Request failed',
+  'Popup_Banner' => 'Popup Banner',
+  'general' => 'General',
+  'Static Pages' => 'Static Pages',
+  'Enable_Popup_Banner' => 'Enable Popup Banner',
+  'Enter_banner_description' => 'Enter banner description',
+  'Recommended_size_600x400px' => 'Recommended size 600x400px',
+  'Current_Image' => 'Current Image',
 );

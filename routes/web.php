@@ -104,6 +104,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     
     Route::post('/update-website-info', [DashboardController::class, 'updateInfo'])->name('admin.business-settings.updateInfo');
 
+    // Popup Banner Routes
+    Route::get('/business-settings/popup-banner', [DashboardController::class, 'popupBanner'])->name('admin.business-settings.popup-banner');
+    Route::post('/business-settings/popup-banner-update', [DashboardController::class, 'popupBannerUpdate'])->name('admin.business-settings.popup-banner-update');
+
     Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.auth.logout');
 
     Route::group(['prefix' => 'custom-role', 'as' => 'admin.custom-role.'], function () {
@@ -136,16 +140,17 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     });
 
    
-// Support-ticket
+    // Support-ticket
     Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])
     ->name('admin.support-ticket.view-support');
 
-Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
+    Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
     ->name('admin.support-ticket.singleTicket');
 
-Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
+    Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
     ->name('admin.support-ticket.replay');
 });
+
 Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])
     ->name('admin.support-ticket.close');
  

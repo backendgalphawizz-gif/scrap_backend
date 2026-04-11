@@ -122,6 +122,11 @@
                 <!-- Card -->
                 <div class="card h-100" >
                     @if($customer)
+                        @php($customerImage = blank($customer->image)
+                            ? asset('public/assets/front-end/img/image-place-holder.png')
+                            : (\Illuminate\Support\Str::startsWith($customer->image, ['http://', 'https://'])
+                                ? $customer->image
+                                : asset('storage/profile/' . ltrim($customer->image, '/'))))
                         <div class="card-body">
                             <h4 class="mb-4 d-flex align-items-center gap-2">
                                 <img src="{{asset('/public/assets/back-end/img/seller-information.png')}}" alt="">
@@ -132,8 +137,8 @@
                                 <div class="mr-3">
                                     <img
                                         class="avatar rounded-circle avatar-70"
-                                        onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
-                                        src="{{asset('storage/app/public/profile/'.$customer->image??'')}}"
+                                        onerror="this.onerror=null;this.src=&quot;{{ asset('public/assets/front-end/img/image-place-holder.png') }}&quot;;"
+                                        src="{{$customerImage}}"
                                         alt="Image">
                                 </div>
                                 <div class="media-body d-flex flex-column gap-1">
