@@ -7,12 +7,40 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CommonResource;
 use App\Models\CoinWallet;
 use App\Models\Voucher;
+use App\Models\VoucherBrand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class VoucherController extends Controller
 {
+    public function brands(Request $request)
+    {
+        try {
+            $limit = (int) ($request->limit ?? 25);
+
+            $brands = VoucherBrand::where('is_active', 1)
+                ->withCount(['vouchers' => function ($q) {
+                    $q->where('status', 'available')->where('is_active', 1)
+                        ->whereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()');
+                }])
+                ->orderByDesc('id')
+                ->paginate($limit);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Voucher brands retrieved successfully',
+                'data' => CommonResource::collection($brands),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+                'data' => [],
+            ]);
+        }
+    }
+
     public function index(Request $request)
     {
 
