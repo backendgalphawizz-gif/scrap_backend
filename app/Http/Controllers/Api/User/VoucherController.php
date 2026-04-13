@@ -301,4 +301,56 @@ class VoucherController extends Controller
             ]);
         }
     }
+
+    public function purchasedVouchers(Request $request)
+    {
+        try {
+            $limit = (int) ($request->limit ?? 25);
+            $user = $request->user();
+
+            $wallet = CoinWallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
+
+            $transactionsQuery = $wallet->transactions()
+                ->where('transaction_type', 'voucher_purchase')
+                ->where('type', 'debit')
+                ->where('status', 'completed')
+                ->latest();
+
+            $totalPurchased = (clone $transactionsQuery)->count();
+            $transactions = $transactionsQuery->paginate($limit);
+
+            $voucherIds = collect($transactions->items())
+                ->pluck('value')
+                ->filter()
+                ->map(fn($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            $vouchers = Voucher::with('voucherBrand:id,name,logo')
+                ->whereIn('id', $voucherIds)
+                ->get()
+                ->keyBy('id');
+
+            $transactions->getCollection()->transform(function ($transaction) use ($vouchers) {
+                $transaction->voucher = $vouchers->get((int) $transaction->value);
+                return $transaction;
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Purchased vouchers retrieved successfully',
+                'total_purchased' => $totalPurchased,
+                'data' => CommonResource::collection($transactions),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+                'data' => [],
+            ]);
+        }
+    }
 }
