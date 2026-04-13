@@ -12,6 +12,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomRoleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\VoucherBrandController;
+use App\Http\Controllers\VoucherController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -80,6 +82,26 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
 
     Route::group(['prefix' => 'campaigns-transactions'], function() {
         Route::get('/', [CampaignController::class, 'campaignTransctions'])->name('admin.campaigns-transactions.list');
+    });
+
+    Route::group(['prefix' => 'voucher-brands', 'as' => 'admin.voucher-brand.'], function() {
+        Route::get('/', [VoucherBrandController::class, 'index'])->name('index');
+        Route::get('/create', [VoucherBrandController::class, 'create'])->name('create');
+        Route::post('/store', [VoucherBrandController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [VoucherBrandController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [VoucherBrandController::class, 'update'])->name('update');
+        Route::post('/status', [VoucherBrandController::class, 'status'])->name('status');
+        Route::post('/delete', [VoucherBrandController::class, 'delete'])->name('delete');
+    });
+
+    Route::group(['prefix' => 'vouchers', 'as' => 'admin.voucher.'], function() {
+        Route::get('/', [VoucherController::class, 'index'])->name('index');
+        Route::get('/create', [VoucherController::class, 'create'])->name('create');
+        Route::post('/store', [VoucherController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [VoucherController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [VoucherController::class, 'update'])->name('update');
+        Route::post('/active-status', [VoucherController::class, 'activeStatus'])->name('active-status');
+        Route::post('/delete', [VoucherController::class, 'delete'])->name('delete');
     });
     
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');

@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Api\User;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,42 @@ use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
+
+    public function localForVocal(Request $request)
+    {
+        $user = $request->user();
+        $city = trim((string) ($user->city ?? ''));
+        $state = trim((string) ($user->state ?? ''));
+
+        $campaigns = Campaign::with(['brand'])
+            ->withCount('campaign_transactions')
+            ->when($city !== '', function ($q) use ($city) {
+                $q->where('city', $city);
+            })
+            ->when($state !== '', function ($q) use ($state) {
+                $q->where('state', $state);
+            })
+            ->where('status', 'active')
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('user_campaign_skips')
+                    ->where('user_id', $user->id);
+            })
+            ->orderBy('campaign_transactions_count', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Local for vocal campaigns retrieved successfully',
+            'filters' => [
+                'city' => $city,
+                'state' => $state,
+            ],
+            'data' => CommonResource::collection($campaigns),
+        ]);
+    }
 
     public function index(Request $request)
     {
@@ -37,6 +72,8 @@ class DashboardController extends Controller
             case 'newest':
                 $query->orderBy('created_at', 'DESC');
                 break;
+
+        
 
             default:
                 $query->orderBy('id', 'DESC');
