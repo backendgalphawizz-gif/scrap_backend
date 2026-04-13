@@ -27,6 +27,25 @@ class VoucherController extends Controller
                 ->orderByDesc('id')
                 ->paginate($limit);
 
+            $brands->getCollection()->transform(function ($brand) {
+                $logo = (string) ($brand->logo ?? '');
+
+                if ($logo === '') {
+                    $brand->logo_full_path = '';
+                } elseif (preg_match('/^https?:\/\//i', $logo)) {
+                    $brand->logo_full_path = $logo;
+                } else {
+                    $normalizedLogo = ltrim($logo, '/');
+                    if (str_starts_with($normalizedLogo, 'storage/')) {
+                        $brand->logo_full_path = asset($normalizedLogo);
+                    } else {
+                        $brand->logo_full_path = asset('storage/voucher-brand/' . $normalizedLogo);
+                    }
+                }
+
+                return $brand;
+            });
+
             return response()->json([
                 'status' => true,
                 'message' => 'Voucher brands retrieved successfully',
