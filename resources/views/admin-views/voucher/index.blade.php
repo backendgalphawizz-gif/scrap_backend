@@ -93,7 +93,7 @@
                             <td>{{ $voucher->coin_price }}</td>
                             <td>{{ $voucher->fiat_value }}</td>
                             <td>
-                                <span class="badge badge-info">{{ ucfirst($voucher->status) }}</span>
+                                <span class="badge {{ $voucher->status === 'purchased' ? 'badge-warning' : 'badge-info' }}">{{ ucfirst($voucher->status) }}</span>
                             </td>
                             <td>{{ $voucher->validity_days }}</td>
                             <td>
