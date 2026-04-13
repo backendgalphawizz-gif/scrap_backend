@@ -105,6 +105,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('voucher-brands', [UserVoucherController::class, 'brands']);
     Route::get('voucher-brands/{brandId}/vouchers', [UserVoucherController::class, 'byBrand']);
     Route::get('vouchers', [UserVoucherController::class, 'index']);
+    Route::get('vouchers/purchased', [UserVoucherController::class, 'purchasedVouchers']);
     Route::get('vouchers/purchase-transactions', [UserVoucherController::class, 'purchaseTransactions']);
     Route::post('vouchers/purchase', [UserVoucherController::class, 'purchase']);
     Route::get('vouchers/{id}', [UserVoucherController::class, 'show']);
