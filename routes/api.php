@@ -102,6 +102,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
     Route::get('wallet-transactions', [UserProfileController::class, 'walletTransctions']);
     Route::post('wallet-withdrawl', [UserProfileController::class, 'debitWalletCoin']);
+    Route::get('voucher-brands', [UserVoucherController::class, 'brands']);
     Route::get('vouchers', [UserVoucherController::class, 'index']);
     Route::get('vouchers/purchase-transactions', [UserVoucherController::class, 'purchaseTransactions']);
     Route::post('vouchers/purchase', [UserVoucherController::class, 'purchase']);
