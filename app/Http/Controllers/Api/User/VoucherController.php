@@ -75,6 +75,48 @@ class VoucherController extends Controller
         }
     }
 
+    public function byBrand(Request $request, $brandId)
+    {
+        try {
+            $brand = VoucherBrand::where('id', $brandId)->where('is_active', 1)->first();
+            if (!$brand) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Voucher brand not found',
+                    'data' => [],
+                ], 404);
+            }
+
+            $limit = (int) ($request->limit ?? 25);
+            $status = $request->status;
+
+            $vouchers = Voucher::with('voucherBrand:id,name,logo')
+                ->where('voucher_brands_id', $brandId)
+                ->where('is_active', 1)
+                ->when($status, function ($q) use ($status) {
+                    $q->where('status', $status);
+                }, function ($q) {
+                    $q->where('status', 'available');
+                })
+                ->whereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()')
+                ->orderByDesc('id')
+                ->paginate($limit);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Vouchers retrieved successfully',
+                'brand' => new CommonResource($brand),
+                'data' => CommonResource::collection($vouchers),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+                'data' => [],
+            ]);
+        }
+    }
+
     public function show(Request $request, $id)
     {
         try {
