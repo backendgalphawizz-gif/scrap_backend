@@ -190,7 +190,9 @@ class UserAuthController extends Controller
                 'city' => $request->city,
                 'state' => $request->state,
                 'instagram_username' => $request->instagram_username,
-                'facebook_username' => $request->facebook_username
+                'instagram_status' => $request->instagram_username ? 'pending' : 'not_submitted',
+                'facebook_username' => $request->facebook_username,
+                'facebook_status' => $request->facebook_username ? 'pending' : 'not_submitted',
             ]);
 
             $user->fcm_id = $request->fcm_id;

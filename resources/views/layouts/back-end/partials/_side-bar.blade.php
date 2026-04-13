@@ -83,6 +83,24 @@
             </div>
         </li>
         @endif
+        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="false" aria-controls="brands-voucher-manage">
+                <span class="menu-title">Voucher Manage</span>
+                <i class="mdi mdi-ticket-percent menu-icon"></i>
+            </a>
+            <div class="collapse" id="brands-voucher-manage">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.voucher.index') }}">Vouchers</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        @endif
         @if(\App\CPU\Helpers::module_permission_check('admin_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#admins" aria-expanded="false" aria-controls="admins">
