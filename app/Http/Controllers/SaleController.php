@@ -15,22 +15,24 @@ class SaleController extends Controller
 {
     function list(Request $request)
     {
-        $query_param = [];
-        $search = $request['search'];
-        if ($request->has('search')) {
-            $key = explode(' ', $request['search']);
-            $sales = Sale::where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    // $q->Where('banner_type', 'like', "%{$value}%");
-                }
-            })->orderBy('id', 'desc');
-            $query_param = ['search' => $request['search']];
-        } else {
-            $sales = Sale::orderBy('id', 'desc');
-        }
-        $sales = $sales->paginate(25)->appends($query_param);
+        $sales = Sale::query()
+            ->when($request->filled('id'), function ($query) use ($request) {
+                $query->where('id', $request->id);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . trim($request->name) . '%');
+            })
+            ->when($request->filled('mobile'), function ($query) use ($request) {
+                $query->where('mobile', 'like', '%' . trim($request->mobile) . '%');
+            })
+            ->when($request->filled('email'), function ($query) use ($request) {
+                $query->where('email', 'like', '%' . trim($request->email) . '%');
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(25)
+            ->withQueryString();
 
-        return view('admin-views.sale.view', compact('sales', 'search'));
+        return view('admin-views.sale.view', compact('sales'));
     }
 
     public function create()
@@ -116,13 +118,91 @@ class SaleController extends Controller
     
     public function walletTransactions(Request $request)
     {
-        $transactions = SaleWalletTransaction::with(['sale'])->orderBy('id', 'desc')->paginate(25);
+        $transactions = SaleWalletTransaction::with(['sale'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', $search)
+                        ->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhereHas('sale', function ($saleQuery) use ($search) {
+                            $saleQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('mobile', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->when($request->filled('amount_min'), function ($query) use ($request) {
+                $query->where('amount', '>=', $request->amount_min);
+            })
+            ->when($request->filled('amount_max'), function ($query) use ($request) {
+                $query->where('amount', '<=', $request->amount_max);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+
         return view('admin-views.sale.wallet-transactions', compact('transactions'));
     }
 
     public function ledgerTransactions(Request $request)
     {
-        $transactions = SaleCommissionLedger::with(['sale', 'brand','campaign'])->orderBy('id', 'desc')->paginate(25);
+        $transactions = SaleCommissionLedger::with(['sale', 'brand', 'campaign'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', $search)
+                        ->orWhere('reference_type', 'like', "%{$search}%")
+                        ->orWhereHas('sale', function ($saleQuery) use ($search) {
+                            $saleQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('brand', function ($brandQuery) use ($search) {
+                            $brandQuery->where('username', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('campaign', function ($campaignQuery) use ($search) {
+                            $campaignQuery->where('title', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('reference_type'), function ($query) use ($request) {
+                $query->where('reference_type', $request->reference_type);
+            })
+            ->when($request->filled('amount_min'), function ($query) use ($request) {
+                $query->where('amount', '>=', $request->amount_min);
+            })
+            ->when($request->filled('amount_max'), function ($query) use ($request) {
+                $query->where('amount', '<=', $request->amount_max);
+            })
+            ->when($request->filled('commission_min'), function ($query) use ($request) {
+                $query->where('commission_amount', '>=', $request->commission_min);
+            })
+            ->when($request->filled('commission_max'), function ($query) use ($request) {
+                $query->where('commission_amount', '<=', $request->commission_max);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+
         return view('admin-views.sale.ledger-transactions', compact('transactions'));
     }
 

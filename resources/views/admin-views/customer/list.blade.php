@@ -242,6 +242,17 @@
                         <span class="count-pill">Total: {{ $customers->total() }}</span>
                     </div>
 
+                    <div class="px-3 pt-3 pb-3 d-flex justify-content-end">
+                        <form method="GET" action="{{ route('admin.user') }}" class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                            <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="max-width: 120px;">
+                            <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="max-width: 220px;">
+                            <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="max-width: 180px;">
+                            <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="max-width: 220px;">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{{ route('admin.user') }}" class="btn btn-outline-secondary">Reset</a>
+                        </form>
+                    </div>
+
                     <div class="table-responsive datatable-custom premium-table-wrap">
                     <table class="table premium-user-table">
                         <thead class="text-capitalize">

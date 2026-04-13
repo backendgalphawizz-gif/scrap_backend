@@ -3,7 +3,23 @@
 @section('title', \App\CPU\translate('Seller List'))
 
 @push('css_or_js')
+    <style>
+        .brand-filter-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 4px;
+            width: 100%;
+        }
 
+        .brand-filter-form {
+            flex-wrap: nowrap !important;
+            min-width: max-content;
+        }
+
+        .brand-filter-form .btn {
+            white-space: nowrap;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -24,6 +40,26 @@
         </div>
         <div class="row">
             <div class="col-lg-12">
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="brand-filter-scroll">
+                        <form method="GET" action="{{ route('admin.brand') }}" class="brand-filter-form d-flex align-items-center justify-content-end gap-2">
+                            <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="width: 110px;">
+                            <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="width: 180px;">
+                            <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="width: 160px;">
+                            <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="width: 200px;">
+                            <input type="date" class="form-control" name="registration_date" value="{{ request('registration_date') }}" style="width: 170px;">
+                            <select class="form-select" name="status" style="width: 150px;">
+                                <option value="">All Status</option>
+                                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Active</option>
+                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{{ route('admin.brand') }}" class="btn btn-outline-secondary">Reset</a>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table">
                         <thead class="text-capitalize">

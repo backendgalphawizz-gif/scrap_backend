@@ -5,6 +5,39 @@
 @push('css_or_js')
 
 <meta name="_token" content="{{ csrf_token() }}">
+<style>
+    .wallet-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+    }
+
+    .wallet-filter-form {
+        flex-wrap: nowrap !important;
+        min-width: max-content;
+    }
+
+    .wallet-filter-form .form-control {
+        min-width: 135px;
+    }
+
+    .wallet-filter-form .search-control {
+        min-width: 260px;
+    }
+
+    .wallet-filter-form .transaction-type-control {
+        min-width: 180px;
+    }
+
+    .wallet-filter-form .date-control {
+        min-width: 160px;
+    }
+
+    .wallet-filter-form .btn {
+        height: 38px;
+        white-space: nowrap;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -23,6 +56,35 @@
             </ul>
         </nav>
     </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <div class="wallet-filter-scroll">
+            <form method="GET" action="{{ route('admin.user.wallet') }}" class="wallet-filter-form d-flex align-items-center gap-2">
+                <input type="text" class="form-control search-control" name="search" value="{{ request('search') }}" placeholder="Search user, transaction ID, remark">
+
+                <select class="form-select" name="status">
+                    <option value="">All status</option>
+                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
+                </select>
+
+                <select class="form-select" name="type">
+                    <option value="">All type</option>
+                    <option value="debit" {{ request('type') === 'debit' ? 'selected' : '' }}>Debit</option>
+                    <option value="credit" {{ request('type') === 'credit' ? 'selected' : '' }}>Credit</option>
+                </select>
+
+                <input type="text" class="form-control transaction-type-control" name="transaction_type" value="{{ request('transaction_type') }}" placeholder="Transaction type">
+                <input type="date" class="form-control date-control" name="date_from" value="{{ request('date_from') }}" title="From date">
+                <input type="date" class="form-control date-control" name="date_to" value="{{ request('date_to') }}" title="To date">
+
+                <button type="submit" class="btn btn-primary px-4">Filter</button>
+                <a href="{{ route('admin.user.wallet') }}" class="btn btn-outline-secondary px-4">Reset</a>
+            </form>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
