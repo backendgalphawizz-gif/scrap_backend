@@ -4,6 +4,23 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .sale-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+        width: 100%;
+    }
+
+    .sale-filter-form {
+        flex-wrap: nowrap !important;
+        min-width: max-content;
+    }
+
+    .sale-filter-form .btn {
+        white-space: nowrap;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -34,6 +51,19 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
+
+            <div class="d-flex justify-content-end mb-3">
+                <div class="sale-filter-scroll">
+                    <form method="GET" action="{{ route('admin.sale.list') }}" class="sale-filter-form d-flex align-items-center justify-content-end gap-2">
+                        <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="width: 110px;">
+                        <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="width: 180px;">
+                        <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="width: 160px;">
+                        <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="width: 220px;">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.sale.list') }}" class="btn btn-outline-secondary">Reset</a>
+                    </form>
+                </div>
+            </div>
 
             <div class="row" id="banner-table">
                 <div class="col-md-12">

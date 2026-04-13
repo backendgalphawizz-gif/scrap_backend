@@ -4,6 +4,37 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .campaign-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+        width: 100%;
+    }
+
+    .campaign-filter-form {
+        flex-wrap: nowrap !important;
+        min-width: max-content;
+    }
+
+    .campaign-filter-form .form-control,
+    .campaign-filter-form .form-select {
+        min-width: 150px;
+    }
+
+    .campaign-filter-form .brand-control,
+    .campaign-filter-form .title-control {
+        min-width: 200px;
+    }
+
+    .campaign-filter-form .date-control {
+        min-width: 165px;
+    }
+
+    .campaign-filter-form .btn {
+        white-space: nowrap;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -81,6 +112,27 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <div class="campaign-filter-scroll">
+                    <form method="GET" action="{{ route('admin.campaign.list') }}" class="campaign-filter-form d-flex align-items-center justify-content-end gap-2">
+                        <input type="text" class="form-control brand-control" name="brand_name" value="{{ request('brand_name') }}" placeholder="Brand name">
+                        <input type="text" class="form-control title-control" name="title" value="{{ request('title') }}" placeholder="Title">
+                        <input type="text" class="form-control" name="city" value="{{ request('city') }}" placeholder="City">
+                        <input type="text" class="form-control" name="state" value="{{ request('state') }}" placeholder="State">
+                        <input type="date" class="form-control date-control" name="date_from" value="{{ request('date_from') }}" title="Date from">
+                        <input type="date" class="form-control date-control" name="date_to" value="{{ request('date_to') }}" title="Date to">
+                        <select class="form-select" name="status" style="min-width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.campaign.list') }}" class="btn btn-outline-secondary">Reset</a>
+                    </form>
                 </div>
             </div>
 

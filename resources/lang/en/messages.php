@@ -511,4 +511,5 @@
   'Enter_banner_description' => 'Enter banner description',
   'Recommended_size_600x400px' => 'Recommended size 600x400px',
   'Current_Image' => 'Current Image',
+  'No transactions found' => 'No transactions found',
 );

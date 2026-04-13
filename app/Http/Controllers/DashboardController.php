@@ -97,7 +97,23 @@ class DashboardController extends Controller
     }
 
     public function users(Request $request) {
-        $customers = User::latest()->paginate(10);
+        $customers = User::query()
+            ->when($request->filled('id'), function ($query) use ($request) {
+                $query->where('id', $request->id);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . trim($request->name) . '%');
+            })
+            ->when($request->filled('mobile'), function ($query) use ($request) {
+                $query->where('mobile', 'like', '%' . trim($request->mobile) . '%');
+            })
+            ->when($request->filled('email'), function ($query) use ($request) {
+                $query->where('email', 'like', '%' . trim($request->email) . '%');
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return view('admin-views.customer.list', compact('customers'));
     }
 
@@ -181,7 +197,34 @@ class DashboardController extends Controller
     }
 }
     public function brands(Request $request) {
-        $sellers = Seller::orderBy('id', 'DESC')->paginate(25);
+        $sellers = Seller::query()
+            ->when($request->filled('id'), function ($query) use ($request) {
+                $query->where('id', $request->id);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $name = trim($request->name);
+                $query->where(function ($q) use ($name) {
+                    $q->where('username', 'like', "%{$name}%")
+                        ->orWhere('f_name', 'like', "%{$name}%")
+                        ->orWhere('l_name', 'like', "%{$name}%");
+                });
+            })
+            ->when($request->filled('mobile'), function ($query) use ($request) {
+                $query->where('phone', 'like', '%' . trim($request->mobile) . '%');
+            })
+            ->when($request->filled('email'), function ($query) use ($request) {
+                $query->where('email', 'like', '%' . trim($request->email) . '%');
+            })
+            ->when($request->filled('registration_date'), function ($query) use ($request) {
+                $query->whereDate('created_at', $request->registration_date);
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate(25)
+            ->withQueryString();
+
         return view('admin-views.seller.index', compact('sellers'));
     }
 
@@ -286,6 +329,9 @@ class DashboardController extends Controller
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'minimum_wallet_balance'], [
             'value' => $request['minimum_wallet_balance']
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'campaign_gst_percentage'], [
+            'value' => $request->filled('campaign_gst_percentage') ? $request['campaign_gst_percentage'] : '18'
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'kyc_amount'], [
@@ -471,13 +517,46 @@ class DashboardController extends Controller
     }
 
     public function userWallet(Request $request) {
-        $transactions = CoinTransaction::with(['wallet.user'])->orderBy('id', 'DESC')->paginate(25);
+        $transactions = $this->getFilteredUserWalletTransactions($request);
         return view('admin-views.customer.coin-transactions', compact('transactions'));
     }
 
     public function userWalletTransactions(Request $request) {
-        $transactions = CoinTransaction::with(['wallet.user'])->paginate(25);
+        $transactions = $this->getFilteredUserWalletTransactions($request);
         return view('admin-views.customer.coin-transactions', compact('transactions'));
+    }
+
+    private function getFilteredUserWalletTransactions(Request $request)
+    {
+        return CoinTransaction::with(['wallet.user'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('wallet.user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->when($request->filled('transaction_type'), function ($query) use ($request) {
+                $query->where('transaction_type', $request->transaction_type);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate(25)
+            ->withQueryString();
     }
 
     public function rolesNdPermission(Request $request) {
