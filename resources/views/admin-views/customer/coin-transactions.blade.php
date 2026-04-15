@@ -37,6 +37,73 @@
         height: 38px;
         white-space: nowrap;
     }
+
+    .premium-pagination-wrap {
+        border-top: 1px solid #e8ebef;
+        margin-top: 0;
+        padding: 12px 18px 16px;
+    }
+
+    .premium-pagination-shell {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .premium-pagination-inline {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        overflow-x: auto;
+    }
+
+    .premium-pagination-nav {
+        margin-left: 0;
+        flex: 0 0 auto;
+    }
+
+    .premium-pagination-shell .pagination {
+        margin: 0;
+        gap: 8px;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+
+    .premium-pagination-shell .page-link {
+        border: 1px solid #d0d6dd;
+        border-radius: 4px;
+        color: #6c757d;
+        font-weight: 600;
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 0 14px;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .premium-pagination-shell .page-link:hover {
+        border-color: #1367ad;
+        background: #e7f1fb;
+        color: #0f4c81;
+        text-decoration: none;
+    }
+
+    .premium-pagination-shell .page-item.active .page-link {
+        background: linear-gradient(135deg, #0f4c81 0%, #1367ad 100%);
+        border-color: #0f4c81;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(15, 76, 129, 0.25);
+    }
+
+    .premium-pagination-shell .page-item.disabled .page-link {
+        background: #f8f9fa;
+        color: #adb5bd;
+        border-color: #d0d6dd;
+        pointer-events: none;
+    }
 </style>
 @endpush
 
@@ -128,10 +195,14 @@
                         </tbody>
                     </table>
                 </div>
-                @if($transactions->count() > 0)
-                <nav>
-                    {{ $transactions->links() }}
-                </nav>
+                @if($transactions->hasPages())
+                <div class="premium-pagination-wrap">
+                    <div class="premium-pagination-shell">
+                        <div class="premium-pagination-inline">
+                            {!! $transactions->onEachSide(1)->links('vendor.pagination.premium') !!}
+                        </div>
+                    </div>
+                </div>
                 @endif
             </div>
         </div>

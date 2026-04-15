@@ -38,6 +38,16 @@
             </div>
         </li>
         @endif
+
+        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.feedback-questions.index') }}">
+                <span class="menu-title">Feedback Management</span>
+                <i class="mdi mdi-comment-multiple-outline menu-icon"></i>
+            </a>
+        </li>
+        @endif
+
         @if(\App\CPU\Helpers::module_permission_check('sale_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#sales" aria-expanded="false" aria-controls="sales">

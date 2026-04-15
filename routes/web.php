@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomRoleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\FeedbackQuestionController;
 use App\Http\Controllers\VoucherBrandController;
 use App\Http\Controllers\VoucherController;
 
@@ -29,6 +30,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/delete-user/{id}', [DashboardController::class, 'deleteUser'])->name('admin.user.delete');
     Route::get('/user-wallet', [DashboardController::class, 'userWallet'])->name('admin.user.wallet');
     Route::get('/user-wallet-transactions', [DashboardController::class, 'userWalletTransactions'])->name('admin.user-wallet-transactions');
+    Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index'])->name('admin.feedback-questions.index');
+    Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store'])->name('admin.feedback-questions.store');
+    Route::post('/feedback-questions/update/{id}', [FeedbackQuestionController::class, 'update'])->name('admin.feedback-questions.update');
+    Route::post('/feedback-questions/delete/{id}', [FeedbackQuestionController::class, 'destroy'])->name('admin.feedback-questions.delete');
     Route::get('/brands', [DashboardController::class, 'brands'])->name('admin.brand');
     Route::get('/brands/{id}', [DashboardController::class, 'showBrand'])->name('admin.brand.view');
     Route::post('/brands/{id}', [DashboardController::class, 'updateBrand'])->name('admin.brand.updateStatus');

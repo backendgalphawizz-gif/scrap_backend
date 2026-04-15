@@ -522,4 +522,5 @@
   'Add Voucher' => 'Add Voucher',
   'Create Voucher' => 'Create Voucher',
   'Edit Voucher' => 'Edit Voucher',
+  'Feedback Management' => 'Feedback Management',
 );

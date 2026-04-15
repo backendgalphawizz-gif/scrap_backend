@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-use DB; 
+use Illuminate\Support\Facades\DB;
 
 class Feedback extends Model
 {
@@ -15,7 +15,8 @@ class Feedback extends Model
         'campaign_id',
         'user_id',
         'questions',
-        'ratings'
+        'ratings',
+        'user_feedback'
     ];
 
     protected $table = 'feedbacks';
