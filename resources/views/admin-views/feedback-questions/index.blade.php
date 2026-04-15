@@ -542,7 +542,7 @@ button.option-remove-btn.remove-option {
 </div>
 
 <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <form method="POST" id="editQuestionForm">
                 @csrf
