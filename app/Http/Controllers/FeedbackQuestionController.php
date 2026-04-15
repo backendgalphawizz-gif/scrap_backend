@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BrandCategory;
 use App\Models\BrandFeedbackQuestion;
+use App\Models\Feedback;
 use Illuminate\Http\Request;
 
 class FeedbackQuestionController extends Controller
@@ -101,5 +102,38 @@ class FeedbackQuestionController extends Controller
         $question->delete();
 
         return redirect()->back()->with('success', 'Feedback question deleted successfully.');
+    }
+
+    public function feedbackList(Request $request)
+    {
+        $search = trim((string) $request->input('search', ''));
+        $rating = (string) $request->input('rating', '');
+        $limit = (int) $request->input('limit', 20);
+        $limit = $limit > 0 ? $limit : 20;
+
+        $feedbacks = Feedback::with(['user', 'brand', 'campaign'])
+            ->when($rating !== '', function ($query) use ($rating) {
+                $query->where('ratings', $rating);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('user_feedback', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('campaign', function ($cq) use ($search) {
+                            $cq->where('title', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('brand', function ($bq) use ($search) {
+                            $bq->where('username', 'like', "%{$search}%")
+                                ->orWhereRaw('CONCAT(f_name, " ", l_name) like ?', ["%{$search}%"]);
+                        });
+                });
+            })
+            ->latest()
+            ->paginate($limit)
+            ->withQueryString();
+
+        return view('admin-views.feedback-questions.feedback-list', compact('feedbacks', 'search', 'rating', 'limit'));
     }
 }

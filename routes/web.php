@@ -34,6 +34,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store'])->name('admin.feedback-questions.store');
     Route::post('/feedback-questions/update/{id}', [FeedbackQuestionController::class, 'update'])->name('admin.feedback-questions.update');
     Route::post('/feedback-questions/delete/{id}', [FeedbackQuestionController::class, 'destroy'])->name('admin.feedback-questions.delete');
+    Route::get('/feedback', [FeedbackQuestionController::class, 'feedbackList'])->name('admin.feedback.list');
     Route::get('/brands', [DashboardController::class, 'brands'])->name('admin.brand');
     Route::get('/brands/{id}', [DashboardController::class, 'showBrand'])->name('admin.brand.view');
     Route::post('/brands/{id}', [DashboardController::class, 'updateBrand'])->name('admin.brand.updateStatus');

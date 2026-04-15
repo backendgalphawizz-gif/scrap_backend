@@ -39,14 +39,7 @@
         </li>
         @endif
 
-        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('admin.feedback-questions.index') }}">
-                <span class="menu-title">Feedback Management</span>
-                <i class="mdi mdi-comment-multiple-outline menu-icon"></i>
-            </a>
-        </li>
-        @endif
+        
 
         @if(\App\CPU\Helpers::module_permission_check('sale_management'))
         <li class="nav-item">
@@ -93,6 +86,26 @@
             </div>
         </li>
         @endif
+
+        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="collapse" href="#feedback" aria-expanded="false" aria-controls="feedback">
+                <span class="menu-title">Feedback</span>
+                <i class="mdi mdi-comment-multiple-outline menu-icon"></i>
+            </a>
+            <div class="collapse" id="feedback">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.feedback.list') }}">User Feedback</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.feedback-questions.index') }}">Question Management</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        @endif
+
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="false" aria-controls="brands-voucher-manage">
