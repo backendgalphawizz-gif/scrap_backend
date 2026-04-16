@@ -257,6 +257,48 @@
         font-weight: 600;
     }
 
+    .question-action-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .question-action-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .question-action-btn i {
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    .question-status-btn {
+        border: none;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(16, 42, 67, 0.18);
+    }
+
+    .question-status-btn.status-deactivate {
+        background: linear-gradient(135deg, #d9485f 0%, #c83349 100%);
+    }
+
+    .question-status-btn.status-activate {
+        background: linear-gradient(135deg, #1f9d62 0%, #168750 100%);
+    }
+
+    .question-status-btn:hover {
+        color: #fff;
+        filter: brightness(0.98);
+        transform: translateY(-1px);
+    }
+
     #editQuestionModal .modal-content {
         border: 1px solid #dfe9f4;
         border-radius: 14px;
@@ -503,21 +545,37 @@ button.option-remove-btn.remove-option {
                                 </span>
                             </td>
                             <td>
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-primary edit-question-btn"
-                                        data-id="{{ $question->id }}"
-                                        data-category-id="{{ $question->brand_category_id }}"
-                                        data-question="{{ $question->question }}"
-                                        data-question-type="{{ $question->question_type ?? 'multiple_choice' }}"
-                                        data-status="{{ $question->status ? 1 : 0 }}"
-                                        data-options='@json($options)'>
-                                    Edit
-                                </button>
+                                <div class="question-action-group">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary edit-question-btn question-action-btn"
+                                            title="Edit"
+                                            aria-label="Edit"
+                                            data-id="{{ $question->id }}"
+                                            data-category-id="{{ $question->brand_category_id }}"
+                                            data-question="{{ $question->question }}"
+                                            data-question-type="{{ $question->question_type ?? 'multiple_choice' }}"
+                                            data-status="{{ $question->status ? 1 : 0 }}"
+                                            data-options='@json($options)'>
+                                        <i class="mdi mdi-pencil-outline"></i>
+                                    </button>
 
-                                <form method="POST" action="{{ route('admin.feedback-questions.delete', $question->id) }}" class="d-inline" onsubmit="return confirm('Delete this question?')">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                </form>
+                                    <form method="POST" action="{{ route('admin.feedback-questions.toggle-status', $question->id) }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="btn btn-sm question-action-btn question-status-btn {{ $question->status ? 'status-deactivate' : 'status-activate' }}"
+                                                title="{{ $question->status ? 'Deactivate' : 'Activate' }}"
+                                                aria-label="{{ $question->status ? 'Deactivate' : 'Activate' }}">
+                                            <i class="mdi {{ $question->status ? 'mdi-close-circle-outline' : 'mdi-check-circle-outline' }}"></i>
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('admin.feedback-questions.delete', $question->id) }}" class="d-inline" onsubmit="return confirm('Delete this question?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger question-action-btn" title="Delete" aria-label="Delete">
+                                            <i class="mdi mdi-delete-outline"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

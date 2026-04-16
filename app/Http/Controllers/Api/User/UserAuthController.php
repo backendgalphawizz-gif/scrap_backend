@@ -66,6 +66,7 @@ class UserAuthController extends Controller
 
             $user->fcm_id = $request->fcm_id;
             $user->device_type = $request->device_type;
+            $user->unique_code = 'RX-' . $user->id;
             $user->save();
 
             $token = $user->createToken('UserToken')->accessToken;

@@ -222,7 +222,7 @@ class DashboardController extends Controller
                 $query->where('status', $request->status);
             })
             ->orderBy('id', 'DESC')
-            ->paginate(25)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin-views.seller.index', compact('sellers'));

@@ -30,7 +30,7 @@ class VoucherController extends Controller
                 $query->where('is_active', (int) $request->is_active);
             })
             ->orderByDesc('id')
-            ->paginate(25)
+            ->paginate(10)
             ->withQueryString();
 
         $voucherBrands = VoucherBrand::orderBy('name')->get();

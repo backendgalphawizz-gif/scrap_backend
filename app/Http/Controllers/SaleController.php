@@ -150,7 +150,7 @@ class SaleController extends Controller
                 $query->whereDate('created_at', '<=', $request->date_to);
             })
             ->orderBy('id', 'desc')
-            ->paginate(25)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin-views.sale.wallet-transactions', compact('transactions'));

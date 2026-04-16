@@ -14,6 +14,17 @@ class User extends Authenticatable
 {
     use SoftDeletes, HasApiTokens, HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::created(function (self $user): void {
+            if (empty($user->unique_code)) {
+                $user->forceFill([
+                    'unique_code' => 'RX-' . $user->id,
+                ])->saveQuietly();
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -43,6 +54,7 @@ class User extends Authenticatable
         'native_city',
         'referral_code',
         'friends_code',
+        'unique_code',
         'provider',
         'provider_id',
         'instagram_username',
