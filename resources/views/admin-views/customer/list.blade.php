@@ -295,7 +295,7 @@
 @endpush
 
 @section('content')
-    <div class="content-wrapper bg-white">
+    <div class="content-wrapper">
         <div class="page-header">
             <h3 class="page-title">
                 <span class="page-title-icon bg-gradient-primary text-white me-2">
@@ -434,7 +434,7 @@
                     </table>
                     </div>
 
-                    <div class="premium-pagination-wrap" style="margin-top: 30px; float:right;">
+                    <div class="premium-pagination-wrap">
                         <div class="premium-pagination-shell">
                             <div class="premium-pagination-inline">
                                 {!! $customers->onEachSide(1)->links('vendor.pagination.premium') !!}
