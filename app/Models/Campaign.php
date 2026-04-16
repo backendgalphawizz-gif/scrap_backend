@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-
-use DB; 
+use Illuminate\Support\Facades\DB;
 
 class Campaign extends Model
 {
@@ -36,7 +35,10 @@ class Campaign extends Model
         'engagement',
         'avg_feedback',
         'cost_per_click',
-        'budget'
+        'budget',
+        'occupied_slots',
+        'available_slots',
+        'is_slot_full'
     ];
 
     // public function getActivitylogOptions(): LogOptions
@@ -90,6 +92,12 @@ class Campaign extends Model
         return $this->hasMany(CampaignTransaction::class, 'campaign_id');
     }
 
+    public function occupiedTransactions()
+    {
+        return $this->hasMany(CampaignTransaction::class, 'campaign_id')
+            ->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
+    }
+
     public function getLeftDaysAttribute()
     {
         $endDate = \Carbon\Carbon::parse($this->end_date);
@@ -119,6 +127,41 @@ class Campaign extends Model
     }
     public function getBudgetAttribute() {
         return "0";
+    }
+
+    public function getOccupiedSlotsAttribute()
+    {
+        if (array_key_exists('occupied_slots', $this->attributes)) {
+            return (int) $this->attributes['occupied_slots'];
+        }
+
+        if ($this->relationLoaded('occupiedTransactions')) {
+            return $this->occupiedTransactions->count();
+        }
+
+        return $this->occupiedTransactions()->count();
+    }
+
+    public function getAvailableSlotsAttribute()
+    {
+        $requiredSlots = (int) $this->total_user_required;
+
+        if ($requiredSlots <= 0) {
+            return 0;
+        }
+
+        return max(0, $requiredSlots - $this->occupied_slots);
+    }
+
+    public function getIsSlotFullAttribute()
+    {
+        $requiredSlots = (int) $this->total_user_required;
+
+        if ($requiredSlots <= 0) {
+            return false;
+        }
+
+        return $this->occupied_slots >= $requiredSlots;
     }
 
 }

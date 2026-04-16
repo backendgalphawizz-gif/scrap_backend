@@ -12,6 +12,17 @@ class Seller extends Authenticatable
 {
     use Notifiable, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::created(function (self $seller): void {
+            if (empty($seller->unique_code)) {
+                $seller->forceFill([
+                    'unique_code' => 'RXB-' . $seller->id,
+                ])->saveQuietly();
+            }
+        });
+    }
+
     protected $fillable = [
         'f_name',
         'l_name',
@@ -20,6 +31,7 @@ class Seller extends Authenticatable
         'email',
         'referral_code',
         'friends_code',
+        'unique_code',
         'city',
         'state',
         'auth_token',

@@ -20,6 +20,21 @@
     .sale-filter-form .btn {
         white-space: nowrap;
     }
+
+    .sale-action-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .sale-action-btn i {
+        font-size: 18px;
+        line-height: 1;
+    }
 </style>
 @endpush
 
@@ -107,20 +122,20 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
-                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit"
-                                                    title="{{ \App\CPU\translate('Edit')}}"
+                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit sale-action-btn"
+                                                    title="{{ \App\CPU\translate('View')}}"
                                                     href="{{route('admin.sale.show',[$sale['id']])}}">
-                                                    View
+                                                    <i class="mdi mdi-eye-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-primary btn-sm cursor-pointer edit"
+                                                <a class="btn btn-outline-primary btn-sm cursor-pointer edit sale-action-btn"
                                                     title="{{ \App\CPU\translate('Edit')}}"
                                                     href="{{route('admin.sale.edit',[$sale['id']])}}">
-                                                    Edit
+                                                    <i class="mdi mdi-pencil-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete"
+                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete sale-action-btn"
                                                     title="{{ \App\CPU\translate('Delete')}}"
                                                     id="{{$sale['id']}}">
-                                                    Delete
+                                                    <i class="mdi mdi-delete-outline"></i>
                                                 </a>
                                             </div>
                                         </td>

@@ -103,6 +103,82 @@
             min-width: 74px;
         }
 
+        .premium-user-table .action-icon-group {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 7px;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+            border: 1px solid #d7e5f4;
+            box-shadow: 0 6px 16px rgba(16, 42, 67, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        }
+
+        .premium-user-table .action-icon-btn {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            border: none;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+        }
+
+        .premium-user-table .action-icon-btn i {
+            font-size: 19px;
+            line-height: 1;
+            transition: transform .18s ease;
+        }
+
+        .premium-user-table .action-icon-btn:hover {
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .premium-user-table .action-icon-btn:hover i {
+            transform: scale(1.05);
+        }
+
+        .premium-user-table .action-icon-btn:focus {
+            box-shadow: 0 0 0 0.18rem rgba(19, 103, 173, 0.16);
+        }
+
+        .premium-user-table .action-icon-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 0.22rem rgba(19, 103, 173, 0.2);
+        }
+
+        .premium-user-table .action-icon-btn.view-btn {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e4f0fb 100%);
+            color: #0f4c81;
+            box-shadow: 0 7px 14px rgba(15, 76, 129, 0.1);
+        }
+
+        .premium-user-table .action-icon-btn.view-btn:hover {
+            background: linear-gradient(135deg, #0f4c81 0%, #1367ad 100%);
+            color: #ffffff;
+            box-shadow: 0 11px 20px rgba(15, 76, 129, 0.24);
+        }
+
+        .premium-user-table .action-icon-btn.delete-btn {
+            background: linear-gradient(135deg, #fff4f6 0%, #ffe9ee 100%);
+            color: #c73a57;
+            box-shadow: 0 7px 14px rgba(199, 58, 87, 0.1);
+        }
+
+        .premium-user-table .action-icon-btn.delete-btn:hover {
+            background: linear-gradient(135deg, #c73a57 0%, #de5a74 100%);
+            color: #ffffff;
+            box-shadow: 0 11px 20px rgba(199, 58, 87, 0.24);
+        }
+
         .premium-pagination-wrap {
             border-top: 1px solid #e8ebef;
             margin-top: 28px;
@@ -158,7 +234,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f5f7fa;
+            background: #ffffff;
             box-shadow: none;
             text-decoration: none;
             padding: 0 14px;
@@ -167,20 +243,20 @@
 
         .premium-pagination-shell .page-link:hover {
             border-color: #c8d0d9;
-            background: #edf1f5;
+            background: #ffffff;
             color: #414c58;
             text-decoration: none;
         }
 
         .premium-pagination-shell .page-item.active .page-link {
-            background: #eceff3;
-            border-color: #d0d6dd;
-            color: #3b4652;
+            background: #ffffff;
+            border-color: #1367ad;
+            color: #1367ad;
             box-shadow: none;
         }
 
         .premium-pagination-shell .page-item.disabled .page-link {
-            background: #f5f7fa;
+            background: #ffffff;
             color: #a1abb6;
             border-color: #e1e5ea;
             box-shadow: none;
@@ -219,7 +295,7 @@
 @endpush
 
 @section('content')
-    <div class="content-wrapper">
+    <div class="content-wrapper bg-white">
         <div class="page-header">
             <h3 class="page-title">
                 <span class="page-title-icon bg-gradient-primary text-white me-2">
@@ -333,19 +409,23 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex justify-content-center gap-2">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="action-icon-group">
                                         <a title="{{\App\CPU\translate('View')}}"
-                                        class="btn btn-outline-info btn-sm square-btn"
+                                        class="btn btn-sm action-icon-btn view-btn"
+                                        aria-label="{{\App\CPU\translate('View')}}"
                                         target="_self"
                                         href="{{ route('admin.user.view',[$customer['id']]) }}">
-                                            View
+                                            <i class="mdi mdi-eye-outline"></i>
                                         </a>
-                                        <a title="{{\App\CPU\translate('View')}}"
-                                        class="btn btn-outline-danger btn-sm delete square-btn"
+                                        <a title="{{\App\CPU\translate('Delete')}}"
+                                        class="btn btn-sm delete action-icon-btn delete-btn"
+                                        aria-label="{{\App\CPU\translate('Delete')}}"
                                         onclick="return confirm('{{\App\CPU\translate('Are you sure you want to delete this customer?')}}');"
                                         href="{{ route('admin.user.delete',[$customer['id']]) }}">
-                                            Delete
+                                            <i class="mdi mdi-delete-outline"></i>
                                         </a>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

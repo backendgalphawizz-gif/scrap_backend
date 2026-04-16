@@ -43,7 +43,7 @@ class CampaignController extends Controller
                 $query->where('status', $request->status);
             })
             ->orderBy('id', 'desc')
-            ->paginate(25)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin-views.campaign.view', compact('campaigns'));
@@ -175,7 +175,10 @@ class CampaignController extends Controller
 
     public function campaignTransctions(Request $request)
     {
-        $transactions = CampaignTransaction::with(['campaign.brand', 'user'])->orderBy('id', 'desc')->paginate(25);
+        $transactions = CampaignTransaction::with(['campaign.brand', 'user'])
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
         return view('admin-views.campaign.transactions', compact('transactions'));
     }
 

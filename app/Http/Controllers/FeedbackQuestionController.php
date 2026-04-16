@@ -23,7 +23,7 @@ class FeedbackQuestionController extends Controller
                 $query->where('brand_category_id', $request->brand_category_id);
             })
             ->orderBy('id', 'DESC')
-            ->paginate(20)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin-views.feedback-questions.index', compact('questions', 'categories'));
@@ -102,6 +102,15 @@ class FeedbackQuestionController extends Controller
         $question->delete();
 
         return redirect()->back()->with('success', 'Feedback question deleted successfully.');
+    }
+
+    public function toggleStatus($id)
+    {
+        $question = BrandFeedbackQuestion::where('brand_id', 0)->findOrFail($id);
+        $question->status = !$question->status;
+        $question->save();
+
+        return redirect()->back()->with('success', 'Feedback question status updated successfully.');
     }
 
     public function feedbackList(Request $request)
