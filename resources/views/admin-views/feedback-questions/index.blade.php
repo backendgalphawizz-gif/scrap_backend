@@ -421,16 +421,7 @@ button.option-remove-btn.remove-option {
             <form method="POST" action="{{ route('admin.feedback-questions.store') }}">
                 @csrf
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Brand Category</label>
-                        <select class="form-select" name="brand_category_id" required>
-                            <option value="">Select category</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('brand_category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-5">
+                    <div class="col-md-9">
                         <label class="form-label">Question</label>
                         <input type="text" class="form-control" name="question" value="{{ old('question') }}" required placeholder="Enter question text">
                     </div>
@@ -495,12 +486,6 @@ button.option-remove-btn.remove-option {
     <div class="px-3 pt-3 pb-3 d-flex justify-content-end mb-2">
         <form method="GET" action="{{ route('admin.feedback-questions.index') }}" class="feedback-filter-form d-flex align-items-center justify-content-end gap-2">
             <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search question" style="max-width: 260px;">
-            <select class="form-select" name="brand_category_id" style="max-width: 220px;">
-                <option value="">All categories</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ (string) request('brand_category_id') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                @endforeach
-            </select>
             <button type="submit" class="btn btn-primary">Filter</button>
             <a href="{{ route('admin.feedback-questions.index') }}" class="btn btn-outline-secondary">Reset</a>
         </form>
@@ -512,7 +497,6 @@ button.option-remove-btn.remove-option {
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Category</th>
                         <th>Question</th>
                         <th>Type</th>
                         <th>Options</th>
@@ -524,7 +508,6 @@ button.option-remove-btn.remove-option {
                     @forelse($questions as $index => $question)
                         <tr>
                             <td>{{ $questions->firstItem() + $index }}</td>
-                            <td>{{ $question->category->name ?? '-' }}</td>
                             <td>{{ $question->question }}</td>
                             <td>{{ $question->question_type === 'input' ? 'Input' : 'MCQ' }}</td>
                             <td>
@@ -551,7 +534,6 @@ button.option-remove-btn.remove-option {
                                             title="Edit"
                                             aria-label="Edit"
                                             data-id="{{ $question->id }}"
-                                            data-category-id="{{ $question->brand_category_id }}"
                                             data-question="{{ $question->question }}"
                                             data-question-type="{{ $question->question_type ?? 'multiple_choice' }}"
                                             data-status="{{ $question->status ? 1 : 0 }}"
@@ -580,7 +562,7 @@ button.option-remove-btn.remove-option {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center">No feedback questions found</td>
+                            <td colspan="6" class="text-center">No feedback questions found</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -610,16 +592,7 @@ button.option-remove-btn.remove-option {
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Brand Category</label>
-                            <select class="form-select" name="brand_category_id" id="edit-category-id" required>
-                                <option value="">Select category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-5">
+                        <div class="col-md-9">
                             <label class="form-label">Question</label>
                             <input type="text" class="form-control" name="question" id="edit-question" required>
                         </div>
@@ -786,7 +759,6 @@ button.option-remove-btn.remove-option {
     document.querySelectorAll('.edit-question-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const id = this.dataset.id;
-            const categoryId = this.dataset.categoryId || '';
             const question = this.dataset.question || '';
             const questionType = this.dataset.questionType || 'multiple_choice';
             const status = this.dataset.status || '1';
@@ -798,7 +770,6 @@ button.option-remove-btn.remove-option {
                 options = [];
             }
 
-            document.getElementById('edit-category-id').value = categoryId;
             document.getElementById('edit-question').value = question;
             document.getElementById('edit-question-type').value = questionType;
             document.getElementById('edit-status').value = status;

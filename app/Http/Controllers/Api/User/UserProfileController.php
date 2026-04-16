@@ -278,38 +278,12 @@ class UserProfileController extends Controller
 
     public function getBrandFeedbackQuestion(Request $request, $id)
     {
-        $brand = Seller::find($id);
+        $brandId = (int) $id;
+        $brandExists = Seller::withTrashed()->where('id', $brandId)->exists();
 
-        $categoryIds = [];
-        $query = BrandFeedbackQuestion::query()->where('status', 1);
-
-        if ($brand) {
-            $categoryIds = collect([$brand->category_id, $brand->sub_category_id])
-                ->filter()
-                ->unique()
-                ->values()
-                ->all();
-
-            $query->where(function ($q) use ($brand, $categoryIds) {
-                $q->where('brand_id', $brand->id)
-                    ->orWhere(function ($adminQuery) use ($categoryIds) {
-                        $adminQuery->where('brand_id', 0);
-
-                        if (!empty($categoryIds)) {
-                            $adminQuery->whereIn('brand_category_id', $categoryIds);
-                        } else {
-                            $adminQuery->whereRaw('1=0');
-                        }
-                    });
-            });
-        } else {
-            // Backward compatible: if brand is not found, treat {id} as category_id.
-            $categoryIds = [(int) $id];
-            $query->where('brand_id', 0)
-                ->whereIn('brand_category_id', $categoryIds);
-        }
-
-        $questions = $query->with('category:id,name')
+        $questions = BrandFeedbackQuestion::query()
+            ->where('brand_id', $brandId)
+            ->where('status', 1)
             ->orderBy('id', 'ASC')
             ->get()
             ->map(function ($item) {
@@ -318,8 +292,6 @@ class UserProfileController extends Controller
                 return [
                     'id' => (int) $item->id,
                     'brand_id' => (int) $item->brand_id,
-                    'brand_category_id' => $item->brand_category_id ? (int) $item->brand_category_id : null,
-                    'brand_category_name' => $item->category->name ?? '',
                     'question' => $item->question,
                     'question_type' => $item->question_type ?: 'multiple_choice',
                     'options' => $options,
@@ -329,9 +301,10 @@ class UserProfileController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Brand questions retrieved successfully',
+            'message' => $brandExists ? 'Brand questions retrieved successfully' : 'Questions retrieved by brand reference id',
             'data' => [
-                'category_ids' => $categoryIds,
+                'brand_id' => $brandId,
+                'brand_exists' => $brandExists,
                 'total_questions' => $questions->count(),
                 'questions' => $questions,
             ]
@@ -381,26 +354,9 @@ class UserProfileController extends Controller
             ], 422);
         }
 
-        $categoryIds = collect([$brand->category_id, $brand->sub_category_id])
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
         $allowedQuestions = BrandFeedbackQuestion::query()
+            ->where('brand_id', $brand->id)
             ->where('status', 1)
-            ->where(function ($query) use ($brand, $categoryIds) {
-                $query->where('brand_id', $brand->id)
-                    ->orWhere(function ($adminQuery) use ($categoryIds) {
-                        $adminQuery->where('brand_id', 0);
-
-                        if (!empty($categoryIds)) {
-                            $adminQuery->whereIn('brand_category_id', $categoryIds);
-                        } else {
-                            $adminQuery->whereRaw('1=0');
-                        }
-                    });
-            })
             ->get()
             ->keyBy('id');
 

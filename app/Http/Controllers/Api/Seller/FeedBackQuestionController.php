@@ -51,15 +51,11 @@ class FeedbackQuestionController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $seller = $data['data'];
         $limit = (int) $request->input('limit', 20);
         $search = trim((string) $request->input('search', ''));
 
-        $questions = BrandFeedbackQuestion::with('category:id,name')
+        $questions = BrandFeedbackQuestion::query()
             ->where('brand_id', 0)
-            ->when($request->filled('brand_category_id'), function ($query) use ($request) {
-                $query->where('brand_category_id', $request->brand_category_id);
-            })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', (int) $request->status);
             })
@@ -89,8 +85,6 @@ class FeedbackQuestionController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $seller = $data['data'];
-
         // Backward compatible defaults for old clients using only question text.
         if (!$request->has('question_type')) {
             $request->merge(['question_type' => 'multiple_choice']);
@@ -98,12 +92,8 @@ class FeedbackQuestionController extends Controller
         if (!$request->has('status')) {
             $request->merge(['status' => 1]);
         }
-        if (!$request->filled('brand_category_id') && !empty($seller->category_id)) {
-            $request->merge(['brand_category_id' => $seller->category_id]);
-        }
 
         $validator = Validator::make($request->all(), [
-            'brand_category_id' => 'nullable|exists:brand_categories,id',
             'question' => 'required|string|max:1000',
             'question_type' => 'nullable|in:multiple_choice,input',
             'options' => 'nullable',
@@ -124,16 +114,8 @@ class FeedbackQuestionController extends Controller
             ], 422);
         }
 
-        if (!$request->filled('brand_category_id')) {
-            return response()->json([
-                'status' => false,
-                'message' => 'brand_category_id is required. Please select a category from brand/brand-category-list.'
-            ], 422);
-        }
-
         $question = BrandFeedbackQuestion::create([
             'brand_id' => 0,
-            'brand_category_id' => (int) $request->brand_category_id,
             'question' => trim($request->question),
             'question_type' => $questionType,
             'options' => $questionType === 'multiple_choice' ? $options : [],
@@ -143,7 +125,7 @@ class FeedbackQuestionController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Question created',
-            'data' => new CommonResource($question->load('category:id,name'))
+            'data' => new CommonResource($question)
         ], 201);
     }
 
@@ -154,7 +136,7 @@ class FeedbackQuestionController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $question = BrandFeedbackQuestion::with('category:id,name')
+        $question = BrandFeedbackQuestion::query()
             ->where('brand_id', 0)
             ->find($id);
 
@@ -181,7 +163,6 @@ class FeedbackQuestionController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'brand_category_id' => 'nullable|exists:brand_categories,id',
             'question' => 'required|string|max:1000',
             'question_type' => 'nullable|in:multiple_choice,input',
             'options' => 'nullable',
@@ -207,19 +188,7 @@ class FeedbackQuestionController extends Controller
             ], 422);
         }
 
-        $brandCategoryId = $request->filled('brand_category_id')
-            ? (int) $request->brand_category_id
-            : (int) $question->brand_category_id;
-
-        if (!$brandCategoryId) {
-            return response()->json([
-                'status' => false,
-                'message' => 'brand_category_id is required. Please select a category from brand/brand-category-list.'
-            ], 422);
-        }
-
         $question->update([
-            'brand_category_id' => $brandCategoryId,
             'question' => trim($request->question),
             'question_type' => $questionType,
             'options' => $questionType === 'multiple_choice' ? $options : [],
@@ -229,7 +198,7 @@ class FeedbackQuestionController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Updated successfully',
-            'data' => new CommonResource($question->load('category:id,name'))
+            'data' => new CommonResource($question)
         ], 200);
     }
 
