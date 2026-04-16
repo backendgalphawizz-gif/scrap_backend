@@ -5,6 +5,46 @@
 <!-- Custom styles for this page -->
 <link href="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 <link href="{{asset('public/assets/back-end/css/croppie.css')}}" rel="stylesheet">
+<style>
+    .premium-pagination-wrap {
+        border-top: 1px solid #e8ebef;
+        margin-top: 22px;
+        padding: 12px 18px 16px;
+    }
+
+    .premium-pagination-shell {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .premium-pagination-inline {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        overflow-x: auto;
+    }
+
+    .premium-pagination-nav {
+        float: none;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+
+    .premium-pagination-shell .pagination {
+        margin: 0;
+    }
+
+    @media (max-width: 767px) {
+        .premium-pagination-wrap {
+            padding: 12px;
+        }
+
+        .premium-pagination-inline {
+            justify-content: flex-end;
+        }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -128,12 +168,15 @@
                 </div>
                 @endforeach
 
-                <!-- Pagination -->
-                <div class="table-responsive mt-4">
-                    <div class="px-4 d-flex justify-content-lg-end">
-                        {{ $tickets->links() }}
+                @if($tickets->hasPages())
+                <div class="premium-pagination-wrap">
+                    <div class="premium-pagination-shell">
+                        <div class="premium-pagination-inline">
+                            {!! $tickets->onEachSide(1)->links('vendor.pagination.premium') !!}
+                        </div>
                     </div>
                 </div>
+                @endif
 
                 <!-- No Data -->
                 @if(count($tickets) == 0)

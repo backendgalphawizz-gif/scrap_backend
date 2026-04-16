@@ -50,6 +50,7 @@ class UserAuthController extends Controller
 
         $otp = strval(rand(1000, 9999));
         $mobile = strval($request->mobile);
+        $otpExpiresAt = Carbon::now()->addMinutes(5);
         $token = "";
         if (in_array($request->type, ['login', 'forgot_password'])) {
             $user = User::where('mobile', $request->mobile)->first();
@@ -60,10 +61,12 @@ class UserAuthController extends Controller
                     'data' => [],
                     'otp' => $otp, // REMOVE in production
                     'mobile' => $mobile,
-                    'otp_expires_at' => Carbon::now()->addMinutes(5)->toDateTimeString()
+                    'otp_expires_at' => $otpExpiresAt->toDateTimeString()
                 ], 404);
             }
 
+            $user->otp = $otp;
+            $user->otp_expires_at = $otpExpiresAt;
             $user->fcm_id = $request->fcm_id;
             $user->device_type = $request->device_type;
             $user->unique_code = 'RX-' . $user->id;
@@ -95,7 +98,7 @@ class UserAuthController extends Controller
             'otp' => $otp, // REMOVE in production
             'mobile' => $mobile,
             'token' => $token,
-            'otp_expires_at' => Carbon::now()->addMinutes(5)->toDateTimeString()
+            'otp_expires_at' => $otpExpiresAt->toDateTimeString()
         ]);
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BrandCategory;
 use App\Models\BrandFeedbackQuestion;
 use App\Models\Feedback;
 use Illuminate\Http\Request;
@@ -11,28 +10,22 @@ class FeedbackQuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = BrandCategory::where('status', 1)->orderBy('name')->get();
-
-        $questions = BrandFeedbackQuestion::with('category:id,name')
+        $questions = BrandFeedbackQuestion::query()
             ->where('brand_id', 0)
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim($request->search);
                 $query->where('question', 'like', "%{$search}%");
             })
-            ->when($request->filled('brand_category_id'), function ($query) use ($request) {
-                $query->where('brand_category_id', $request->brand_category_id);
-            })
             ->orderBy('id', 'DESC')
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin-views.feedback-questions.index', compact('questions', 'categories'));
+        return view('admin-views.feedback-questions.index', compact('questions'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'brand_category_id' => 'required|exists:brand_categories,id',
             'question' => 'required|string|max:1000',
             'question_type' => 'required|in:multiple_choice,input',
             'options' => 'nullable|array',
@@ -52,7 +45,6 @@ class FeedbackQuestionController extends Controller
 
         BrandFeedbackQuestion::create([
             'brand_id' => 0,
-            'brand_category_id' => (int) $validated['brand_category_id'],
             'question' => trim($validated['question']),
             'question_type' => $validated['question_type'],
             'options' => $validated['question_type'] === 'multiple_choice' ? $options : [],
@@ -65,7 +57,6 @@ class FeedbackQuestionController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'brand_category_id' => 'required|exists:brand_categories,id',
             'question' => 'required|string|max:1000',
             'question_type' => 'required|in:multiple_choice,input',
             'options' => 'nullable|array',
@@ -86,7 +77,6 @@ class FeedbackQuestionController extends Controller
         $question = BrandFeedbackQuestion::where('brand_id', 0)->findOrFail($id);
 
         $question->update([
-            'brand_category_id' => (int) $validated['brand_category_id'],
             'question' => trim($validated['question']),
             'question_type' => $validated['question_type'],
             'options' => $validated['question_type'] === 'multiple_choice' ? $options : [],
