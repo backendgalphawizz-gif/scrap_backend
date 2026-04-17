@@ -157,6 +157,7 @@
             <div class="card">
                 <div class="table-responsive">
                     <table class="table">
+
                         <thead class="text-capitalize">
                             <tr>
                                 <th>{{\App\CPU\translate('Transaction ID')}}</th>
@@ -185,6 +186,9 @@
                                     <span class="badge badge-{{ $transaction->status == 'completed' ? 'gradient-success' : 'gradient-danger' }}">
                                         {{ ucfirst($transaction->status) }}
                                     </span>
+                                    @if($transaction->type == 'debit' && $transaction->status == 'pending')
+                                        <button class="btn btn-sm btn-success approve-withdrawal-btn mt-1" data-id="{{ $transaction->id }}">Approve</button>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -213,6 +217,45 @@
 @push('script_2')
 
 <script>
+    $(document).on('click', '.approve-withdrawal-btn', function() {
+        let id = $(this).data('id');
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you want to approve this withdrawal request?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, approve it!'
+        }).then((result) => {
+            if (result.value) {
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: "{{ route('admin.user.approve-withdrawal') }}",
+                    method: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status) {
+                            Swal.fire('Success', response.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', xhr.responseJSON?.message || 'Something went wrong.', 'error');
+                    }
+                });
+            }
+        });
+    });
+
     $(document).on('click', '.update-wallet-status', function() {
         let id = $(this).attr("data-id");
 

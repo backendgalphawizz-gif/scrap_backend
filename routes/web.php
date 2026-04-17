@@ -121,6 +121,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');
     Route::post('/update-wallet-status', [DashboardController::class, 'updateUserWalletStatus'])->name('admin.user.update-wallet-status');
+    Route::post('/approve-withdrawal', [DashboardController::class, 'approveWithdrawal'])->name('admin.user.approve-withdrawal');
     Route::post('/update-wallet-withdrawal-freeze', [DashboardController::class, 'updateUserWalletWithdrawalFreeze'])->name('admin.user.update-wallet-withdrawal-freeze');
     Route::post('/update-user-status', [DashboardController::class, 'updateUserStatus'])->name('admin.user.update-user-status');
 

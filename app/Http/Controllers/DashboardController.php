@@ -616,5 +616,36 @@ class DashboardController extends Controller
         }
     }
 
+    public function approveWithdrawal(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:coin_transactions,id',
+        ]);
+
+        $transaction = CoinTransaction::with('wallet')->findOrFail($request->id);
+        if ($transaction->type !== 'debit' || $transaction->status !== 'pending') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Only pending debit withdrawals can be approved.'
+            ], 422);
+        }
+
+        $wallet = $transaction->wallet;
+        if (!$wallet) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Wallet not found.'
+            ], 404);
+        }
+
+        $transaction->status = 'completed';
+        $transaction->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Withdrawal approved successfully.'
+        ]);
+    }
+
 }
 
