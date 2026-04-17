@@ -313,11 +313,6 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="premium-table-card">
-                    <div class="premium-table-header">
-                        <h5>User Directory</h5>
-                        <span class="count-pill">Total: {{ $customers->total() }}</span>
-                    </div>
-
                     <div class="px-3 pt-3 pb-3 d-flex justify-content-end">
                         <form method="GET" action="{{ route('admin.user') }}" class="d-flex flex-wrap align-items-center justify-content-end gap-2">
                             <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="max-width: 120px;">

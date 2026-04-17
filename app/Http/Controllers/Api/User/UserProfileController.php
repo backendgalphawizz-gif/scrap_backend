@@ -590,4 +590,4 @@ class UserProfileController extends Controller
         ]);
     }
 
-}
+    }

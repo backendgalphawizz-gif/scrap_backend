@@ -122,8 +122,10 @@
                                         <!-- onerror="this.src='{{asset('public/assets/back-end/img/400x400/img2.jpg')}}'" -->
                                         <img width="50"
                                         class="avatar rounded-circle"
-                                            
+
                                             src="{{$seller->image}}"
+                                            data-fallback="{{ asset('public/assets/front-end/img/image-place-holder.png') }}"
+                                            onerror="this.onerror=null;this.src=this.dataset.fallback;"
                                             alt="">
                                         <div>
                                             <a class="title-color" href="#">{{ \Str::limit($seller->username, 20)}}</a>
@@ -154,7 +156,7 @@
                                 <td class="text-center">
                                     <a href="#"
                                         class="btn text--primary bg-soft--primary font-weight-bold px-3 py-1 mb-0 fz-12">
-                                        {{ $seller->campaign?->count() ?? 0 }}
+                                        {{ $seller->campaigns?->count() ?? 0 }}
                                     </a>
                                 </td>
                                 <td class="actiondiv">
@@ -205,8 +207,8 @@
             }
 
             Swal.fire({
-                title: '{{\App\CPU\translate('Are you sure')}}?',
-                text: '{{\App\CPU\translate('want_to_change_status')}}',
+                title: '{{ \App\CPU\translate("Are you sure") }}?',
+                text: '{{ \App\CPU\translate("want_to_change_status") }}',
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -231,7 +233,7 @@
                         dataType:'json',
                         success: function (response) {
                             if(response.status){
-                                swal.fire('', '{{\App\CPU\translate('Status updated successfully')}}', 'success').then((result) => {
+                                swal.fire('', '{{ \App\CPU\translate("Status updated successfully") }}', 'success').then((result) => {
                                     location.reload();
                                 });
                             } else {
@@ -245,5 +247,4 @@
     </script>
 
 @endpush
-
 

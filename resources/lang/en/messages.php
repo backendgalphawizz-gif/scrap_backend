@@ -524,4 +524,6 @@
   'Edit Voucher' => 'Edit Voucher',
   'Feedback Management' => 'Feedback Management',
   'Feedback' => 'Feedback',
+  'Image Crop' => 'Image Crop',
+  'Image preview is available in the form. Crop tool is currently not configured.' => 'Image preview is available in the form. Crop tool is currently not configured.',
 );
