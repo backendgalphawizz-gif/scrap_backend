@@ -19,6 +19,14 @@ use App\Http\Controllers\VoucherController;
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
 
+// Legacy image upload endpoint used by shared image-process partials.
+Route::post('/image-upload', function () {
+    return response()->json([
+        'status' => false,
+        'message' => 'Image crop upload endpoint is not configured.',
+    ], 501);
+})->name('image-upload');
+
 // Admin Dashboard
 Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');

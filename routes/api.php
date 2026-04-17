@@ -95,13 +95,19 @@ Route::prefix('admin')
     });
 
 Route::prefix('user')->middleware('auth:api')->group(function () {
+
+    // User profile related routes
     Route::get('profile', [UserProfileController::class, 'index']);
     Route::get('referrers', [UserProfileController::class, 'referrers']);
     Route::post('update-profile', [UserProfileController::class, 'update']);
     Route::post('update-kyc', [UserProfileController::class, 'updateKyc']);
+
+    // User wallet related routes
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
     Route::get('wallet-transactions', [UserProfileController::class, 'walletTransctions']);
     Route::post('wallet-withdrawl', [UserProfileController::class, 'debitWalletCoin']);
+
+    // User Voucher related routes
     Route::get('voucher-brands', [UserVoucherController::class, 'brands']);
     Route::get('voucher-brands/{brandId}/vouchers', [UserVoucherController::class, 'byBrand']);
     Route::get('vouchers', [UserVoucherController::class, 'index']);
@@ -110,28 +116,31 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('vouchers/purchase', [UserVoucherController::class, 'purchase']);
     Route::get('vouchers/{id}', [UserVoucherController::class, 'show']);
 
+    // User Campaign related routes
     Route::post('campaigns', [UserDashboardController::class, 'index']);
     Route::get('local_for_vocal', [UserDashboardController::class, 'localForVocal']);
     Route::post('campaign/detail/{id}', [UserDashboardController::class, 'show']);
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
+    
+
+    // User Feedback related routes
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);
 
+    // User Notifications related routes
     Route::get('notifications', [UserProfileController::class, 'notifications']);
-
     Route::post('verify-social', [UserProfileController::class, 'verifySocial']);
     Route::get('social-verification-status', [UserProfileController::class, 'socialVerificationStatus']);
-
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
-
     Route::get('support-tickets', [UserSupportTicketController::class, 'index']);
     Route::post('support-tickets', [UserSupportTicketController::class, 'store']);
     Route::get('support-tickets/{id}', [UserSupportTicketController::class, 'show']);
     Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
+    
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);
