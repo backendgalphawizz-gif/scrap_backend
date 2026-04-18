@@ -128,16 +128,15 @@
                                 <h5 class="mb-3 d-flex">{{ \App\CPU\translate('instructions') }}</h5>
                                 <ul class="pl-3 d-flex flex-column gap-2 instructions-list">
                                     <li>
-                                        1. {{ translate('please_make_sure') }}, {{ translate('your_server_php') }}
-                                        "upload_max_filesize" {{translate('value_is_grater
-                                   _or_equal_to_20MB') }}. {{ translate('current_value_is') }}
+                                        1. {{\App\CPU\translate('please_make_sure')}}, {{\App\CPU\translate('your_server_php')}}
+                                        "upload_max_filesize" {{\App\CPU\translate('value_is_grater_or_equal_to_20MB')}}. {{\App\CPU\translate('current_value_is')}}
                                         - {{ini_get('upload_max_filesize')}}B
                                     </li>
                                     <li>
-                                        2. {{ translate('please_make_sure')}}, {{ translate('your_server_php')}}
+                                        2. {{\App\CPU\translate('please_make_sure')}}, {{\App\CPU\translate('your_server_php')}}
                                         "post_max_size"
-                                        {{translate('value_is_grater_or_equal_to_20MB')}}
-                                        . {{translate('current_value_is') }} - {{ini_get('post_max_size')}}B
+                                        {{\App\CPU\translate('value_is_grater_or_equal_to_20MB')}}
+                                        . {{\App\CPU\translate('current_value_is')}} - {{ini_get('post_max_size')}}B
                                     </li>
                                 </ul>
                             </div>

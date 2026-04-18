@@ -21,25 +21,25 @@
         <form action="{{route('admin.business-settings.web-config.theme.activation')}}" method="post">
             @csrf
             <div class="form-group mb-4">
-                <label for="username">{{ translate('codecanyon_username') }}</label>
+                <label for="username">{{\App\CPU\translate('codecanyon_username')}}</label>
                 <input
                     name="username" id="username"
                     class="form-control"
-                    placeholder="{{translate('Ex')}}: Riad Uddin" required />
+                    placeholder="{{\App\CPU\translate('Ex')}}: Riad Uddin" required />
             </div>
             <div class="form-group mb-6">
-                <label for="purchase_code">{{ translate('purchase_code') }}</label>
+                <label for="purchase_code">{{\App\CPU\translate('purchase_code')}}</label>
                 <input
                     name="purchase_code" id="purchase_code"
                     class="form-control"
-                    placeholder="{{translate('Ex')}}: 987652" required
+                    placeholder="{{\App\CPU\translate('Ex')}}: 987652" required
                 />
             </div>
 
             <div class="d-flex justify-content-center gap-3 mb-3">
                 <input type="hidden" value="{{ $theme }}" name="theme">
-                <button type="button" class="fs-16 btn btn-secondary flex-grow-1" data-dismiss="modal">{{ translate('cancel') }}</button>
-                <button type="submit" class="fs-16 btn btn--primary flex-grow-1">{{ translate('activate') }}</button>
+                <button type="button" class="fs-16 btn btn-secondary flex-grow-1" data-dismiss="modal">{{\App\CPU\translate('cancel')}}</button>
+                <button type="submit" class="fs-16 btn btn--primary flex-grow-1">{{\App\CPU\translate('activate')}}</button>
             </div>
         </form>
     </div>

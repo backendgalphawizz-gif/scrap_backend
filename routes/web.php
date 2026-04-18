@@ -12,9 +12,20 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomRoleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\FeedbackQuestionController;
+use App\Http\Controllers\VoucherBrandController;
+use App\Http\Controllers\VoucherController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
+
+// Legacy image upload endpoint used by shared image-process partials.
+Route::post('/image-upload', function () {
+    return response()->json([
+        'status' => false,
+        'message' => 'Image crop upload endpoint is not configured.',
+    ], 501);
+})->name('image-upload');
 
 // Admin Dashboard
 Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
@@ -27,6 +38,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/delete-user/{id}', [DashboardController::class, 'deleteUser'])->name('admin.user.delete');
     Route::get('/user-wallet', [DashboardController::class, 'userWallet'])->name('admin.user.wallet');
     Route::get('/user-wallet-transactions', [DashboardController::class, 'userWalletTransactions'])->name('admin.user-wallet-transactions');
+    Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index'])->name('admin.feedback-questions.index');
+    Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store'])->name('admin.feedback-questions.store');
+    Route::post('/feedback-questions/update/{id}', [FeedbackQuestionController::class, 'update'])->name('admin.feedback-questions.update');
+    Route::post('/feedback-questions/toggle-status/{id}', [FeedbackQuestionController::class, 'toggleStatus'])->name('admin.feedback-questions.toggle-status');
+    Route::post('/feedback-questions/delete/{id}', [FeedbackQuestionController::class, 'destroy'])->name('admin.feedback-questions.delete');
+    Route::get('/feedback', [FeedbackQuestionController::class, 'feedbackList'])->name('admin.feedback.list');
     Route::get('/brands', [DashboardController::class, 'brands'])->name('admin.brand');
     Route::get('/brands/{id}', [DashboardController::class, 'showBrand'])->name('admin.brand.view');
     Route::post('/brands/{id}', [DashboardController::class, 'updateBrand'])->name('admin.brand.updateStatus');
@@ -81,9 +98,30 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::group(['prefix' => 'campaigns-transactions'], function() {
         Route::get('/', [CampaignController::class, 'campaignTransctions'])->name('admin.campaigns-transactions.list');
     });
+
+    Route::group(['prefix' => 'voucher-brands', 'as' => 'admin.voucher-brand.'], function() {
+        Route::get('/', [VoucherBrandController::class, 'index'])->name('index');
+        Route::get('/create', [VoucherBrandController::class, 'create'])->name('create');
+        Route::post('/store', [VoucherBrandController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [VoucherBrandController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [VoucherBrandController::class, 'update'])->name('update');
+        Route::post('/status', [VoucherBrandController::class, 'status'])->name('status');
+        Route::post('/delete', [VoucherBrandController::class, 'delete'])->name('delete');
+    });
+
+    Route::group(['prefix' => 'vouchers', 'as' => 'admin.voucher.'], function() {
+        Route::get('/', [VoucherController::class, 'index'])->name('index');
+        Route::get('/create', [VoucherController::class, 'create'])->name('create');
+        Route::post('/store', [VoucherController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [VoucherController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [VoucherController::class, 'update'])->name('update');
+        Route::post('/active-status', [VoucherController::class, 'activeStatus'])->name('active-status');
+        Route::post('/delete', [VoucherController::class, 'delete'])->name('delete');
+    });
     
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');
     Route::post('/update-wallet-status', [DashboardController::class, 'updateUserWalletStatus'])->name('admin.user.update-wallet-status');
+    Route::post('/approve-withdrawal', [DashboardController::class, 'approveWithdrawal'])->name('admin.user.approve-withdrawal');
     Route::post('/update-wallet-withdrawal-freeze', [DashboardController::class, 'updateUserWalletWithdrawalFreeze'])->name('admin.user.update-wallet-withdrawal-freeze');
     Route::post('/update-user-status', [DashboardController::class, 'updateUserStatus'])->name('admin.user.update-user-status');
 
@@ -103,6 +141,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/website-info/brand-update_privacy_policy', [DashboardController::class, 'brand_privacy_policy_update'])->name('admin.business-settings.brand-privacy-policy-update');
     
     Route::post('/update-website-info', [DashboardController::class, 'updateInfo'])->name('admin.business-settings.updateInfo');
+
+    // Popup Banner Routes
+    Route::get('/business-settings/popup-banner', [DashboardController::class, 'popupBanner'])->name('admin.business-settings.popup-banner');
+    Route::post('/business-settings/popup-banner-update', [DashboardController::class, 'popupBannerUpdate'])->name('admin.business-settings.popup-banner-update');
 
     Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.auth.logout');
 
@@ -136,16 +178,17 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     });
 
    
-// Support-ticket
+    // Support-ticket
     Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])
     ->name('admin.support-ticket.view-support');
 
-Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
+    Route::get('/support-ticket/{id}', [SupportTicketController::class, 'view'])
     ->name('admin.support-ticket.singleTicket');
 
-Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
+    Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
     ->name('admin.support-ticket.replay');
 });
+
 Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])
     ->name('admin.support-ticket.close');
  

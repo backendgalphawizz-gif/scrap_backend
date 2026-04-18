@@ -7,11 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\Banner;
+use App\Models\BrandCategory;
 use App\Models\Seller;
 use App\Models\User;
 use App\CPU\Helpers;
 use App\CPU\ImageManager;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class SellerAuthController extends Controller
 {
@@ -53,6 +55,10 @@ class SellerAuthController extends Controller
         $otp = strval(rand(1000, 9999));
         $mobile = strval($request->mobile);
         $token = Str::random(50);
+
+        // Store OTP in cache for verification (no DB columns needed).
+        Cache::put("brand_otp_{$mobile}", $otp, now()->addMinutes(5));
+        Cache::put("brand_otp_{$mobile}_{$request->type}", $otp, now()->addMinutes(5));
         if (in_array($request->type, ['login', 'forgot_password'])) {
             $user = Seller::where('phone', $request->mobile)->first();
             if (!$user) {
@@ -128,6 +134,7 @@ class SellerAuthController extends Controller
         $validator = Validator::make($request->all(), [
             'mobile' => 'required|digits:10',
             'otp' => 'required|digits:4',
+            'type' => 'nullable|in:login,forgot_password,signup',
         ]);
 
         if ($validator->fails()) {
@@ -137,36 +144,59 @@ class SellerAuthController extends Controller
             ], 422);
         }
 
-        $user = User::with('role:id,name')->select('id', 'name', 'role_id', 'image', 'mobile')->where('mobile', $request->mobile)
-            ->where('otp', $request->otp)
-            ->where('otp_expires_at', '>=', now())
-            ->first();
+        $mobile = (string) $request->mobile;
+        $inputOtp = (string) $request->otp;
 
-        if (!$user) {
+        $cachedOtp = null;
+        if ($request->filled('type')) {
+            $cachedOtp = Cache::get("brand_otp_{$mobile}_{$request->type}");
+        }
+        if (!$cachedOtp) {
+            $cachedOtp = Cache::get("brand_otp_{$mobile}");
+        }
+
+        if (! $cachedOtp || (string) $cachedOtp !== $inputOtp) {
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid or expired OTP'
             ], 401);
         }
 
-        $user->otp = null;
-        $user->otp_expires_at = null;
-        $user->save();
+        // OTP verified, clear cache keys.
+        Cache::forget("brand_otp_{$mobile}");
+        Cache::forget("brand_otp_{$mobile}_login");
+        Cache::forget("brand_otp_{$mobile}_forgot_password");
+        Cache::forget("brand_otp_{$mobile}_signup");
 
-        $token = $user->createToken('AdminToken')->accessToken;
+        $seller = Seller::where('phone', $mobile)->first();
+        if (! $seller) {
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP verified successfully',
+                'token' => null,
+                'data' => [
+                    'mobile' => $mobile,
+                    'is_registered' => false,
+                ]
+            ]);
+        }
+
+        if (empty($seller->auth_token) || strlen((string) $seller->auth_token) < 30) {
+            $seller->auth_token = Str::random(50);
+            $seller->save();
+        }
 
         return response()->json([
             'status' => true,
             'message' => 'Login successful',
-            'token' => $token,
+            'token' => $seller->auth_token,
             'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'mobile' => $user->mobile,
-                'image' => $user->image,
-                'role_id' => $user->role_id,
-                'status' => $user->status == 1 ? 'Active' : 'Suspended',
-                'role' => $user->role
+                'id' => $seller->id,
+                'name' => trim(($seller->f_name ?? '') . ' ' . ($seller->l_name ?? '')),
+                'mobile' => $seller->phone,
+                'image' => $seller->image,
+                'status' => $seller->status,
+                'is_registered' => true,
             ]
         ]);
     }
@@ -286,6 +316,20 @@ class SellerAuthController extends Controller
             'status' => true,
             'message' => 'Banners retrieved successfully',
             'data' => $banners
+        ]);
+    }
+
+    public function brandCategoryList()
+    {
+        $categories = BrandCategory::with(['childes'])
+            ->where('status', 1)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Brand Category retrieved successfully',
+            'data' => $categories
         ]);
     }
 

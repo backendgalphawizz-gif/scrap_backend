@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CommonResource;
+use App\Models\BrandFeedbackQuestion;
+use App\Models\Campaign;
 use App\Models\CoinWallet;
 use App\Models\Feedback;
 use App\CPU\ImageManager;
@@ -276,13 +278,36 @@ class UserProfileController extends Controller
 
     public function getBrandFeedbackQuestion(Request $request, $id)
     {
-        $brand = Seller::findOrFail($id);
-        $questions = $brand->questions()->where('status', 1)->get();
+        $brandId = (int) $id;
+        $brandExists = Seller::withTrashed()->where('id', $brandId)->exists();
+
+        $questions = BrandFeedbackQuestion::query()
+            ->where('brand_id', $brandId)
+            ->where('status', 1)
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->map(function ($item) {
+                $options = is_array($item->options) ? array_values(array_filter($item->options, fn ($opt) => trim((string) $opt) !== '')) : [];
+
+                return [
+                    'id' => (int) $item->id,
+                    'brand_id' => (int) $item->brand_id,
+                    'question' => $item->question,
+                    'question_type' => $item->question_type ?: 'multiple_choice',
+                    'options' => $options,
+                ];
+            })
+            ->values();
 
         return response()->json([
             'status' => true,
-            'message' => 'Brand questions retrieved successfully',
-            'data' => CommonResource::collection($questions)
+            'message' => $brandExists ? 'Brand questions retrieved successfully' : 'Questions retrieved by brand reference id',
+            'data' => [
+                'brand_id' => $brandId,
+                'brand_exists' => $brandExists,
+                'total_questions' => $questions->count(),
+                'questions' => $questions,
+            ]
         ]);
     }
 
@@ -290,10 +315,23 @@ class UserProfileController extends Controller
     {
         $user = $request->user();
 
+        // Support Postman payloads where `questions` may arrive as JSON string in form-data.
+        $incomingQuestions = $request->input('questions');
+        if (is_string($incomingQuestions) && trim($incomingQuestions) !== '') {
+            $decoded = json_decode($incomingQuestions, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $request->merge(['questions' => $decoded]);
+            }
+        }
+
         $rules = [
             'campaign_id' => 'required|exists:campaigns,id',
-            'rating' => 'required|integer|min:1|max:5',
+            'rating' => 'required|numeric|min:1|max:5',
+            'user_feedback' => 'nullable|string|max:1000',
             'feedback' => 'nullable|string|max:1000',
+            'questions' => 'nullable|array',
+            'questions.*.question_id' => 'required|integer',
+            'questions.*.answer' => 'nullable',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -301,22 +339,130 @@ class UserProfileController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => Helpers::single_error_processor($validator)
+                'message' => Helpers::single_error_processor($validator),
+                'errors' => $validator->errors(),
             ], 422);
         }
 
-        $feedback = new Feedback;
-        $feedback->campaign_id = $request->input('campaign_id');
-        $feedback->brand_id = $request->input('brand_id');
-        $feedback->user_id = $user->id;
-        $feedback->ratings = $request->input('rating');
-        $feedback->questions = $request->input('questions');
-        $feedback->save();
+        $campaign = Campaign::findOrFail($request->campaign_id);
+        $brand = Seller::find($campaign->brand_id);
+
+        if (! $brand) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Brand not found for this campaign'
+            ], 422);
+        }
+
+        $allowedQuestions = BrandFeedbackQuestion::query()
+            ->where('brand_id', $brand->id)
+            ->where('status', 1)
+            ->get()
+            ->keyBy('id');
+
+        $submittedQuestions = collect($request->input('questions', []));
+        $normalizedAnswers = [];
+        $validQuestionIds = $allowedQuestions->keys()->map(fn ($key) => (int) $key)->values()->all();
+
+        foreach ($submittedQuestions as $row) {
+            $questionId = (int) ($row['question_id'] ?? 0);
+            $answer = $row['answer'] ?? null;
+
+            if (! $allowedQuestions->has($questionId)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Invalid question_id: {$questionId}",
+                    'data' => [
+                        'campaign_id' => (int) $campaign->id,
+                        'brand_id' => (int) $campaign->brand_id,
+                        'submitted_question_id' => $questionId,
+                        'valid_question_ids' => $validQuestionIds,
+                        'hint' => 'Use only question_id values returned by GET user/get-feedbacks-questions/{brandId} for this campaign brand.',
+                    ]
+                ], 422);
+            }
+
+            $question = $allowedQuestions->get($questionId);
+            $questionType = $question->question_type ?: 'multiple_choice';
+            $options = is_array($question->options) ? array_values(array_filter($question->options, fn ($opt) => trim((string) $opt) !== '')) : [];
+            $normalizedAnswer = is_string($answer) ? trim($answer) : $answer;
+
+            if ($questionType === 'multiple_choice') {
+                if (! is_string($normalizedAnswer) || $normalizedAnswer === '') {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Answer is required for question_id: {$questionId}"
+                    ], 422);
+                }
+
+                $normalizedOptions = array_map(fn ($opt) => trim((string) $opt), $options);
+                $optionMatched = in_array($normalizedAnswer, $normalizedOptions, true);
+
+                if (! $optionMatched) {
+                    // Fallback: case-insensitive match to reduce client-side formatting issues.
+                    $lowerAnswer = mb_strtolower($normalizedAnswer);
+                    foreach ($normalizedOptions as $opt) {
+                        if (mb_strtolower($opt) === $lowerAnswer) {
+                            $normalizedAnswer = $opt;
+                            $optionMatched = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (! $optionMatched) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Invalid option selected for question_id: {$questionId}",
+                        'data' => [
+                            'allowed_options' => $normalizedOptions,
+                        ]
+                    ], 422);
+                }
+            }
+
+            if ($questionType === 'input') {
+                if (! is_string($normalizedAnswer) || $normalizedAnswer === '') {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Input answer is required for question_id: {$questionId}"
+                    ], 422);
+                }
+
+                if (mb_strlen($normalizedAnswer) > 1000) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Input answer too long for question_id: {$questionId}"
+                    ], 422);
+                }
+            }
+
+            $normalizedAnswers[] = [
+                'question_id' => $questionId,
+                'question' => $question->question,
+                'question_type' => $questionType,
+                'answer' => $normalizedAnswer,
+                'options' => $questionType === 'multiple_choice' ? $options : [],
+            ];
+        }
+
+        $feedback = Feedback::updateOrCreate(
+            [
+                'campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'brand_id' => $campaign->brand_id,
+                'ratings' => $request->input('rating'),
+                'questions' => json_encode($normalizedAnswers),
+                'user_feedback' => $request->input('user_feedback', $request->input('feedback')),
+            ]
+        );
 
         return response()->json([
             'status' => true,
             'message' => 'Campaign feedback submitted successfully',
-            'data' => []
+            'data' => new CommonResource($feedback)
         ]);
     }
 
@@ -444,4 +590,4 @@ class UserProfileController extends Controller
         ]);
     }
 
-}
+    }

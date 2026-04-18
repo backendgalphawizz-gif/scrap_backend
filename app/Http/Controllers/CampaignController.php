@@ -15,22 +15,38 @@ class CampaignController extends Controller
 {
     function list(Request $request)
     {
-        $query_param = [];
-        $search = $request['search'];
-        if ($request->has('search')) {
-            $key = explode(' ', $request['search']);
-            $campaigns = Campaign::with(['brand'])->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    // $q->Where('banner_type', 'like', "%{$value}%");
-                }
-            })->orderBy('id', 'desc');
-            $query_param = ['search' => $request['search']];
-        } else {
-            $campaigns = Campaign::with(['brand'])->orderBy('id', 'desc');
-        }
-        $campaigns = $campaigns->paginate(25)->appends($query_param);
+        $campaigns = Campaign::with(['brand'])
+            ->when($request->filled('brand_name'), function ($query) use ($request) {
+                $brandName = trim($request->brand_name);
+                $query->whereHas('brand', function ($brandQuery) use ($brandName) {
+                    $brandQuery->where('username', 'like', "%{$brandName}%")
+                        ->orWhere('f_name', 'like', "%{$brandName}%")
+                        ->orWhere('l_name', 'like', "%{$brandName}%");
+                });
+            })
+            ->when($request->filled('title'), function ($query) use ($request) {
+                $query->where('title', 'like', '%' . trim($request->title) . '%');
+            })
+            ->when($request->filled('city'), function ($query) use ($request) {
+                $query->where('city', 'like', '%' . trim($request->city) . '%');
+            })
+            ->when($request->filled('state'), function ($query) use ($request) {
+                $query->where('state', 'like', '%' . trim($request->state) . '%');
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('start_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('start_date', '<=', $request->date_to);
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('admin-views.campaign.view', compact('campaigns', 'search'));
+        return view('admin-views.campaign.view', compact('campaigns'));
     }
 
     public function create()
@@ -159,7 +175,10 @@ class CampaignController extends Controller
 
     public function campaignTransctions(Request $request)
     {
-        $transactions = CampaignTransaction::with(['campaign.brand', 'user'])->orderBy('id', 'desc')->paginate(25);
+        $transactions = CampaignTransaction::with(['campaign.brand', 'user'])
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
         return view('admin-views.campaign.transactions', compact('transactions'));
     }
 

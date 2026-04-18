@@ -115,7 +115,8 @@ class ReportController extends Controller
                     $q->where('status','rejected');
                 }
             ])
-            ->paginate($limit);
+            ->paginate($limit)
+            ->withQueryString();
 
         $data = [
             'totalCampaigns' => Campaign::whereBetween('created_at', [$from, $to])->count(),
@@ -188,7 +189,8 @@ class ReportController extends Controller
             )
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('id', 'DESC')
-            ->paginate($limit);
+            ->paginate($limit)
+            ->withQueryString();
 
         return view('admin-views.report._post-reports', compact('data', 'posts', 'date_type', 'from', 'to'));
     }
@@ -198,7 +200,9 @@ class ReportController extends Controller
         $date_type = request('date_type') ?? 'this_year';
         $from = date('Y-m-d');
         $to = date('Y-m-d');
-        $limit = request('limit') ?? 10;
+        $limit = request('limit') ?? 20;
+        $search = request('search') ?? '';
+
         switch ($date_type) {
             case 'today':
                 $from = now()->startOfDay();
@@ -231,12 +235,21 @@ class ReportController extends Controller
         }
 
         $logs = Activity::with('causer')
+            ->whereBetween('created_at', [$from, $to])
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                        ->orWhere('log_name', 'like', "%{$search}%")
+                        ->orWhereHas('causer', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->latest()
-            ->paginate(20);
+            ->paginate($limit)
+            ->withQueryString();
 
-        // dd($logs);
-
-        return view('admin-views.report._activity-logs', compact('logs', 'date_type', 'from', 'to'));
+        return view('admin-views.report._activity-logs', compact('logs', 'date_type', 'from', 'to', 'search', 'limit'));
     }
 
 }

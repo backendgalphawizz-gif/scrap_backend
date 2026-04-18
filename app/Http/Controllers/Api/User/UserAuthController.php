@@ -50,6 +50,7 @@ class UserAuthController extends Controller
 
         $otp = strval(rand(1000, 9999));
         $mobile = strval($request->mobile);
+        $otpExpiresAt = Carbon::now()->addMinutes(5);
         $token = "";
         if (in_array($request->type, ['login', 'forgot_password'])) {
             $user = User::where('mobile', $request->mobile)->first();
@@ -60,12 +61,15 @@ class UserAuthController extends Controller
                     'data' => [],
                     'otp' => $otp, // REMOVE in production
                     'mobile' => $mobile,
-                    'otp_expires_at' => Carbon::now()->addMinutes(5)->toDateTimeString()
+                    'otp_expires_at' => $otpExpiresAt->toDateTimeString()
                 ], 404);
             }
 
+            $user->otp = $otp;
+            $user->otp_expires_at = $otpExpiresAt;
             $user->fcm_id = $request->fcm_id;
             $user->device_type = $request->device_type;
+            $user->unique_code = 'RX-' . $user->id;
             $user->save();
 
             $token = $user->createToken('UserToken')->accessToken;
@@ -94,7 +98,7 @@ class UserAuthController extends Controller
             'otp' => $otp, // REMOVE in production
             'mobile' => $mobile,
             'token' => $token,
-            'otp_expires_at' => Carbon::now()->addMinutes(5)->toDateTimeString()
+            'otp_expires_at' => $otpExpiresAt->toDateTimeString()
         ]);
     }
 
@@ -190,7 +194,9 @@ class UserAuthController extends Controller
                 'city' => $request->city,
                 'state' => $request->state,
                 'instagram_username' => $request->instagram_username,
-                'facebook_username' => $request->facebook_username
+                'instagram_status' => $request->instagram_username ? 'pending' : 'not_submitted',
+                'facebook_username' => $request->facebook_username,
+                'facebook_status' => $request->facebook_username ? 'pending' : 'not_submitted',
             ]);
 
             $user->fcm_id = $request->fcm_id;
@@ -289,6 +295,44 @@ class UserAuthController extends Controller
             'status' => true,
             'message' => 'Banners retrieved successfully',
             'data' => $banners
+        ]);
+    }
+
+    public function popupBanner()
+    {
+        $popupBanner = Helpers::get_business_settings('popup_banner');
+
+        if (is_string($popupBanner)) {
+            $decoded = json_decode($popupBanner, true);
+            $popupBanner = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($popupBanner)) {
+            $popupBanner = [];
+        }
+
+        $image = $popupBanner['image'] ?? null;
+        $imageUrl = null;
+
+        if (!empty($image)) {
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                $imageUrl = $image;
+            } elseif (str_starts_with($image, '/')) {
+                $imageUrl = asset(ltrim($image, '/'));
+            } else {
+                $imageUrl = asset('storage/popup_banner/' . ltrim($image, '/'));
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Popup banner retrieved successfully',
+            'data' => [
+                'status' => (int) ($popupBanner['status'] ?? 0),
+                'title' => $popupBanner['title'] ?? '',
+                'description' => $popupBanner['description'] ?? '',
+                'image' => $imageUrl,
+            ]
         ]);
     }
 

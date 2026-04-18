@@ -40,8 +40,13 @@ class CoinWallet extends Model
         return $this->transactions()->where('type', 'credit')->where('status', 'pending')->sum('coin');
     }
     public function getTodaysCoinEarningAttribute() {
-        // ->where('status', 'completed')
-        return $this->transactions()->where('type', 'credit')->whereBetween('created_at', [date('Y-m-d 00:00:01'), date('Y-m-d 23:58:00')])->sum('coin');
+        return $this->transactions()
+            ->where('type', 'credit')
+            ->where(function ($query) {
+                $query->where('status', 'completed')->orWhereNull('status');
+            })
+            ->whereBetween('created_at', [date('Y-m-d 00:00:01'), date('Y-m-d 23:58:00')])
+            ->sum('coin');
     }
 
     public function getTotalCoinWithdrawlAttribute() {
@@ -50,13 +55,21 @@ class CoinWallet extends Model
     }
 
     public function getTotalCoinEarningAttribute() {
-        // ->where('status', 'completed')
-        return $this->transactions()->where('type', 'credit')->sum('coin');
+        return $this->transactions()
+            ->where('type', 'credit')
+            ->where(function ($query) {
+                $query->where('status', 'completed')->orWhereNull('status');
+            })
+            ->sum('coin');
     }
 
     public function getTotalearningInRupeesAttribute() {
-        // ->where('status', 'completed')
-        return $this->transactions()->where('type', 'credit')->sum('coin') * Helpers::get_business_settings('upi_value');
+        return $this->transactions()
+            ->where('type', 'credit')
+            ->where(function ($query) {
+                $query->where('status', 'completed')->orWhereNull('status');
+            })
+            ->sum('coin') * Helpers::get_business_settings('upi_value');
     }
 
 }

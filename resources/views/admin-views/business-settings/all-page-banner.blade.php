@@ -14,7 +14,7 @@
         <div class="pb-2">
             <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
                 <img src="{{asset('/public/assets/back-end/img/business-setup.png')}}" alt="">
-                {{translate('All_Pages_Banner')}}
+                {{\App\CPU\translate('All_Pages_Banner')}}
             </h2>
         </div>
         <!-- End Page Title -->
@@ -29,7 +29,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0 text-capitalize">{{ translate('banner_form')}}</h5>
+                        <h5 class="mb-0 text-capitalize">{{\App\CPU\translate('banner_form')}}</h5>
                     </div>
                     <div class="card-body">
                         <form action="{{ route('admin.business-settings.all-pages-banner-store') }}" method="post" enctype="multipart/form-data"
@@ -42,26 +42,26 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="name" class="title-color text-capitalize">{{ translate('banner_type') }}</label>
+                                        <label for="name" class="title-color text-capitalize">{{\App\CPU\translate('banner_type')}}</label>
                                         <select class="js-example-responsive form-control w-100" name="type" required>
-                                            <option value="banner_product_list_page">{{ translate('Product_List_Page')}}</option>
-                                            <option value="banner_terms_conditions">{{ translate('Terms_and_Conditions')}}</option>
-                                            <option value="banner_privacy_policy">{{ translate('Privacy_Policy')}}</option>
-                                            <option value="banner_refund_policy">{{ translate('Refund_Policy')}}</option>
-                                            <option value="banner_return_policy">{{ translate('Return_Policy')}}</option>
-                                            <option value="banner_cancellation_policy">{{ translate('Cancellation_Policy')}}</option>
+                                            <option value="banner_product_list_page">{{\App\CPU\translate('Product_List_Page')}}</option>
+                                            <option value="banner_terms_conditions">{{\App\CPU\translate('Terms_and_Conditions')}}</option>
+                                            <option value="banner_privacy_policy">{{\App\CPU\translate('Privacy_Policy')}}</option>
+                                            <option value="banner_refund_policy">{{\App\CPU\translate('Refund_Policy')}}</option>
+                                            <option value="banner_return_policy">{{\App\CPU\translate('Return_Policy')}}</option>
+                                            <option value="banner_cancellation_policy">{{\App\CPU\translate('Cancellation_Policy')}}</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="name"
-                                            class="title-color text-capitalize">{{ translate('Image')}}</label>
-                                        <span class="text-info">( {{ translate('ratio')}} 4:1 )</span>
+                                            class="title-color text-capitalize">{{\App\CPU\translate('Image')}}</label>
+                                        <span class="text-info">( {{\App\CPU\translate('ratio')}} 4:1 )</span>
                                         <div class="custom-file text-left">
                                             <input type="file" name="image" id="mbimageFileUploader"
                                                 class="custom-file-input"
                                                 accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                             <label class="custom-file-label title-color"
-                                                for="mbimageFileUploader">{{ translate('choose')}} {{ translate('file')}}</label>
+                                                for="mbimageFileUploader">{{\App\CPU\translate('choose')}} {{\App\CPU\translate('file')}}</label>
                                         </div>
                                     </div>
                                 </div>
@@ -77,11 +77,11 @@
                                     </div>
                                 </div>
                                 <div class="col-12 d-flex justify-content-end flex-wrap gap-10">
-                                    <button class="btn btn-secondary cancel px-4" type="reset">{{ translate('reset')}}</button>
+                                    <button class="btn btn-secondary cancel px-4" type="reset">{{\App\CPU\translate('reset')}}</button>
                                     <button id="add" type="submit"
-                                            class="btn btn--primary px-4">{{ translate('save')}}</button>
+                                            class="btn btn--primary px-4">{{\App\CPU\translate('save')}}</button>
                                     <button id="update"
-                                       class="btn btn--primary d--none text-white">{{ translate('update')}}</button>
+                                       class="btn btn--primary d--none text-white">{{\App\CPU\translate('update')}}</button>
                                 </div>
                             </div>
                         </form>
@@ -97,7 +97,7 @@
                         <div class="row align-items-center">
                             <div class="col-md-4 col-lg-6 mb-2 mb-md-0">
                                 <h5 class="mb-0 text-capitalize d-flex gap-2">
-                                    {{ translate('banner_table')}}
+                                    {{\App\CPU\translate('banner_table')}}
                                     <span
                                         class="badge badge-soft-dark radius-50 fz-12">{{ $page_banners->total() }}</span>
                                 </h5>
@@ -115,10 +115,10 @@
                                             </div>
                                             <input id="datatableSearch_" type="search" name="search"
                                                    class="form-control"
-                                                   placeholder="{{ translate('Search_by_Banner_Type')}}"
+                                                   placeholder="{{\App\CPU\translate('Search_by_Banner_Type')}}"
                                                    aria-label="Search orders" value="{{ $search }}">
                                             <button type="submit" class="btn btn--primary">
-                                                {{ translate('Search')}}
+                                                {{\App\CPU\translate('Search')}}
                                             </button>
                                         </div>
                                     </form>
@@ -127,7 +127,7 @@
                                     <div id="banner-btn">
                                         <button id="main-banner-add" class="btn btn--primary text-nowrap">
                                             <i class="tio-add"></i>
-                                            {{ translate('add_banner')}}
+                                            {{\App\CPU\translate('add_banner')}}
                                         </button>
                                     </div>
                                 </div>
@@ -142,10 +142,10 @@
                             <thead class="thead-light thead-50 text-capitalize">
                             <tr>
                                 <th class="pl-xl-5">{{translate('SL')}}</th>
-                                <th>{{ translate('image')}}</th>
-                                <th>{{ translate('banner_type')}}</th>
-                                <th>{{ translate('published')}}</th>
-                                <th class="text-center">{{ translate('action')}}</th>
+                                <th>{{\App\CPU\translate('image')}}</th>
+                                <th>{{\App\CPU\translate('banner_type')}}</th>
+                                <th>{{\App\CPU\translate('published')}}</th>
+                                <th class="text-center">{{\App\CPU\translate('action')}}</th>
                             </tr>
                             </thead>
                             @foreach($page_banners as $key=>$banner)
@@ -157,7 +157,7 @@
                                              onerror="this.src='{{asset('public/assets/front-end/img/placeholder.png')}}'"
                                              src="{{asset('storage/app/public/banner')}}/{{json_decode($banner['value'])->image}}">
                                     </td>
-                                    <td>{{translate(ucwords(str_replace('_',' ',$banner->type)))}}</td>
+                    <td>{{translate(ucwords(str_replace('_',' ',$banner->type)))}}</td>
                                     <td>
                                         <label class="switcher">
                                             <input type="checkbox" class="switcher_input status"
@@ -253,9 +253,9 @@
                 },
                 success: function (data) {
                     if (data == 1) {
-                        toastr.success('{{translate('Banner_published_successfully')}}');
+                        toastr.success('{{(\App\CPU\translate('Banner_published_successfully'))}}');
                     } else {
-                        toastr.success('{{translate('Banner_unpublished_successfully')}}');
+                        toastr.success('{{(\App\CPU\translate('Banner_unpublished_successfully'))}}');
                     }
                     location.reload();
                 }
@@ -265,12 +265,12 @@
         $(document).on('click', '.delete', function () {
             var id = $(this).attr("id");
             Swal.fire({
-                title: "{{translate('Are_you_sure_delete_this_banner')}}?",
-                text: "{{translate('You_will_not_be_able_to_revert_this')}}!",
+                title: "{{(\App\CPU\translate('Are_you_sure_delete_this_banner'))}}?",
+                text: "{{(\App\CPU\translate('You_will_not_be_able_to_revert_this'))}}!",
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: '{{translate('Yes')}}, {{translate('delete_it')}}!',
+                confirmButtonText: '{{(\App\CPU\translate('Yes'))}}, {{(\App\CPU\translate('delete_it'))}}!',
                 type: 'warning',
                 reverseButtons: true
             }).then((result) => {

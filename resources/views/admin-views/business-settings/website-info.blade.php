@@ -162,6 +162,7 @@
                             @php($sale_post_commission=\App\Models\BusinessSetting::where('type','sale_post_commission')->first()->value ?? '')
                             @php($sale_brand_commission=\App\Models\BusinessSetting::where('type','sale_brand_commission')->first()->value ?? '')
                             @php($minimum_wallet_balance=\App\Models\BusinessSetting::where('type','minimum_wallet_balance')->first()->value ?? '')
+                            @php($campaign_gst_percentage=\App\Models\BusinessSetting::where('type','campaign_gst_percentage')->first()->value ?? '18')
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
                                     <label class="title-color d-flex">KYC Amount</label>
@@ -238,6 +239,12 @@
                                 <div class="form-group">
                                     <label class="title-color d-flex">Brand Minimum wallet balance</label>
                                     <input class="form-control" type="text" name="minimum_wallet_balance" value="{{ $minimum_wallet_balance }}">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Campaign GST percentage</label>
+                                    <input class="form-control" type="text" name="campaign_gst_percentage" value="{{ $campaign_gst_percentage }}" placeholder="18">
                                 </div>
                             </div>
                         </div>

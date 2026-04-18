@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Http\Resources\CommonResource;
 use DB;
 use App\CPU\ImageManager;
+use Carbon\Carbon;
 // use Gregwar\Captcha\PhraseBuilder;
 
 class DashboardController extends Controller
@@ -32,9 +33,45 @@ class DashboardController extends Controller
         $totalCampaignBudgetSpent = Campaign::where('status', 'completed')->sum('total_campaign_budget');
         $totalCampaignparticipants = CampaignTransaction::count();
 
+        $trendLabels = [];
+        $campaignTrend = [];
+        $participantTrend = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = Carbon::now()->subMonths($i);
+            $start = $monthDate->copy()->startOfMonth();
+            $end = $monthDate->copy()->endOfMonth();
+
+            $trendLabels[] = $monthDate->format('M Y');
+            $campaignTrend[] = Campaign::whereBetween('created_at', [$start, $end])->count();
+            $participantTrend[] = CampaignTransaction::whereBetween('created_at', [$start, $end])->count();
+        }
+
+        $statusKeys = ['active', 'completed', 'inactive'];
+        $statusLabels = ['Active', 'Completed', 'Inactive'];
+        $statusSeries = [];
+
+        foreach ($statusKeys as $status) {
+            $statusSeries[] = Campaign::where('status', $status)->count();
+        }
+
 
         $campaigns = Campaign::with(['brand'])->where('start_date', '<=', now())->where('end_date', '>=', now())->orderBy('id', 'DESC')->limit(5)->get();
-        return view('admin-views.system.dashboard', compact('totalCampaignparticipants', 'totalCampaignBudget', 'totalCampaignBudgetSpent','liveCampaignCount', 'userCount', 'brandCount', 'campaignCount', 'campaigns'));
+        return view('admin-views.system.dashboard', compact(
+            'totalCampaignparticipants',
+            'totalCampaignBudget',
+            'totalCampaignBudgetSpent',
+            'liveCampaignCount',
+            'userCount',
+            'brandCount',
+            'campaignCount',
+            'campaigns',
+            'trendLabels',
+            'campaignTrend',
+            'participantTrend',
+            'statusLabels',
+            'statusSeries'
+        ));
     }
 
     public function updateProfile(Request $request) {
@@ -60,7 +97,23 @@ class DashboardController extends Controller
     }
 
     public function users(Request $request) {
-        $customers = User::latest()->paginate(10);
+        $customers = User::query()
+            ->when($request->filled('id'), function ($query) use ($request) {
+                $query->where('id', $request->id);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . trim($request->name) . '%');
+            })
+            ->when($request->filled('mobile'), function ($query) use ($request) {
+                $query->where('mobile', 'like', '%' . trim($request->mobile) . '%');
+            })
+            ->when($request->filled('email'), function ($query) use ($request) {
+                $query->where('email', 'like', '%' . trim($request->email) . '%');
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return view('admin-views.customer.list', compact('customers'));
     }
 
@@ -104,6 +157,14 @@ class DashboardController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'upi_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'bank_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'pan_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'aadhar_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'upi_reason' => 'nullable|string|max:255',
+            'bank_reason' => 'nullable|string|max:255',
+            'pan_reason' => 'nullable|string|max:255',
+            'aadhar_reason' => 'nullable|string|max:255',
         ]);
 
         $request->has('image') && $user->image = ImageManager::upload('profile/', 'png', $request->file('image'), $user->image);
@@ -115,6 +176,17 @@ class DashboardController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->phone;
+
+        // KYC fields from admin edit user page
+        $user->upi_status = $request->upi_status;
+        $user->bank_status = $request->bank_status;
+        $user->pan_status = $request->pan_status;
+        $user->aadhar_status = $request->aadhar_status;
+        $user->upi_rejection_reason = $request->upi_status === 'Rejected' ? $request->upi_reason : null;
+        $user->bank_rejection_reason = $request->bank_status === 'Rejected' ? $request->bank_reason : null;
+        $user->pan_rejection_reason = $request->pan_status === 'Rejected' ? $request->pan_reason : null;
+        $user->aadhar_rejection_reason = $request->aadhar_status === 'Rejected' ? $request->aadhar_reason : null;
+
         $user->save();
 
         // ✅ Success message
@@ -125,7 +197,34 @@ class DashboardController extends Controller
     }
 }
     public function brands(Request $request) {
-        $sellers = Seller::orderBy('id', 'DESC')->paginate(25);
+        $sellers = Seller::query()
+            ->when($request->filled('id'), function ($query) use ($request) {
+                $query->where('id', $request->id);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $name = trim($request->name);
+                $query->where(function ($q) use ($name) {
+                    $q->where('username', 'like', "%{$name}%")
+                        ->orWhere('f_name', 'like', "%{$name}%")
+                        ->orWhere('l_name', 'like', "%{$name}%");
+                });
+            })
+            ->when($request->filled('mobile'), function ($query) use ($request) {
+                $query->where('phone', 'like', '%' . trim($request->mobile) . '%');
+            })
+            ->when($request->filled('email'), function ($query) use ($request) {
+                $query->where('email', 'like', '%' . trim($request->email) . '%');
+            })
+            ->when($request->filled('registration_date'), function ($query) use ($request) {
+                $query->whereDate('created_at', $request->registration_date);
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate(10)
+            ->withQueryString();
+
         return view('admin-views.seller.index', compact('sellers'));
     }
 
@@ -230,6 +329,9 @@ class DashboardController extends Controller
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'minimum_wallet_balance'], [
             'value' => $request['minimum_wallet_balance']
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'campaign_gst_percentage'], [
+            'value' => $request->filled('campaign_gst_percentage') ? $request['campaign_gst_percentage'] : '18'
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'kyc_amount'], [
@@ -415,13 +517,46 @@ class DashboardController extends Controller
     }
 
     public function userWallet(Request $request) {
-        $transactions = CoinTransaction::with(['wallet.user'])->orderBy('id', 'DESC')->paginate(25);
+        $transactions = $this->getFilteredUserWalletTransactions($request);
         return view('admin-views.customer.coin-transactions', compact('transactions'));
     }
 
     public function userWalletTransactions(Request $request) {
-        $transactions = CoinTransaction::with(['wallet.user'])->paginate(25);
+        $transactions = $this->getFilteredUserWalletTransactions($request);
         return view('admin-views.customer.coin-transactions', compact('transactions'));
+    }
+
+    private function getFilteredUserWalletTransactions(Request $request)
+    {
+        return CoinTransaction::with(['wallet.user'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('wallet.user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->when($request->filled('transaction_type'), function ($query) use ($request) {
+                $query->where('transaction_type', $request->transaction_type);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate(25)
+            ->withQueryString();
     }
 
     public function rolesNdPermission(Request $request) {
@@ -433,4 +568,84 @@ class DashboardController extends Controller
 
     }
 
+    public function popupBanner(Request $request)
+    {
+        $popupBanner = \App\CPU\Helpers::get_business_settings('popup_banner');
+        if ($popupBanner && is_string($popupBanner)) {
+            $popupBanner = json_decode($popupBanner, true);
+        }
+        return view('admin-views.business-settings.popup-banner', compact('popupBanner'));
+    }
+
+    public function popupBannerUpdate(Request $request)
+    {
+        try {
+            $existing = \App\CPU\Helpers::get_business_settings('popup_banner');
+            $existingData = [];
+            if (is_string($existing)) {
+                $decoded = json_decode($existing, true);
+                $existingData = is_array($decoded) ? $decoded : [];
+            } elseif (is_array($existing)) {
+                $existingData = $existing;
+            } elseif (is_object($existing)) {
+                $existingData = (array) $existing;
+            }
+
+            $popupBannerData = [
+                'status' => $request->has('status') ? 1 : 0,
+                'title' => $request->title ?? '',
+                'description' => $request->description ?? '',
+                'image' => $existingData['image'] ?? null,
+            ];
+
+            // Handle image upload
+            if ($request->hasFile('image') && $request->file('image')->isValid()) {
+                 $image = ImageManager::upload('popup_banner/', 'png', $request->file('image'));
+                $popupBannerData['image'] = $image;
+            }
+
+            // Store in database
+            BusinessSetting::where('type', 'popup_banner')->updateOrInsert(
+                ['type' => 'popup_banner'],
+                ['value' => json_encode($popupBannerData)]
+            );
+
+            return redirect()->back()->with('success', 'Popup Banner settings updated successfully!');
+        } catch (\Throwable $th) {
+            return redirect()->back()->with('error', 'Error updating popup banner settings: ' . $th->getMessage());
+        }
+    }
+
+    public function approveWithdrawal(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:coin_transactions,id',
+        ]);
+
+        $transaction = CoinTransaction::with('wallet')->findOrFail($request->id);
+        if ($transaction->type !== 'debit' || $transaction->status !== 'pending') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Only pending debit withdrawals can be approved.'
+            ], 422);
+        }
+
+        $wallet = $transaction->wallet;
+        if (!$wallet) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Wallet not found.'
+            ], 404);
+        }
+
+        $transaction->status = 'completed';
+        $transaction->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Withdrawal approved successfully.'
+        ]);
+    }
+
 }
+
