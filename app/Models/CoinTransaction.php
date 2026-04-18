@@ -12,6 +12,7 @@ class CoinTransaction extends Model
         'campaign_id',
         'coin',
         'type',
+        'status',
         'amount',
         'tds',
         'convertion_rate',

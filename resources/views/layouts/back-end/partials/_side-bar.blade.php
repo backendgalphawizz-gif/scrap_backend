@@ -38,6 +38,9 @@
             </div>
         </li>
         @endif
+
+        
+
         @if(\App\CPU\Helpers::module_permission_check('sale_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#sales" aria-expanded="false" aria-controls="sales">
@@ -78,6 +81,44 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participants</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="collapse" href="#feedback" aria-expanded="false" aria-controls="feedback">
+                <span class="menu-title">Feedback</span>
+                <i class="mdi mdi-comment-multiple-outline menu-icon"></i>
+            </a>
+            <div class="collapse" id="feedback">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.feedback.list') }}">User Feedback</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.feedback-questions.index') }}">Question Management</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="false" aria-controls="brands-voucher-manage">
+                <span class="menu-title">Voucher Manage</span>
+                <i class="mdi mdi-ticket-percent menu-icon"></i>
+            </a>
+            <div class="collapse" id="brands-voucher-manage">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.voucher.index') }}">Vouchers</a>
                     </li>
                 </ul>
             </div>
@@ -198,6 +239,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.business-settings.privacy-policy') }}">Static Pages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.business-settings.popup-banner') }}">Popup Banner</a>
                     </li>
                 </ul>
             </div>

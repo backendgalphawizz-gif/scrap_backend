@@ -4,6 +4,76 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .campaign-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+        width: 100%;
+    }
+
+    .campaign-filter-form {
+        flex-wrap: nowrap !important;
+        min-width: max-content;
+    }
+
+    .campaign-filter-form .form-control,
+    .campaign-filter-form .form-select {
+        min-width: 150px;
+    }
+
+    .campaign-filter-form .brand-control,
+    .campaign-filter-form .title-control {
+        min-width: 200px;
+    }
+
+    .campaign-filter-form .date-control {
+        min-width: 165px;
+    }
+
+    .campaign-filter-form .btn {
+        white-space: nowrap;
+    }
+
+    .premium-pagination-wrap {
+        border-top: 1px solid #e8ebef;
+        margin-top: 22px;
+        padding: 12px 18px 16px;
+    }
+
+    .premium-pagination-shell {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .premium-pagination-inline {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        overflow-x: auto;
+    }
+
+    .premium-pagination-nav {
+        float: none;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+
+    .premium-pagination-shell .pagination {
+        margin: 0;
+    }
+
+    @media (max-width: 767px) {
+        .premium-pagination-wrap {
+            padding: 12px;
+        }
+
+        .premium-pagination-inline {
+            justify-content: flex-end;
+        }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -81,6 +151,27 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <div class="campaign-filter-scroll">
+                    <form method="GET" action="{{ route('admin.campaign.list') }}" class="campaign-filter-form d-flex align-items-center justify-content-end gap-2">
+                        <input type="text" class="form-control brand-control" name="brand_name" value="{{ request('brand_name') }}" placeholder="Brand name">
+                        <input type="text" class="form-control title-control" name="title" value="{{ request('title') }}" placeholder="Title">
+                        <input type="text" class="form-control" name="city" value="{{ request('city') }}" placeholder="City">
+                        <input type="text" class="form-control" name="state" value="{{ request('state') }}" placeholder="State">
+                        <input type="date" class="form-control date-control" name="date_from" value="{{ request('date_from') }}" title="Date from">
+                        <input type="date" class="form-control date-control" name="date_to" value="{{ request('date_to') }}" title="Date to">
+                        <select class="form-select" name="status" style="min-width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.campaign.list') }}" class="btn btn-outline-secondary">Reset</a>
+                    </form>
                 </div>
             </div>
 
@@ -166,12 +257,15 @@
                             </table>
                         </div>
 
-                        <div class="table-responsive mt-4">
-                            <div class="px-4 d-flex justify-content-lg-end">
-                                <!-- Pagination -->
-                                {{$campaigns->links()}}
+                        @if($campaigns->hasPages())
+                            <div class="premium-pagination-wrap">
+                                <div class="premium-pagination-shell">
+                                    <div class="premium-pagination-inline">
+                                        {!! $campaigns->onEachSide(1)->links('vendor.pagination.premium') !!}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @endif
 
                         @if(count($campaigns)==0)
                         <div class="text-center p-4">

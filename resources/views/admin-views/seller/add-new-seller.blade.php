@@ -188,14 +188,14 @@
 
                         <div class="mt-4">
                             <div class="d-flex gap-1 align-items-center title-color mb-2">
-                                {{translate('shop_secondary_banner')}}
-                                <span class="text-info">({{translate('ratio')}} {{translate('6')}}:{{translate('1')}})</span>
+                                {{\App\CPU\translate('shop_secondary_banner')}}
+                                <span class="text-info">({{translate('ratio')}} {{\App\CPU\translate('6')}}:{{\App\CPU\translate('1')}})</span>
                             </div>
 
                             <div class="custom-file">
                                 <input type="file" name="bottom_banner" id="BottomBannerUpload" class="custom-file-input"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                <label class="custom-file-label" for="BottomBannerUpload">{{translate('Upload')}} {{translate('Bottom')}} {{translate('Banner')}}</label>
+                                <label class="custom-file-label" for="BottomBannerUpload">{{\App\CPU\translate('Upload')}} {{\App\CPU\translate('Bottom')}} {{\App\CPU\translate('Banner')}}</label>
                             </div>
                         </div>
                     </div>

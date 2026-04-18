@@ -7,6 +7,11 @@
 @endpush
 
 @section('content')
+<style>
+    .cke_notifications_area {
+        display: none !important;
+    }
+</style>
     <div class="content-wrapper">
         <div class="page-header">
             <h3 class="page-title">

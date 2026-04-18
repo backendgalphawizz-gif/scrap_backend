@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\User\DashboardController as UserDashboardController
 use App\Http\Controllers\Api\User\UserAuthController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use App\Http\Controllers\Api\User\SocialAuthController;
+use App\Http\Controllers\Api\User\VoucherController as UserVoucherController;
 use App\Http\Controllers\Api\Seller\SellerAuthController;
 use App\Http\Controllers\Api\Seller\SellerWalletController;
 use App\Http\Controllers\Api\Seller\SellerDashboardController;
@@ -95,15 +96,30 @@ Route::prefix('admin')
     });
 
 Route::prefix('user')->middleware('auth:api')->group(function () {
+
+    // User profile related routes
     Route::get('profile', [UserProfileController::class, 'index']);
     Route::get('referrers', [UserProfileController::class, 'referrers']);
     Route::post('update-profile', [UserProfileController::class, 'update']);
     Route::post('update-kyc', [UserProfileController::class, 'updateKyc']);
+
+    // User wallet related routes
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
     Route::get('wallet-transactions', [UserProfileController::class, 'walletTransctions']);
     Route::post('wallet-withdrawl', [UserProfileController::class, 'debitWalletCoin']);
 
+    // User Voucher related routes
+    Route::get('voucher-brands', [UserVoucherController::class, 'brands']);
+    Route::get('voucher-brands/{brandId}/vouchers', [UserVoucherController::class, 'byBrand']);
+    Route::get('vouchers', [UserVoucherController::class, 'index']);
+    Route::get('vouchers/purchased', [UserVoucherController::class, 'purchasedVouchers']);
+    Route::get('vouchers/purchase-transactions', [UserVoucherController::class, 'purchaseTransactions']);
+    Route::post('vouchers/purchase', [UserVoucherController::class, 'purchase']);
+    Route::get('vouchers/{id}', [UserVoucherController::class, 'show']);
+
+    // User Campaign related routes
     Route::post('campaigns', [UserDashboardController::class, 'index']);
+    Route::get('local_for_vocal', [UserDashboardController::class, 'localForVocal']);
     Route::post('campaign/detail/{id}', [UserDashboardController::class, 'show']);
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
@@ -113,23 +129,23 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);
 
+    // User Notifications related routes
     Route::get('notifications', [UserProfileController::class, 'notifications']);
-
     Route::post('verify-social', [UserProfileController::class, 'verifySocial']);
     Route::get('social-verification-status', [UserProfileController::class, 'socialVerificationStatus']);
-
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
-
     Route::get('support-tickets', [UserSupportTicketController::class, 'index']);
     Route::post('support-tickets', [UserSupportTicketController::class, 'store']);
     Route::get('support-tickets/{id}', [UserSupportTicketController::class, 'show']);
     Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
+    
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);
 Route::get('professions', [UserAuthController::class, 'professions']);
 Route::get('banners', [UserAuthController::class, 'banners']);
+Route::get('popup-banner', [UserAuthController::class, 'popupBanner']);
 Route::get('config', [UserAuthController::class, 'config']);
 Route::post('auth/send-otp', [UserAuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [UserAuthController::class, 'verifyOtp']);
@@ -141,6 +157,7 @@ Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
 Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
 
 Route::group(['prefix' => 'brand'], function () {
+    Route::get('brand-category-list', [SellerAuthController::class, 'brandCategoryList']);
     Route::post('auth/send-otp', [SellerAuthController::class, 'sendOtp']);
     Route::post('auth/verify-otp', [SellerAuthController::class, 'verifyOtp']);
     Route::post('auth/resend-otp', [SellerAuthController::class, 'resendOtp']);

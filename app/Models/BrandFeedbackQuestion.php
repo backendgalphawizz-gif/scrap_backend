@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-use DB; 
+use Illuminate\Support\Facades\DB;
 
 class BrandFeedbackQuestion extends Model
 {
@@ -13,7 +13,14 @@ class BrandFeedbackQuestion extends Model
     protected $fillable = [
         'brand_id',
         'question',
+        'question_type',
+        'options',
         'status'
+    ];
+
+    protected $casts = [
+        'options' => 'array',
+        'status' => 'boolean',
     ];
 
     public function brand()

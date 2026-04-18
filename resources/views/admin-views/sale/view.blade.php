@@ -4,6 +4,38 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .sale-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+        width: 100%;
+    }
+
+    .sale-filter-form {
+        flex-wrap: nowrap !important;
+        min-width: max-content;
+    }
+
+    .sale-filter-form .btn {
+        white-space: nowrap;
+    }
+
+    .sale-action-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .sale-action-btn i {
+        font-size: 18px;
+        line-height: 1;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -34,6 +66,19 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
+
+            <div class="d-flex justify-content-end mb-3">
+                <div class="sale-filter-scroll">
+                    <form method="GET" action="{{ route('admin.sale.list') }}" class="sale-filter-form d-flex align-items-center justify-content-end gap-2">
+                        <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="width: 110px;">
+                        <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="width: 180px;">
+                        <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="width: 160px;">
+                        <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="width: 220px;">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.sale.list') }}" class="btn btn-outline-secondary">Reset</a>
+                    </form>
+                </div>
+            </div>
 
             <div class="row" id="banner-table">
                 <div class="col-md-12">
@@ -77,20 +122,20 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
-                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit"
-                                                    title="{{ \App\CPU\translate('Edit')}}"
+                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit sale-action-btn"
+                                                    title="{{ \App\CPU\translate('View')}}"
                                                     href="{{route('admin.sale.show',[$sale['id']])}}">
-                                                    View
+                                                    <i class="mdi mdi-eye-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-primary btn-sm cursor-pointer edit"
+                                                <a class="btn btn-outline-primary btn-sm cursor-pointer edit sale-action-btn"
                                                     title="{{ \App\CPU\translate('Edit')}}"
                                                     href="{{route('admin.sale.edit',[$sale['id']])}}">
-                                                    Edit
+                                                    <i class="mdi mdi-pencil-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete"
+                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete sale-action-btn"
                                                     title="{{ \App\CPU\translate('Delete')}}"
                                                     id="{{$sale['id']}}">
-                                                    Delete
+                                                    <i class="mdi mdi-delete-outline"></i>
                                                 </a>
                                             </div>
                                         </td>

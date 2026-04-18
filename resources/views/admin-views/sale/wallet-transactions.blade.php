@@ -4,6 +4,76 @@
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        .wallet-filter-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 4px;
+        }
+
+        .wallet-filter-form {
+            flex-wrap: nowrap !important;
+            min-width: max-content;
+        }
+
+        .wallet-filter-form .form-control,
+        .wallet-filter-form .form-select {
+            min-width: 135px;
+        }
+
+        .wallet-filter-form .search-control {
+            min-width: 240px;
+        }
+
+        .wallet-filter-form .amount-control,
+        .wallet-filter-form .date-control {
+            min-width: 155px;
+        }
+
+        .wallet-filter-form .btn {
+            height: 38px;
+            white-space: nowrap;
+        }
+
+        .premium-pagination-wrap {
+            border-top: 1px solid #e8ebef;
+            margin-top: 22px;
+            padding: 12px 18px 16px;
+        }
+
+        .premium-pagination-shell {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .premium-pagination-inline {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow-x: auto;
+        }
+
+        .premium-pagination-nav {
+            float: none;
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
+        .premium-pagination-shell .pagination {
+            margin: 0;
+        }
+
+        @media (max-width: 767px) {
+            .premium-pagination-wrap {
+                padding: 12px;
+            }
+
+            .premium-pagination-inline {
+                justify-content: flex-end;
+            }
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -27,6 +97,38 @@
         <div class="col-lg-12">
             <div class="row ">
                 <div class="col-12">
+                    <div class="card mb-3">
+                        <div class="card-body border-bottom">
+                            <div class="wallet-filter-scroll">
+                                <form method="GET" action="{{ route('admin.sale.wallet-transactions') }}" class="wallet-filter-form d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control search-control" name="search" value="{{ request('search') }}" placeholder="Search sale, email, mobile, remarks, ID">
+
+                                    <select class="form-select" name="status">
+                                        <option value="">All status</option>
+                                        <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
+                                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
+                                    </select>
+
+                                    <select class="form-select" name="type">
+                                        <option value="">All type</option>
+                                        <option value="credit" {{ request('type') === 'credit' ? 'selected' : '' }}>Credit</option>
+                                        <option value="debit" {{ request('type') === 'debit' ? 'selected' : '' }}>Debit</option>
+                                    </select>
+
+                                    <input type="number" step="0.01" min="0" class="form-control amount-control" name="amount_min" value="{{ request('amount_min') }}" placeholder="Min amount">
+                                    <input type="number" step="0.01" min="0" class="form-control amount-control" name="amount_max" value="{{ request('amount_max') }}" placeholder="Max amount">
+
+                                    <input type="date" class="form-control date-control" name="date_from" value="{{ request('date_from') }}" title="From date">
+                                    <input type="date" class="form-control date-control" name="date_to" value="{{ request('date_to') }}" title="To date">
+
+                                    <button type="submit" class="btn btn-primary px-4">Filter</button>
+                                    <a href="{{ route('admin.sale.wallet-transactions') }}" class="btn btn-outline-secondary px-4">Reset</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table">
                             <thead class="text-capitalize">
@@ -34,6 +136,7 @@
                                     <th>{{ \App\CPU\translate('SL')}}</th>
                                     <th>{{ \App\CPU\translate('Name')}}</th>
                                     <th>{{ \App\CPU\translate('Amount')}}</th>
+                                    <th>{{ \App\CPU\translate('Type')}}</th>
                                     <th>{{ \App\CPU\translate('Remarks')}}</th>
                                     <th>{{ \App\CPU\translate('Status')}}</th>
                                     <th>{{ \App\CPU\translate('Date')}}</th>
@@ -45,6 +148,7 @@
                                         <td>{{ $transactions->firstItem() + $key }}</td>
                                         <td>{{ $txn->sale->name ?? '' }}</td>
                                         <td>{{ $txn->amount ?? '' }}</td>
+                                        <td>{{ ucfirst($txn->type ?? '-') }}</td>
                                         <td>{{ $txn->remarks ?? '' }}</td>
                                         <td>
                                             <span class="badge badge-{{ $txn->status == 'success' ? 'gradient-success' : 'gradient-danger' }}">
@@ -54,7 +158,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center">
+                                        <td colspan="7" class="text-center">
                                             {{ \App\CPU\translate('No transactions found')}}
                                         </td>
                                     </tr>
@@ -62,9 +166,15 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        {{ $transactions->links() }}
-                    </div>
+                    @if($transactions->hasPages())
+                        <div class="premium-pagination-wrap">
+                            <div class="premium-pagination-shell">
+                                <div class="premium-pagination-inline">
+                                    {!! $transactions->onEachSide(1)->links('vendor.pagination.premium') !!}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

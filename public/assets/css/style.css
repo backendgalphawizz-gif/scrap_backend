@@ -12057,9 +12057,13 @@ textarea.form-control-lg {
 
 .form-check .form-check-input {
   float: left;
-  margin-left: -1.5em;
+  margin-left: 0;
 }
-
+.premium-pagination-wrap {
+    display: inline-block;
+    background: #fff;
+    width: 100%;
+}
 .form-check-reverse {
   padding-right: 1.5em;
   padding-left: 0;
@@ -24154,6 +24158,42 @@ code {
 
 .page-header nav {
   display: none;
+}
+
+nav.premium-pagination-nav {
+  float: right;
+  margin: 18px 40px;
+}
+
+.premium-pagination-list .page-link {
+  color: #0f4c81;
+  border: 1px solid #d2e3f4;
+  border-radius: 8px;
+  margin: 0 3px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 13px;
+  transition: all .18s ease;
+  background: #fff;
+}
+
+.premium-pagination-list .page-link:hover {
+  background: #eef4fb;
+  border-color: #1367ad;
+  color: #0f4c81;
+}
+
+.premium-pagination-list .page-item.active .page-link {
+  background: linear-gradient(135deg, #0f4c81 0%, #1367ad 100%);
+  border-color: #0f4c81;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 76, 129, 0.28);
+}
+
+.premium-pagination-list .page-item.disabled .page-link {
+  color: #a0b3c6;
+  border-color: #e2eaf3;
+  background: #f6f9fd;
 }
 
 .page-header .breadcrumb {

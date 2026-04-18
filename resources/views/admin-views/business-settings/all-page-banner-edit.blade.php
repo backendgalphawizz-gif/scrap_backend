@@ -1,6 +1,6 @@
 @extends('layouts.back-end.app')
 
-@section('title', translate('Edit - All_Pages_Banner '))
+@section('title', \App\CPU\translate('Edit_All_Pages_Banner'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -14,7 +14,7 @@
         <div class="pb-2">
             <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
                 <img src="{{asset('/public/assets/back-end/img/business-setup.png')}}" alt="">
-                {{translate('All_Pages_Banner')}}
+                {{\App\CPU\translate('All_Pages_Banner')}}
             </h2>
         </div>
         <!-- End Page Title -->
