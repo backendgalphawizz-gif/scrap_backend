@@ -66,6 +66,6 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
 ## Migrate 
-[run migrate].([https://](https://datascrapy.developmentalphawizz.com/api/maintenance/migrate)
-[run optimize].([https://](https://datascrapy.developmentalphawizz.com/api/maintenance/optimize)
+[run migrate].(https://datascrapy.developmentalphawizz.com/api/maintenance/migrate)
+[run optimize].(https://datascrapy.developmentalphawizz.com/api/maintenance/optimize)
 
