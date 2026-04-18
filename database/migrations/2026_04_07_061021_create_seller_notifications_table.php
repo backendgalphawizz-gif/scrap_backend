@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('seller_notifications')) {
+            return;
+        }
+
         Schema::create('seller_notifications', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title', 200);

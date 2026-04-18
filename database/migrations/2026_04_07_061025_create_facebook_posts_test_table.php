@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('facebook_posts_test')) {
+            return;
+        }
+
         Schema::create('facebook_posts_test', function (Blueprint $table) {
             $table->increments('id');
             $table->string('post_url', 500)->nullable()->unique();

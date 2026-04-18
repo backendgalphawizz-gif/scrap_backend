@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('user_campaign_skips')) {
+            return;
+        }
+
         Schema::create('user_campaign_skips', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');

@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('tagged_posts_test')) {
+            return;
+        }
+
         Schema::create('tagged_posts_test', function (Blueprint $table) {
             $table->bigInteger('id', true, false)->primary();
             $table->string('instagram_post_id', 100)->nullable()->unique();
