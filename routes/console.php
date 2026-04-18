@@ -8,12 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-// Sync campaign_transactions day_status from scraped tables (cron; same as POST /api/campaign/sync-post-day-status)
-Schedule::command('campaign:sync-post-day-status')
-    ->dailyAt('05:00')
-    ->withoutOverlapping()
-    ->runInBackground();
-
 // Check scraped post results daily and credit coins for verified 7-day campaigns
 Schedule::command('campaign:process-results')
     ->dailyAt('06:00')
