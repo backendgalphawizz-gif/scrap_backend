@@ -55,9 +55,8 @@ Route::post('/optimize-clear', function () {
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
-Route::prefix('admin')
-    ->middleware(['auth:api'])
-    ->group(function () {
+Route::prefix('admin')->middleware(['auth:api'])->group(function () {
+    
         // Dashboard
         Route::get('/dashboard-count', [DashboardController::class, 'index']);
 
@@ -124,7 +123,6 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
     
-
     // User Feedback related routes
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
@@ -139,8 +137,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('support-tickets', [UserSupportTicketController::class, 'store']);
     Route::get('support-tickets/{id}', [UserSupportTicketController::class, 'show']);
     Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
-    Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
-    
+    Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);   
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);
@@ -152,9 +149,7 @@ Route::post('auth/send-otp', [UserAuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [UserAuthController::class, 'verifyOtp']);
 Route::post('auth/resend-otp', [UserAuthController::class, 'resendOtp']);
 Route::post('auth/register', [UserAuthController::class, 'register']);
-
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
-
 Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
 
 Route::group(['prefix' => 'brand'], function () {
@@ -164,7 +159,6 @@ Route::group(['prefix' => 'brand'], function () {
     Route::post('auth/resend-otp', [SellerAuthController::class, 'resendOtp']);
     Route::post('auth/register', [SellerAuthController::class, 'register']);
     Route::post('auth/notification', [SellerAuthController::class, 'sendNotification']);
-
     Route::get('profile', [SellerDashboardController::class, 'index']);
     Route::get('statistics', [SellerDashboardController::class, 'statistics']);
     Route::get('campaign-wise-report/{campaignId}', [SellerDashboardController::class, 'getCampaignWiseChartData']);
@@ -192,12 +186,9 @@ Route::group(['prefix' => 'brand'], function () {
     Route::delete('/feedback-questions/{id}', [FeedbackQuestionController::class, 'destroy']);
 
     Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
-
     Route::get('notifications', [SellerDashboardController::class, 'notifications']);
-
     Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
     Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
-
     Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
     Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
     Route::get('support-tickets/{id}', [BrandSupportTicketController::class, 'show']);
