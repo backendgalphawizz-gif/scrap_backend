@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AdminSupportTicketController;
 use App\Http\Controllers\Api\User\SupportTicketController as UserSupportTicketController;
 use App\Http\Controllers\Api\Seller\SupportTicketController as BrandSupportTicketController;
 use App\Http\Controllers\Api\Seller\SellerSocialVerificationController;
+use App\Http\Controllers\Api\CampaignDayStatusController;
 
 
 Route::get('/user', function (Request $request) {
@@ -51,8 +52,13 @@ Route::post('/optimize-clear', function () {
     ]);
 });
 
+Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
+// Scraped post day_status sync (same unique_code + scraped_at as facebook_posts_test / tagged_posts_test)
+// Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncWithSecret']);
+Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 
 Route::prefix('admin')
     ->middleware(['auth:api'])
@@ -107,6 +113,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
+    Route::post('campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncForUser']);
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);

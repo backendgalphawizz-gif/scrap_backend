@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('admin_roles')) {
+            return;
+        }
+
         Schema::create('admin_roles', function (Blueprint $table) {
             $table->id();
             $table->string('name', 30)->nullable();
