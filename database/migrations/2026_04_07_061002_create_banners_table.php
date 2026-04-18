@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('banners')) {
+            return;
+        }
+
         Schema::create('banners', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title', 45);

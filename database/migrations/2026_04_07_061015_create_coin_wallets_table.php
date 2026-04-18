@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('coin_wallets')) {
+            return;
+        }
+
         Schema::create('coin_wallets', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id');

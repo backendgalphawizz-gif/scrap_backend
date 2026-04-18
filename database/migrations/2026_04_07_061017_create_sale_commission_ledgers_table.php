@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('sale_commission_ledgers')) {
+            return;
+        }
+
         Schema::create('sale_commission_ledgers', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('sale_id');

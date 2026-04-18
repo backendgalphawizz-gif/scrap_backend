@@ -36,6 +36,7 @@ class CampaignTransaction extends Model
         'unique_code',
         'violation_reason',
         'post_url',
+        'day_status',
     ];
 
     // protected $appends = ['left_days'];

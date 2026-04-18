@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('sale_permission_role')) {
+            return;
+        }
+
         Schema::create('sale_permission_role', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('role_id');
