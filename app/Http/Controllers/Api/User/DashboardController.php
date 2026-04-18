@@ -131,16 +131,21 @@ class DashboardController extends Controller
         ->where(['status' => 'active', 'id' => $id])
         ->orderBy('id', 'DESC')
         ->get();
-        $shared_on = CampaignTransaction::where([
+
+        $userTransactions = CampaignTransaction::where([
             'user_id' => $user->id,
             'campaign_id' => $id
-        ])->get()->pluck('shared_on');
+        ])->get();
+        
+        $shared_on = $userTransactions->pluck('shared_on');
+        $share_count = $userTransactions->count();
 
         return response()->json([
             'status' => true,
             'message' => 'Campaign Lists retrieved successfully',
             'data' => new CommonResource($campaigns),
-            'shared_on' => $shared_on
+            'shared_on' => $shared_on,
+            'share_count' => $share_count
         ]);
     }
 

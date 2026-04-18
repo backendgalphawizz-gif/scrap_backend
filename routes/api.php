@@ -23,8 +23,6 @@ use App\Http\Controllers\Api\AdminSupportTicketController;
 use App\Http\Controllers\Api\User\SupportTicketController as UserSupportTicketController;
 use App\Http\Controllers\Api\Seller\SupportTicketController as BrandSupportTicketController;
 use App\Http\Controllers\Api\Seller\SellerSocialVerificationController;
-use App\Http\Controllers\Api\CampaignDayStatusController;
-use App\Http\Controllers\Api\MaintenanceController;
 
 
 Route::get('/user', function (Request $request) {
@@ -32,6 +30,14 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/optimize-clear', function () {
+
+    // Optional: simple security key check
+    if (request()->header('X-SECRET-KEY') !== 'my_secure_key_123') {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthorized'
+        ], 401);
+    }
 
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
@@ -42,16 +48,9 @@ Route::post('/optimize-clear', function () {
     return response()->json([
         'status' => true,
         'message' => 'Optimize clear executed successfully',
-        'output' => Artisan::output(),
+        'output' => Artisan::output()
     ]);
 });
-
-Route::get('/maintenance/migrate', [MaintenanceController::class, 'migrate']);
-Route::get('/maintenance/optimize', [MaintenanceController::class, 'optimize']);
-
-// Bulk day_status sync (GET or POST; call manually instead of cron)
-Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
-Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
@@ -124,7 +123,9 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
-    Route::post('campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncForUser']);
+    
+
+    // User Feedback related routes
     Route::post('submit-feedback', [UserProfileController::class, 'submitCampaignFeedback']);
     Route::get('list-feedbacks', [UserProfileController::class, 'listCampaignFeedback']);
     Route::get('get-feedbacks-questions/{id}', [UserProfileController::class, 'getBrandFeedbackQuestion']);
