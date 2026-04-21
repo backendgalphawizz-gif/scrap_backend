@@ -247,6 +247,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.business-settings.popup-banner') }}">Popup Banner</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.payment-split.edit') }}">Payment Split Settings</a>
+                    </li>
                 </ul>
             </div>
         </li>

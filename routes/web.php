@@ -15,6 +15,7 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\FeedbackQuestionController;
 use App\Http\Controllers\VoucherBrandController;
 use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\Admin\PaymentSplitController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -196,6 +197,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
 
     Route::post('/admin/support-ticket/reply/{id}', [SupportTicketController::class, 'reply'])
     ->name('admin.support-ticket.replay');
+
+    // Payment Split Settings
+    Route::get('business-settings/payment-split', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'edit'])->name('admin.payment-split.edit');
+    Route::post('business-settings/payment-split', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'update'])->name('admin.payment-split.update');
 });
 
 Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])
@@ -204,3 +209,4 @@ Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'clos
 // SocialAuthController
 Route::get('auth/{service}', [SocialAuthController::class, 'redirectToProvider'])->name('service-login');
 Route::get('auth/{service}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('service-callback');
+
