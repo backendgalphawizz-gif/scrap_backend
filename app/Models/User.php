@@ -61,6 +61,7 @@ class User extends Authenticatable
         'facebook_username',
         'instagram_status',
         'facebook_status',
+        'post_slots',
     ];
 
     /**

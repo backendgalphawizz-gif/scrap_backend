@@ -90,6 +90,9 @@ class CampaignController extends Controller
         $campaign->total_campaign_budget = $request->total_campaign_budget;
         $campaign->age_range = $request->age_range;
         $campaign->save();
+        // Set unique_code as RXC-campaign_id
+        $campaign->unique_code = 'RXC-' . $campaign->id;
+        $campaign->save();
         return redirect()->route('admin.campaign.list');
     }
 

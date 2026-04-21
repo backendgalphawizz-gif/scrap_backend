@@ -29,6 +29,16 @@ Route::post('/image-upload', function () {
 
 // Admin Dashboard
 Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
+
+        // User Level Management
+        Route::group(['prefix' => 'user-levels'], function() {
+            Route::get('/', [\App\Http\Controllers\Admin\UserLevelController::class, 'index'])->name('admin.user-level.index');
+            Route::get('/create', [\App\Http\Controllers\Admin\UserLevelController::class, 'create'])->name('admin.user-level.create');
+            Route::post('/store', [\App\Http\Controllers\Admin\UserLevelController::class, 'store'])->name('admin.user-level.store');
+            Route::get('/edit/{id}', [\App\Http\Controllers\Admin\UserLevelController::class, 'edit'])->name('admin.user-level.edit');
+            Route::post('/update/{id}', [\App\Http\Controllers\Admin\UserLevelController::class, 'update'])->name('admin.user-level.update');
+            Route::post('/delete/{id}', [\App\Http\Controllers\Admin\UserLevelController::class, 'destroy'])->name('admin.user-level.delete');
+        });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/profile', [DashboardController::class, 'profile'])->name('admin.profile');
     Route::post('/update-profile/{id}', [DashboardController::class, 'updateProfile'])->name('admin.profile.update');
@@ -175,9 +185,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('status', [NotificationController::class, 'status'])->name('status');
         Route::post('resend-notification', [NotificationController::class, 'resendNotification'])->name('resend-notification');
         Route::post('delete', [NotificationController::class, 'delete'])->name('delete');
-    });
-
-   
+    }); 
+  
     // Support-ticket
     Route::get('/support-ticket/view', [SupportTicketController::class, 'index'])
     ->name('admin.support-ticket.view-support');

@@ -42,6 +42,7 @@ return new class extends Migration
             $table->string('age_range', 45);
             $table->integer('sale_id')->nullable();
             $table->enum('post_type', ['post', 'reel', 'story'])->default('post');
+            $table->string('unique_code', 100)->nullable()->unique();
         });
     }
 

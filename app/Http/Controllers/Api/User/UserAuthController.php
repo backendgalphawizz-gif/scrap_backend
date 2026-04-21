@@ -154,16 +154,7 @@ class UserAuthController extends Controller
     public function register(Request $request)
     {
         try {
-            //code...
-
-            // Registration logic here (if needed)
-            // name:Sawan Shakya
-            // mobile:8962272839
-            // email:sawan@mailinator.com // Optional
-            // dob:2000-07-20
-            // gender:male
-            // profession:Digital Marketting Manager
-            // referral_code: // Optional
+           
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'mobile' => 'required|digits:10|unique:users,mobile',
@@ -193,6 +184,7 @@ class UserAuthController extends Controller
                 'role_id' => 1, // Default to Supervisor or any role you want   
                 'city' => $request->city,
                 'state' => $request->state,
+                'post_slots' => '10', // Default post slots, can be updated later based on user level
                 'instagram_username' => $request->instagram_username,
                 'instagram_status' => $request->instagram_username ? 'pending' : 'not_submitted',
                 'facebook_username' => $request->facebook_username,

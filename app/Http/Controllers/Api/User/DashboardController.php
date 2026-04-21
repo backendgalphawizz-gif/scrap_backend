@@ -76,9 +76,7 @@ class DashboardController extends Controller
 
             case 'newest':
                 $query->orderBy('created_at', 'DESC');
-                break;
-
-        
+                break;     
 
             default:
                 $query->orderBy('id', 'DESC');

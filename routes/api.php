@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\User\UserAuthController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use App\Http\Controllers\Api\User\SocialAuthController;
 use App\Http\Controllers\Api\User\VoucherController as UserVoucherController;
+use App\Http\Controllers\Api\User\UserLevelController as UserLevelController;
 use App\Http\Controllers\Api\Seller\SellerAuthController;
 use App\Http\Controllers\Api\Seller\SellerWalletController;
 use App\Http\Controllers\Api\Seller\SellerDashboardController;
@@ -99,8 +100,8 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     // User profile related routes
     Route::get('profile', [UserProfileController::class, 'index']);
     Route::get('referrers', [UserProfileController::class, 'referrers']);
-    Route::post('update-profile', [UserProfileController::class, 'update']);
-    Route::post('update-kyc', [UserProfileController::class, 'updateKyc']);
+    Route::post('update-profile', [UserProfileController::class, 'update']); // na
+    Route::post('update-kyc', [UserProfileController::class, 'updateKyc']);  // na
 
     // User wallet related routes
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
@@ -140,6 +141,11 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::get('support-tickets/{id}', [UserSupportTicketController::class, 'show']);
     Route::delete('support-tickets/{id}', [UserSupportTicketController::class, 'destroy']);
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
+
+    // get user level and benefits
+    Route::get('user-levels', [UserLevelController::class, 'index']);
+
+
     
 });
 
