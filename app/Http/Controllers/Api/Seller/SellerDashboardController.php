@@ -400,6 +400,12 @@ class SellerDashboardController extends Controller
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
 
+            if($paymentSplit->user_percentage){
+                $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
+            }else{
+                $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
+            }
+
             
             $campaign->save();
 
