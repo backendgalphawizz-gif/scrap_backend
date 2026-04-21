@@ -25,7 +25,8 @@ class Campaign extends Model
         'status',
         'thumbnail',
         'images',
-        'share_on'
+        'share_on',
+        'unique_code'
     ];
 
     protected $appends = [

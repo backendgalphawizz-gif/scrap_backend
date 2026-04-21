@@ -79,16 +79,26 @@ class DashboardController extends Controller
         $admin->name = $request->name;
         $admin->email = $request->email;
         $admin->phone = $request->phone;
-        
+
         if ($request->has('image')) {
             $admin->image = ImageManager::upload('profile/', 'png', $request->file('image'), $admin->image);
         }
 
-        if ($request->password) {
+        // Password update logic
+        if ($request->filled('password')) {
+            $request->validate([
+                'old_password' => 'required',
+                'password' => 'required|string|min:6|confirmed',
+            ]);
+            // Check old password
+            if (!\Hash::check($request->old_password, $admin->password)) {
+                return redirect()->back()->withErrors(['old_password' => 'Old password is incorrect.']);
+            }
             $admin->password = bcrypt($request->password);
         }
+
         $admin->save();
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
     public function profile(Request $request) {

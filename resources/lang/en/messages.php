@@ -526,4 +526,6 @@
   'Feedback' => 'Feedback',
   'Image Crop' => 'Image Crop',
   'Image preview is available in the form. Crop tool is currently not configured.' => 'Image preview is available in the form. Crop tool is currently not configured.',
+  'New Password' => 'New Password',
+  'Old Password' => 'Old Password',
 );

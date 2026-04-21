@@ -10,6 +10,23 @@
 @section('content')
 <div class="content-wrapper">
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="page-header">
         <h3 class="page-title">
             <span class="page-title-icon bg-gradient-primary text-white me-2">
@@ -37,7 +54,7 @@
 
                 <div class="card-body">
 
-                    <form action="{{route('admin.profile.update',[$data->id])}}" method="post" enctype="multipart/form-data">
+                    <form id="profileForm" action="{{route('admin.profile.update',[$data->id])}}" method="post" enctype="multipart/form-data" onsubmit="return validatePasswordMatch()">
                         @csrf
 
                         <div class="row g-3 mb-3">
@@ -70,7 +87,8 @@
                                     <input type="email"
                                         class="form-control"
                                         name="email"
-                                        value="{{$data->email}}">
+                                        value="{{$data->email}}"
+                                        readonly>
                                 </div>
                             </div>
 
@@ -96,6 +114,27 @@
                         </div>
 
                         <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{\App\CPU\translate('Old Password')}}</label>
+                                    <input type="password" class="form-control" name="old_password" autocomplete="current-password" minlength="6">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{\App\CPU\translate('New Password')}}</label>
+                                    <input type="password" class="form-control" name="password" autocomplete="new-password" minlength="6">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{\App\CPU\translate('Confirm Password')}}</label>
+                                    <input type="password" class="form-control" name="password_confirmation" autocomplete="new-password" minlength="6">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div id="password-error" class="text-danger mb-2" style="display:none;"></div>
+                            </div>
                             <div class="col-md-12 d-flex justify-content-end gap-3">
                                 <button type="submit" class="btn btn-primary px-4">
                                     {{\App\CPU\translate('Save changes')}}
@@ -119,13 +158,10 @@
 <script>
     function readURL(input) {
         if (input.files && input.files[0]) {
-
             var reader = new FileReader();
-
             reader.onload = function(e) {
                 $('#viewer').attr('src', e.target.result);
             }
-
             reader.readAsDataURL(input.files[0]);
         }
     }
@@ -133,5 +169,21 @@
     $("#customFileUpload").change(function() {
         readURL(this);
     });
+
+    function validatePasswordMatch(e) {
+        var password = document.querySelector('input[name="password"]').value;
+        var confirmPassword = document.querySelector('input[name="password_confirmation"]').value;
+        var errorDiv = document.getElementById('password-error');
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'New Password and Confirm Password do not match.';
+            errorDiv.style.display = 'block';
+            if (e) e.preventDefault();
+            return false;
+        } else {
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+        }
+        return true;
+    }
 </script>
 @endpush

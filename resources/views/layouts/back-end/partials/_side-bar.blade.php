@@ -34,6 +34,10 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.user.wallet') }}">Wallet Transactions</a>
                     </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{route('admin.user-level.index')}}">User Levels</a>
+                    </li>
                 </ul>
             </div>
         </li>
