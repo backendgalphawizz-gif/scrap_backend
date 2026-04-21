@@ -276,6 +276,32 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function updateScrappedPosts(Request $request)
+    {
+        $transactions_id = $request->input('transactions_id');
+        $post_url = $request->input('post_url');
+        $scrapped_posts = CampaignTransaction::where('id', $transactions_id)
+            ->where('id', $transactions_id)->first();
+        if ($scrapped_posts) {
+           CampaignTransaction::where('id', $transactions_id)->update(['post_url' => $post_url]);
+            return response()->json([
+                'status' => true,   
+                'message' => 'Scrapped post updated successfully',
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Scrapped post not found',
+            ], 404);
+        }
+            
+
+      
+        
+
+
+        
+    }
     public function skipCampaign(Request $request)
     {
         $validator = Validator::make($request->all(), [

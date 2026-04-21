@@ -1,3 +1,10 @@
+                        <!-- Business Settings -->
+                        <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/payment-split')?'active':''}}">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.payment-split.edit') }}">
+                                <i class="tio-settings nav-icon"></i>
+                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">Payment Split Settings</span>
+                            </a>
+                        </li>
 <div id="sidebarMain" class="d-none">
     <aside style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};"
         class="bg-white js-navbar-vertical-aside navbar navbar-vertical-aside navbar-vertical navbar-vertical-fixed navbar-expand-xl navbar-bordered  ">

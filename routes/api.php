@@ -124,6 +124,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('campaign/shared', [UserDashboardController::class, 'myCampaigns']);
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
+    Route::post('campaign/updateScrappedPosts', [UserDashboardController::class, 'updateScrappedPosts']);
     
 
     // User Feedback related routes
