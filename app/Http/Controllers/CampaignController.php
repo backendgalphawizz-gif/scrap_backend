@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignTransaction;
 use App\Models\Seller;
+use App\Models\PaymentSplit;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 
@@ -68,7 +69,10 @@ class CampaignController extends Controller
                 $product_images[] = $image_name;
             }
             $campaign->images = implode(',', $product_images);
-        }            
+        }  
+        
+        $paymentSplit = PaymentSplit::first();
+
         $campaign->brand_id = $request->brand_id;
         $campaign->title = $request->caption;
         $campaign->descriptions = $request->caption;
@@ -89,6 +93,9 @@ class CampaignController extends Controller
         $campaign->daily_budget_cap = $request->daily_budget_cap;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
         $campaign->age_range = $request->age_range;
+        $campaign->admin_percentage = $paymentSplit->admin_percentage;
+        $campaign->user_percentage = $paymentSplit->user_percentage;
+        $campaign->sales_percentage = $paymentSplit->sales_percentage;
         $campaign->save();
         // Set unique_code as RXC-campaign_id
         $campaign->unique_code = 'RXC-' . $campaign->id;
