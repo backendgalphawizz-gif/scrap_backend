@@ -13,6 +13,7 @@ use App\Models\SellerWallet;
 use App\Models\Notification;
 use App\Models\CampaignTransaction;
 use App\Models\SocialVerificationTransaction;
+use App\Models\PaymentSplit;
 
 use Illuminate\Http\Request;
 use function App\CPU\translate;
@@ -369,6 +370,10 @@ class SellerDashboardController extends Controller
                 }
                 $campaign->images = implode(',', $product_images);
             }
+
+            $paymentSplit = PaymentSplit::first();
+
+
             $campaign->brand_id = $seller['id'];
             $caption = (string) ($request->caption ?? '');
             $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
@@ -391,6 +396,11 @@ class SellerDashboardController extends Controller
             $campaign->daily_budget_cap = $request->daily_budget_cap;
             $campaign->total_campaign_budget = $request->total_campaign_budget;
             $campaign->age_range = $request->age_range;
+            $campaign->admin_percentage = $paymentSplit->admin_percentage;
+            $campaign->user_percentage = $paymentSplit->user_percentage;
+            $campaign->sales_percentage = $paymentSplit->sales_percentage;
+
+            
             $campaign->save();
 
             Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
@@ -548,9 +558,9 @@ class SellerDashboardController extends Controller
     public function listCampaign(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
-
         if ($data['success'] == 1) {
             $seller = $data['data'];
+            
             $campaigns = Campaign::where('brand_id', $seller['id'])
                 ->when($request->has('status'), function ($query) use ($request) {
                     // pending, active, completed
@@ -565,7 +575,7 @@ class SellerDashboardController extends Controller
                 })
                 ->orderBy('id', 'DESC')
                 ->get();
-            return response()->json([
+               return response()->json([
                 'status' => true,
                 'message' => 'Campaign list retrieved successfully',
                 'data' => CommonResource::collection($campaigns)

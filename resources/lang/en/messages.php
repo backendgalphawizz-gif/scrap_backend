@@ -528,4 +528,5 @@
   'Image preview is available in the form. Crop tool is currently not configured.' => 'Image preview is available in the form. Crop tool is currently not configured.',
   'New Password' => 'New Password',
   'Old Password' => 'Old Password',
+  'Please verify your Instagram and Facebook accounts before creating a campaign.' => 'Please verify your Instagram and Facebook accounts before creating a campaign.',
 );
