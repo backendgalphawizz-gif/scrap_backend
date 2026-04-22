@@ -242,6 +242,7 @@ class UserAuthController extends Controller
             'sale_post_commission' => Helpers::get_business_settings('sale_post_commission'),
             'sale_brand_commission' => Helpers::get_business_settings('sale_brand_commission'),
             'minimum_wallet_balance' => Helpers::get_business_settings('minimum_wallet_balance'),
+            'campaign_gst_percentage' => Helpers::get_business_settings('campaign_gst_percentage'), 
 
 
             'brand_faq' => [
