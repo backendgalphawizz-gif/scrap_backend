@@ -14,6 +14,7 @@ use App\Models\Notification;
 use App\Models\CampaignTransaction;
 use App\Models\SocialVerificationTransaction;
 use App\Models\PaymentSplit;
+use App\Models\BusinessSetting;
 
 use Illuminate\Http\Request;
 use function App\CPU\translate;
@@ -372,7 +373,9 @@ class SellerDashboardController extends Controller
             }
 
             $paymentSplit = PaymentSplit::first();
-
+            $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
+            $total_campaign_budget = $request->total_campaign_budget;
+            $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
 
             $campaign->brand_id = $seller['id'];
             $caption = (string) ($request->caption ?? '');
@@ -399,6 +402,8 @@ class SellerDashboardController extends Controller
             $campaign->admin_percentage = $paymentSplit->admin_percentage;
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
+            $campaign->sales_referal_code = $paymentSplit->sales_referal_code;
+            $campaign->compign_budget_with_gst = $compign_budget_with_gst;
 
             if($paymentSplit->user_percentage){
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;

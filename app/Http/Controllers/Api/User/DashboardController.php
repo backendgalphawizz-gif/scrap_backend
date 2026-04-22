@@ -88,13 +88,13 @@ class DashboardController extends Controller
         $state = $user->state??'';
 
         $campaigns = $query
-            ->when($gender!='', function($q) use($gender) {
+            ->when($gender != '' && $gender != 'both', function($q) use($gender) {
                 $q->where('gender', $gender);
             })
-            ->when($city!='', function($q) use($city) {
+            ->when($city != '' && $city != 'any', function($q) use($city) {
                 $q->where('city', $city);
             })
-            ->when($state!='', function($q) use($state) {
+            ->when($state != '' && $state != 'any', function($q) use($state) {
                 $q->where('state', $state);
             })
             ->where(['status' => 'active'])
