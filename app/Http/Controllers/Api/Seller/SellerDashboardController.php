@@ -406,7 +406,7 @@ class SellerDashboardController extends Controller
             $campaign->admin_percentage = $paymentSplit->admin_percentage;
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
-            $campaign->sales_referal_code = $paymentSplit->sales_referal_code;
+            $campaign->sales_referal_code = $request->sales_referal_code;
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
 
             if($paymentSplit->user_percentage){
