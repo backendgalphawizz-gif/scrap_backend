@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
+use App\Models\Campaign;
 
 class CampaignDayStatusController extends Controller
 {
@@ -66,6 +67,9 @@ class CampaignDayStatusController extends Controller
 
         if ($transaction->status === 'flagged') {
             $transaction->status = 'deleted';
+            $camp = Campaign::find($transaction->campaign_id);
+            $camp->decrement('used_post');
+
 
             return;
         }
@@ -186,11 +190,14 @@ class CampaignDayStatusController extends Controller
             ->whereNotNull('unique_code')
             ->where('unique_code', '!=', '');
 
+        
+
         if ($restrictUserId !== null) {
             $base->where('user_id', $restrictUserId);
         }
 
         $base->orderBy('id')->chunkById(100, function ($transactions) use (&$stats) {
+            // print_r($transactions->pluck('id')->toArray());die;
             foreach ($transactions as $transaction) {
                 $stats['processed']++;
                 try {

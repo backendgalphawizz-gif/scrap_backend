@@ -394,7 +394,7 @@ class SellerDashboardController extends Controller
             $campaign->state = $request->state;
             $campaign->city = $request->city;
             $campaign->guidelines = implode('|', $request->guidelines);
-            $campaign->coins = $request->reward_per_user;
+            //$campaign->coins = $request->reward_per_user;
 
             $campaign->total_user_required = $request->total_user_required;
             $campaign->reward_per_user = $request->reward_per_user;
@@ -408,15 +408,35 @@ class SellerDashboardController extends Controller
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
             $campaign->sales_referal_code = $request->sales_referal_code;
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+            $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
             if($paymentSplit->user_percentage){
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
+                $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
+                $campaign->final_reward_for_user = $final_reward_for_user;
+                $campaign->coins = $upi_value * $final_reward_for_user;
             }else{
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
+                $final_reward_for_user = ($request->reward_per_user * 50) / 100;
+                $campaign->final_reward_for_user = $final_reward_for_user;
+                $campaign->coins = $upi_value * $final_reward_for_user;
             }
-
-            
+           
             $campaign->save();
+
+            // here remove amount from wellert and create transaction for campaign creation
+
+
+            $sellerWallet->wallet_amount -= $compign_budget_with_gst;
+            $sellerWallet->save();
+
+            // Log wallet debit transaction for campaign creation
+            \App\Models\SellerWalletHistory::create([
+                'seller_id' => $seller['id'],
+                'amount' => -$compign_budget_with_gst,
+                'remarks' => 'Campaign creation: '.$campaign->title,
+                'type' => 'debit',
+            ]);
 
             Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
 
