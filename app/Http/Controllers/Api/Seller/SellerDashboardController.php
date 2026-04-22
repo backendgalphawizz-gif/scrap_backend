@@ -279,6 +279,9 @@ class SellerDashboardController extends Controller
         if ($request->has('gst_number') && $shop->gst_status !== 'Verified') {
             $shop->gst_number = $request->gst_number;
             $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
+            $shop->billing_name = $request->billing_name;
+            $shop->billing_address = $request->billing_address;
+            $shop->billing_phone = $request->billing_phone;
         }
 
         $kycDirty = $shop->isDirty();
@@ -299,6 +302,7 @@ class SellerDashboardController extends Controller
     public function createCampaign(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
+       
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
