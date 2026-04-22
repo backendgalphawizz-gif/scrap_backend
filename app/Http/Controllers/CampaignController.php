@@ -101,6 +101,7 @@ class CampaignController extends Controller
         }else{
             $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
         }
+        
         $campaign->save();
         // Set unique_code as RXC-campaign_id
         $campaign->unique_code = 'RXC-' . $campaign->id;
