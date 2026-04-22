@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Campaign;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CampaignTransaction;
@@ -17,7 +18,7 @@ class ProcessScrapeResults extends Command
 
     public function handle(): void
     {
-        $this->info('Processing scrape results...');
+        $this->info('Processing scrape results...');die;
 
         $transactions = CampaignTransaction::with(['campaign'])
             ->whereIn('status', [
@@ -66,7 +67,10 @@ class ProcessScrapeResults extends Command
             } else {
                 $endDate = Carbon::parse($transaction->end_date)->endOfDay();
                 if ($transaction->status === CampaignTransaction::STATUS_FLAGGED) {
+
                     $this->markDeleted($transaction, $rewardTransaction);
+                    
+                    $this->info('Syncing campaign post day status...',$transaction->campaign_id);
                     $deleted++;
                 } elseif (Carbon::now()->gt($endDate)) {
                     $this->markFlagged($transaction);

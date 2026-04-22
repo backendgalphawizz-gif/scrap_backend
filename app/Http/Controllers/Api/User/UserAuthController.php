@@ -10,6 +10,7 @@ use App\Models\Banner;
 use App\Models\BrandCategory;
 use App\Models\Profession;
 use App\Models\User;
+use App\Models\paymentSplit;
 use App\CPU\Helpers;
 
 class UserAuthController extends Controller
@@ -215,6 +216,8 @@ class UserAuthController extends Controller
     
     public function config()
     {
+
+        $paymentSplit = paymentSplit::first();
         $data = [
             'is_mandatory_update' => true,
             'professions' => Profession::where('status', 1)->get(),
@@ -243,6 +246,10 @@ class UserAuthController extends Controller
             'sale_brand_commission' => Helpers::get_business_settings('sale_brand_commission'),
             'minimum_wallet_balance' => Helpers::get_business_settings('minimum_wallet_balance'),
             'campaign_gst_percentage' => Helpers::get_business_settings('campaign_gst_percentage'), 
+            'campaign_gst_percentage' => Helpers::get_business_settings('campaign_gst_percentage'), 
+            'admin_comission' => $paymentSplit->admin_percentage ?? 0,
+            'user_comission' => $paymentSplit->user_percentage ?? 0,
+            'sale_comission' => $paymentSplit->sales_percentage ?? 0,
 
 
             'brand_faq' => [

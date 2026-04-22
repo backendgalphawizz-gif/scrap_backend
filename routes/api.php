@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\AdminSupportTicketController;
 use App\Http\Controllers\Api\User\SupportTicketController as UserSupportTicketController;
 use App\Http\Controllers\Api\Seller\SupportTicketController as BrandSupportTicketController;
 use App\Http\Controllers\Api\Seller\SellerSocialVerificationController;
+use App\Http\Controllers\Api\CampaignDayStatusController;
+use Illuminate\Support\Facades\Artisan;
 
 
 Route::get('/user', function (Request $request) {
@@ -52,7 +54,8 @@ Route::post('/optimize-clear', function () {
         'output' => Artisan::output()
     ]);
 });
-
+// Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
