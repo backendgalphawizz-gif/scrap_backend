@@ -433,9 +433,9 @@ class SellerDashboardController extends Controller
             // Log wallet debit transaction for campaign creation
             \App\Models\SellerWalletHistory::create([
                 'seller_id' => $seller['id'],
-                'amount' => -$compign_budget_with_gst,
-                'remarks' => 'Campaign creation: '.$campaign->title,
-                'type' => 'debit',
+                'amount'    => $compign_budget_with_gst,
+                'remarks'   => 'Campaign creation: '.$campaign->title,
+                'type'      => 'debit',
             ]);
 
             Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
