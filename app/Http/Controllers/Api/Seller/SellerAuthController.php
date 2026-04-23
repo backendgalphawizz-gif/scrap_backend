@@ -245,6 +245,7 @@ class SellerAuthController extends Controller
                 'username' => $request->username,
                 'phone' => $request->mobile,
                 'email' => $request->email,
+                'status' => 'approved',
                 'referral_code' => Helpers::generate_referral_code(),
                 'friends_code' => $request->referral_code ?? '',
                 'city' => $request->city,
@@ -274,7 +275,7 @@ class SellerAuthController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Registration successful. Please login to continue.',
+                'message' => 'Registration successful.',
                 'token' => $token
             ]);
         } catch (\Throwable $th) {

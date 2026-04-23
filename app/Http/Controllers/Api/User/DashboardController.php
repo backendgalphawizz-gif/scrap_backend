@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api\User;
+
 use App\Http\Controllers\Controller;
 use App\CPU\Helpers;
 use Illuminate\Http\Request;
@@ -76,26 +77,32 @@ class DashboardController extends Controller
 
             case 'newest':
                 $query->orderBy('created_at', 'DESC');
-                break;     
+                break;
 
             default:
                 $query->orderBy('id', 'DESC');
                 break;
         }
 
-        $gender = $user->gender??'';
-        $city = $user->city??'';
-        $state = $user->state??'';
+        $gender = $user->gender ?? '';
+        $city = $user->city ?? '';
+        $state = $user->state ?? '';
 
         $campaigns = $query
-            ->when($gender != '' && $gender != 'both', function($q) use($gender) {
+            ->when($gender != '' && $gender != 'both', function ($q) use ($gender) {
                 $q->where('gender', $gender);
             })
-            ->when($city != '' && $city != 'any', function($q) use($city) {
-                $q->where('city', $city);
+            ->when($city != '' && $city != 'any', function ($q) use ($city) {
+                $q->where(function ($sub) use ($city) {
+                    $sub->where('city', $city)
+                        ->orWhere('city', 'any');
+                });
             })
-            ->when($state != '' && $state != 'any', function($q) use($state) {
-                $q->where('state', $state);
+            ->when($state != '' && $state != 'any', function ($q) use ($state) {
+                $q->where(function ($sub) use ($state) {
+                    $sub->where('state', $state)
+                        ->orWhere('state', 'any');
+                });
             })
             ->where(['status' => 'active'])
             ->whereNotIn('id', function ($sub) use ($user) {
@@ -104,6 +111,7 @@ class DashboardController extends Controller
                     ->where('user_id', $user->id);
             })
             ->paginate($request->input('limit', 10));
+            
         return response()->json([
             'status' => true,
             'message' => 'Campaign Lists retrieved successfully',
@@ -122,19 +130,19 @@ class DashboardController extends Controller
             ], 404);
         }
 
-        $campaigns = Campaign::with(['brand', 'campaign_transactions' => function($q) use($user) {
+        $campaigns = Campaign::with(['brand', 'campaign_transactions' => function ($q) use ($user) {
             $q->where('user_id', $user->id);
         }])
-        ->withCount(['occupiedTransactions as occupied_slots'])
-        ->where(['status' => 'active', 'id' => $id])
-        ->orderBy('id', 'DESC')
-        ->get();
+            ->withCount(['occupiedTransactions as occupied_slots'])
+            ->where(['status' => 'active', 'id' => $id])
+            ->orderBy('id', 'DESC')
+            ->get();
 
         $userTransactions = CampaignTransaction::where([
             'user_id' => $user->id,
             'campaign_id' => $id
         ])->get();
-        
+
         $shared_on = $userTransactions->pluck('shared_on');
         $share_count = $userTransactions->count();
 
@@ -283,9 +291,9 @@ class DashboardController extends Controller
         $scrapped_posts = CampaignTransaction::where('id', $transactions_id)
             ->where('id', $transactions_id)->first();
         if ($scrapped_posts) {
-           CampaignTransaction::where('id', $transactions_id)->update(['post_url' => $post_url]);
+            CampaignTransaction::where('id', $transactions_id)->update(['post_url' => $post_url]);
             return response()->json([
-                'status' => true,   
+                'status' => true,
                 'message' => 'Scrapped post updated successfully',
             ]);
         } else {
@@ -294,13 +302,6 @@ class DashboardController extends Controller
                 'message' => 'Scrapped post not found',
             ], 404);
         }
-            
-
-      
-        
-
-
-        
     }
     public function skipCampaign(Request $request)
     {
@@ -332,16 +333,16 @@ class DashboardController extends Controller
     public function myCampaigns(Request $request)
     {
         $user = $request->user();
-        
+
         $campaign_ids = CampaignTransaction::where('user_id', $user->id)->orderBy('id', 'DESC')->get()->pluck('campaign_id');
 
         $campaigns = Campaign::withCount([
-            'feedbacks' => function($q) use($user) {
+            'feedbacks' => function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             },
             'occupiedTransactions as occupied_slots'
         ])->with(['brand', 'campaign_transactions'])->whereIn('id', $campaign_ids)->get();
- 
+
         $total_coins_earned = strval(0);
         $total_campaigns = strval(CampaignTransaction::where('user_id', $user->id)->count());
 
