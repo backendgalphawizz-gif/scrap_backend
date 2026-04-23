@@ -10,7 +10,7 @@ use App\Models\Banner;
 use App\Models\BrandCategory;
 use App\Models\Profession;
 use App\Models\User;
-use App\Models\paymentSplit;
+use App\Models\PaymentSplit;
 use App\CPU\Helpers;
 
 class UserAuthController extends Controller
@@ -216,8 +216,8 @@ class UserAuthController extends Controller
     
     public function config()
     {
-
-        $paymentSplit = paymentSplit::first();
+        // update
+        $paymentSplit = PaymentSplit::first();
         $data = [
             'is_mandatory_update' => true,
             'professions' => Profession::where('status', 1)->get(),

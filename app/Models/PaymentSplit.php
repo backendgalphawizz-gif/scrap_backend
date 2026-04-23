@@ -11,3 +11,4 @@ class PaymentSplit extends Model
         'admin_percentage',
     ];
 }
+// Updated
