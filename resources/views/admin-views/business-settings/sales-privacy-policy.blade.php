@@ -1,6 +1,6 @@
 @extends('layouts.back-end.app')
 
-@section('title', \App\CPU\translate('Privacy policy'))
+@section('title', \App\CPU\translate('Sales Privacy Policy'))
 
 @push('css_or_js')
 
@@ -22,7 +22,7 @@
             <nav aria-label="breadcrumb">
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item active" aria-current="page">
-                        <span></span>Privacy Policy <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
+                        <span></span>Sales Privacy Policy <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
                     </li>
                 </ul>
             </nav>
@@ -34,11 +34,11 @@
                 <!-- End Inlile Menu -->
             </div>
             <div class="col-lg-12">
-                <form action="{{route('admin.business-settings.privacy-policy-update')}}" method="post">
+                <form action="{{route('admin.business-settings.sales-privacy-policy-update')}}" method="post">
                     @csrf
                     <div class="card-body">
                         <div class="form-group">
-                            <textarea class="form-control" id="editor" name="value">{{$privacy_policy->value}}</textarea>
+                            <textarea class="form-control" id="editor" name="value">{{$privacy_policy->value ?? ''}}</textarea>
                         </div>
                         <div class="form-group termdiv">
                             <input class="form-control btn--primary submitbtn" type="submit" name="btn">
@@ -51,20 +51,8 @@
 @endsection
 
 @push('script')
-    {{--ck editor--}}
-    {{-- <script src="{{asset('/')}}vendor/ckeditor/ckeditor/ckeditor.js"></script>
-    <script src="{{asset('/')}}vendor/ckeditor/ckeditor/adapters/jquery.js"></script>
-    <script>
-        $('#editor').ckeditor({
-            contentsLangDirection : '{{Session::get('direction')}}',
-        });
-    </script>
-    --}}
     <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
     <script>
         CKEDITOR.replace('value');
     </script>
-
-    {{--ck editor--}}
 @endpush
-

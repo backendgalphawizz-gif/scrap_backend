@@ -57,7 +57,10 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        
+
         $user = $request->user();
+   
         $filters = [];
         $query = Campaign::with(['brand'])
             ->withCount(['occupiedTransactions as occupied_slots']);
@@ -90,7 +93,10 @@ class DashboardController extends Controller
 
         $campaigns = $query
             ->when($gender != '' && $gender != 'both', function ($q) use ($gender) {
-                $q->where('gender', $gender);
+                $q->where(function ($sub) use ($gender) {
+                    $sub->where('gender', $gender)
+                        ->orWhere('gender', 'both');
+                });
             })
             ->when($city != '' && $city != 'any', function ($q) use ($city) {
                 $q->where(function ($sub) use ($city) {
@@ -111,7 +117,7 @@ class DashboardController extends Controller
                     ->where('user_id', $user->id);
             })
             ->paginate($request->input('limit', 10));
-            
+
         return response()->json([
             'status' => true,
             'message' => 'Campaign Lists retrieved successfully',

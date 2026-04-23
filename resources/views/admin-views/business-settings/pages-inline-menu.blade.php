@@ -32,7 +32,10 @@
     <ul class="list-unstyled d-flex gap-2">
         <li class="{{ Request::is('admin/business-settings/terms-condition') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/terms_condition') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.terms-condition')}}">{{\App\CPU\translate('Terms_&_Conditions')}}</a></li>
         <li class="{{ Request::is('admin/business-settings/privacy-policy') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/privacy_policy') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.privacy-policy')}}">{{\App\CPU\translate('Privacy_Policy')}}</a></li>
-        
+
+        <li class="{{ Request::is('admin/business-settings/sales-terms-condition') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/sales-terms_condition') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.sales-terms-condition')}}">{{\App\CPU\translate('Sales Terms_&_Conditions')}}</a></li>
+        <li class="{{ Request::is('admin/business-settings/sales-privacy-policy') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/sales-privacy_policy') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.sales-privacy-policy')}}">{{\App\CPU\translate('Sales Privacy_Policy')}}</a></li>
+
         <li class="{{ Request::is('admin/business-settings/brand-terms-condition') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/brand-terms_condition') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.brand-terms-condition')}}">{{\App\CPU\translate('Brand Terms_&_Conditions')}}</a></li>
         <li class="{{ Request::is('admin/business-settings/brand-privacy-policy') ?'active':'' }}"><a class="btn {{ Request::is('admin/website-info/brand-privacy_policy') ?'btn-primary':'btn-secondary second' }}" href="{{route('admin.business-settings.brand-privacy-policy')}}">{{\App\CPU\translate('Brand Privacy_Policy')}}</a></li>
     </ul>

@@ -151,11 +151,22 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/website-info/brand-privacy_policy', [DashboardController::class, 'brand_privacy_policy'])->name('admin.business-settings.brand-privacy-policy');
     Route::post('/website-info/brand-update_privacy_policy', [DashboardController::class, 'brand_privacy_policy_update'])->name('admin.business-settings.brand-privacy-policy-update');
     
+    // Sales Terms & Conditions & Privacy Policy
+    Route::get('/website-info/sales-terms_condition', [DashboardController::class, 'sales_terms_condition'])->name('admin.business-settings.sales-terms-condition');
+    Route::post('/website-info/sales-update_terms_condition', [DashboardController::class, 'sales_updateTermsCondition'])->name('admin.business-settings.sales-update-terms');
+    Route::get('/website-info/sales-privacy_policy', [DashboardController::class, 'sales_privacy_policy'])->name('admin.business-settings.sales-privacy-policy');
+    Route::post('/website-info/sales-update_privacy_policy', [DashboardController::class, 'sales_privacy_policy_update'])->name('admin.business-settings.sales-privacy-policy-update');
+
     Route::post('/update-website-info', [DashboardController::class, 'updateInfo'])->name('admin.business-settings.updateInfo');
 
     // Popup Banner Routes
     Route::get('/business-settings/popup-banner', [DashboardController::class, 'popupBanner'])->name('admin.business-settings.popup-banner');
     Route::post('/business-settings/popup-banner-update', [DashboardController::class, 'popupBannerUpdate'])->name('admin.business-settings.popup-banner-update');
+
+    // Notification & task system
+    Route::get('/dashboard/notification-counts', [DashboardController::class, 'notificationCounts'])->name('admin.dashboard.notification-counts');
+    Route::get('/notifications/feed', [DashboardController::class, 'notificationFeed'])->name('admin.notifications.feed');
+    Route::post('/notifications/mark-read', [DashboardController::class, 'markNotificationsRead'])->name('admin.notifications.mark-read');
 
     Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.auth.logout');
 
