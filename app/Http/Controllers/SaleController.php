@@ -42,16 +42,20 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-        $campaign = new Sale;
+        $sale = new Sale;
         if($request->hasFile('image')) {
-            $campaign->image = ImageManager::upload('profile/', 'png', $request->file('image'));
+            $sale->image = ImageManager::upload('profile/', 'png', $request->file('image'));
         }
-        $campaign->name = $request->name;
-        $campaign->email = $request->email;
-        $campaign->mobile = $request->mobile;
-        $campaign->save();
+        $sale->name = $request->name;
+        $sale->email = $request->email;
+        $sale->mobile = $request->mobile;
+        $sale->save();
 
-        Helpers::systemActivity('sale', auth()->user(), 'deleted', 'Sale Account created by admin', $campaign);
+        // Set referral_code as RXS-{id} after save
+        $sale->referral_code = 'RXS-' . $sale->id;
+        $sale->save();
+
+        Helpers::systemActivity('sale', auth()->user(), 'deleted', 'Sale Account created by admin', $sale);
 
         return redirect()->route('admin.sale.list');
     }
