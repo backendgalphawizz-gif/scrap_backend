@@ -233,6 +233,8 @@ class UserAuthController extends Controller
             'terms_nd_conditions' => Helpers::get_business_settings('terms_condition'),
             'brand_privacy_policy' => Helpers::get_business_settings('privacy_policy'),
             'brand_terms_nd_conditions' => Helpers::get_business_settings('terms_condition'),
+            'sales_terms_condition' => Helpers::get_business_settings('sales_terms_condition'),
+            'sales_privacy_policy' => Helpers::get_business_settings('sales_privacy_policy'),
 
             'kyc_amount' => Helpers::get_business_settings('kyc_amount'),
             'max_posts_per_user' => Helpers::get_business_settings('max_posts_per_user'),

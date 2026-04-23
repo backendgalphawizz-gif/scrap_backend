@@ -200,10 +200,14 @@ Route::group(['prefix' => 'brand'], function () {
     Route::get('/feedback-questions/{id}', [FeedbackQuestionController::class, 'show']);
     Route::put('/feedback-questions/{id}', [FeedbackQuestionController::class, 'update']);
     Route::delete('/feedback-questions/{id}', [FeedbackQuestionController::class, 'destroy']);
+
     Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
+
     Route::get('notifications', [SellerDashboardController::class, 'notifications']);
+
     Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
     Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
+
     Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
     Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
     Route::get('support-tickets/{id}', [BrandSupportTicketController::class, 'show']);
@@ -237,5 +241,10 @@ Route::group(['prefix' => 'sale'], function () {
 
     Route::get('notifications', [SaleDashboardController::class, 'notifications']);
     Route::get('ledger-commission-transactions', [SaleDashboardController::class, 'ledgerTransactions']);
+    
+    Route::get('sales-terms-and-conditions', [SaleDashboardController::class, 'salesTermsAndConditions']);
+    Route::get('sales-privacy-policy', [SaleDashboardController::class, 'salesPrivacyPolicy']);
+
+
 
 });

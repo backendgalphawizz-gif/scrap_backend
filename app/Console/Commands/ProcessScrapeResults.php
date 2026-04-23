@@ -9,20 +9,23 @@ use App\Models\CampaignTransaction;
 use App\Models\CoinWallet;
 use App\Models\CoinTransaction;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class ProcessScrapeResults extends Command
 {
     protected $signature = 'campaign:process-results';
 
     protected $description = 'Verify campaign posts, keep rewards pending, and release them 3 days after campaign completion';
+    private const MAX_VERIFIED_DAYS = 7;
 
     public function handle(): void
     {
-        $this->info('Processing scrape results...');die;
+        $this->info('Processing scrape results...');
 
         $transactions = CampaignTransaction::with(['campaign'])
             ->whereIn('status', [
                 CampaignTransaction::STATUS_PENDING,
+                CampaignTransaction::STATUS_ACTIVE,
                 CampaignTransaction::STATUS_APPROVED,
                 CampaignTransaction::STATUS_FLAGGED,
             ])
@@ -44,49 +47,99 @@ class ProcessScrapeResults extends Command
             }
 
             $rewardTransaction = $this->ensurePendingRewardTransaction($transaction);
+            $verifiedDays = $this->calculateVerifiedDays($transaction);
+            $transaction->day_status = $verifiedDays;
 
-            if ($transaction->status === CampaignTransaction::STATUS_APPROVED) {
-                if ($this->canReleaseReward($transaction)) {
+            if ($verifiedDays >= self::MAX_VERIFIED_DAYS) {
+                if ($transaction->status !== CampaignTransaction::STATUS_APPROVED) {
+                    $approved++;
+                }
+                $transaction->status = CampaignTransaction::STATUS_APPROVED;
+                $transaction->violation_reason = null;
+                $transaction->save();
+
+                if ($this->canReleaseReward($transaction, $verifiedDays)) {
                     $this->releaseReward($transaction, $rewardTransaction);
                     $released++;
                 } else {
                     $pending++;
                 }
-
                 continue;
             }
 
-            $scrapedPost = $this->getLatestScrapedPost($transaction->unique_code, $transaction->shared_on, $transaction->post_url);
-
-            if ($scrapedPost) {
-                $transaction->status = CampaignTransaction::STATUS_APPROVED;
-                $transaction->post_url = $transaction->post_url ?: ($scrapedPost->post_url ?? null);
+            if ($verifiedDays > 0) {
+                $transaction->status = CampaignTransaction::STATUS_ACTIVE;
                 $transaction->violation_reason = null;
                 $transaction->save();
-                $approved++;
-            } else {
-                $endDate = Carbon::parse($transaction->end_date)->endOfDay();
-                if ($transaction->status === CampaignTransaction::STATUS_FLAGGED) {
+                $pending++;
+                continue;
+            }
 
-                    $this->markDeleted($transaction, $rewardTransaction);
-                    
-                    $this->info('Syncing campaign post day status...',$transaction->campaign_id);
-                    $deleted++;
-                } elseif (Carbon::now()->gt($endDate)) {
-                    $this->markFlagged($transaction);
-                    $flagged++;
-                } else {
-                    $pending++;
-                }
+            $endDate = Carbon::parse($transaction->end_date)->endOfDay();
+            if ($transaction->status === CampaignTransaction::STATUS_FLAGGED && Carbon::now()->gt($endDate)) {
+                $this->markDeleted($transaction, $rewardTransaction);
+                $deleted++;
+            } elseif (Carbon::now()->gt($endDate)) {
+                $this->markFlagged($transaction);
+                $flagged++;
+            } else {
+                $transaction->status = CampaignTransaction::STATUS_PENDING;
+                $transaction->save();
+                $pending++;
             }
         }
 
+        $autoCompletedCampaigns = $this->autoCompleteEligibleCampaigns();
+
+        $this->info("Auto-completed campaigns: {$autoCompletedCampaigns}");
         $this->info("Done. Approved: {$approved} | Released: {$released} | Flagged: {$flagged} | Deleted: {$deleted} | Pending: {$pending}");
+    }
+
+    private function autoCompleteEligibleCampaigns(): int
+    {
+        $updated = 0;
+        $eligibleStatuses = ['active', 'live', 'pending', 'accepted', 'paused'];
+
+        Campaign::query()
+            ->whereIn('status', $eligibleStatuses)
+            ->withCount(['occupiedTransactions as occupied_slots'])
+            ->orderBy('id')
+            ->chunkById(100, function ($campaigns) use (&$updated) {
+                foreach ($campaigns as $campaign) {
+                    $endDatePassed = $campaign->end_date
+                        ? Carbon::parse($campaign->end_date)->endOfDay()->isPast()
+                        : false;
+
+                    $occupiedSlots = (int) ($campaign->occupied_slots ?? 0);
+                    $requiredSlots = (int) ($campaign->total_user_required ?? 0);
+                    $slotsExhausted = $requiredSlots > 0 && $occupiedSlots >= $requiredSlots;
+
+                    $rewardPerUser = (float) ($campaign->reward_per_user ?: $campaign->coins ?: 0);
+                    $totalBudget = (float) ($campaign->total_campaign_budget ?? 0);
+                    $estimatedSpend = $rewardPerUser * $occupiedSlots;
+                    $budgetExhausted = $totalBudget > 0 && $estimatedSpend >= $totalBudget;
+
+                    if (! $endDatePassed && ! $slotsExhausted && ! $budgetExhausted) {
+                        continue;
+                    }
+
+                    $campaign->status = 'completed';
+                    $campaign->save();
+                    $updated++;
+                }
+            });
+
+        return $updated;
+    }
+
+    private function scrapedTableForPlatform(string $platform): string
+    {
+        return 'scrapped_posts';
     }
 
     private function getLatestScrapedPost(string $uniqueCode, string $platform, ?string $postUrl = null): ?object
     {
-        $table = $platform === 'facebook' ? 'facebook_posts_test' : 'tagged_posts_test';
+        $table = $this->scrapedTableForPlatform($platform);
 
         $row = DB::table($table)
             ->when($uniqueCode, function ($query) use ($uniqueCode) {
@@ -100,6 +153,50 @@ class ProcessScrapeResults extends Command
             ->first();
 
         return $row;
+    }
+
+    private function fetchScrapedDates(CampaignTransaction $transaction): Collection
+    {
+        $table = $this->scrapedTableForPlatform($transaction->shared_on);
+
+        $rows = DB::table($table)
+            ->where(function ($query) use ($transaction) {
+                $query->where('unique_code', $transaction->unique_code);
+                if (!empty($transaction->post_url)) {
+                    $query->orWhere('post_url', $transaction->post_url);
+                }
+            })
+            ->whereNotNull('scraped_at')
+            ->select('scraped_at')
+            ->orderBy('scraped_at')
+            ->get();
+
+        return $rows
+            ->map(fn ($row) => Carbon::parse($row->scraped_at)->toDateString())
+            ->unique()
+            ->values();
+    }
+
+    private function calculateVerifiedDays(CampaignTransaction $transaction): int
+    {
+        $scrapedDates = $this->fetchScrapedDates($transaction);
+
+        if ($scrapedDates->isEmpty()) {
+            return 0;
+        }
+
+        $start = Carbon::parse($transaction->start_date)->startOfDay();
+        $verifiedDays = 0;
+
+        for ($dayIndex = 0; $dayIndex < self::MAX_VERIFIED_DAYS; $dayIndex++) {
+            $expectedDate = $start->copy()->addDays($dayIndex)->toDateString();
+            if (!$scrapedDates->contains($expectedDate)) {
+                break;
+            }
+            $verifiedDays++;
+        }
+
+        return $verifiedDays;
     }
 
     private function ensurePendingRewardTransaction(CampaignTransaction $transaction): CoinTransaction
@@ -151,8 +248,12 @@ class ProcessScrapeResults extends Command
         }
     }
 
-    private function canReleaseReward(CampaignTransaction $transaction): bool
+    private function canReleaseReward(CampaignTransaction $transaction, int $verifiedDays): bool
     {
+        if ($verifiedDays < self::MAX_VERIFIED_DAYS) {
+            return false;
+        }
+
         $releaseDate = Carbon::parse($transaction->campaign->end_date)->endOfDay()->addDays(3);
 
         return Carbon::now()->greaterThanOrEqualTo($releaseDate);

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -8,6 +7,7 @@ use Illuminate\Http\Request;
 // use Gregwar\Captcha\CaptchaBuilder;
 use App\CPU\Helpers;
 use Illuminate\Support\Facades\Session;
+use App\Models\AdminNotification;
 use App\Models\BusinessSetting;
 use App\Models\Campaign;
 use App\Models\CampaignTransaction;
@@ -15,6 +15,7 @@ use App\Models\CoinTransaction;
 use App\Models\CoinWallet;
 use App\Models\Seller;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Http\Resources\CommonResource;
 use DB;
 use App\CPU\ImageManager;
@@ -55,8 +56,12 @@ class DashboardController extends Controller
             $statusSeries[] = Campaign::where('status', $status)->count();
         }
 
-
         $campaigns = Campaign::with(['brand'])->where('start_date', '<=', now())->where('end_date', '>=', now())->orderBy('id', 'DESC')->limit(5)->get();
+
+        // Notification data for initial server-side render
+        $notificationCounts    = $this->getNotificationTaskCounts();
+        $recentNotifications   = AdminNotification::orderByDesc('created_at')->limit(10)->get();
+
         return view('admin-views.system.dashboard', compact(
             'totalCampaignparticipants',
             'totalCampaignBudget',
@@ -70,10 +75,127 @@ class DashboardController extends Controller
             'campaignTrend',
             'participantTrend',
             'statusLabels',
-            'statusSeries'
+            'statusSeries',
+            'notificationCounts',
+            'recentNotifications'
         ));
     }
 
+    // ── Notification aggregator ───────────────────────────────────────────────
+
+    /**
+     * Return aggregated pending-task counts for all admin notification categories.
+     */
+    private function getNotificationTaskCounts(): array
+    {
+        $counts = [
+            'brand_campaign_approval'   => Campaign::where('status', 'pending')->count(),
+            'brand_gst_validation'      => Seller::whereIn('gst_status', ['Submitted', 'Under Verification'])->count(),
+            'brand_new_registration'    => Seller::where('status', 'pending')->count(),
+            'user_pan_verification'     => User::whereIn('pan_status', ['Submitted', 'Under Verification'])->count(),
+            'user_aadhar_verification'  => User::whereIn('aadhar_status', ['Submitted', 'Under Verification'])->count(),
+            'user_upi_payment_requests' => CoinTransaction::where('type', 'debit')->where('status', 'pending')->count(),
+            'user_voucher_allocation'   => Voucher::where('status', 'pending')->count(),
+        ];
+
+        $counts['total_pending']   = array_sum($counts);
+        $counts['unread_notifs']   = AdminNotification::where('is_read', false)->count();
+        $counts['last_updated_at'] = now()->toIso8601String();
+
+        return $counts;
+    }
+
+    /**
+     * JSON endpoint: polled every 45 s by the dashboard frontend.
+     */
+    public function notificationCounts(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data'   => $this->getNotificationTaskCounts(),
+        ]);
+    }
+
+    /**
+     * JSON endpoint: recent admin notification feed (latest 20).
+     */
+    public function notificationFeed(): \Illuminate\Http\JsonResponse
+    {
+        $feed = AdminNotification::orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($n) => [
+                'id'         => $n->id,
+                'type'       => $n->type,
+                'title'      => $n->title,
+                'message'    => $n->message,
+                'link'       => $n->link,
+                'icon'       => $n->icon,
+                'color'      => $n->color,
+                'is_read'    => $n->is_read,
+                'created_at' => $n->created_at->diffForHumans(),
+            ]);
+
+        return response()->json(['status' => true, 'data' => $feed]);
+    }
+
+    /**
+     * Mark notifications as read.
+     * Pass `ids[]` array to mark specific ones; omit to mark all.
+     */
+    public function markNotificationsRead(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $query = AdminNotification::where('is_read', false);
+
+        if ($request->filled('ids')) {
+            $query->whereIn('id', (array) $request->ids);
+        }
+
+        $count = $query->count();
+        $query->update(['is_read' => true]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => "{$count} notification(s) marked as read.",
+        ]);
+    }
+        // Sales Terms & Conditions
+    public function sales_terms_condition()
+    {
+        $terms_condition = BusinessSetting::where('type', 'sales_terms_condition')->first();
+        return view('admin-views.business-settings.sales-terms-condition', compact('terms_condition'));
+    }
+
+    public function sales_updateTermsCondition(Request $data)
+    {
+        $validatedData = $data->validate([
+            'value' => 'required',
+        ]);
+        BusinessSetting::updateOrCreate(
+            ['type' => 'sales_terms_condition'],
+            ['value' => $data->value]
+        );
+        return redirect()->back();
+    }
+
+    // Sales Privacy Policy
+    public function sales_privacy_policy()
+    {
+        $privacy_policy = BusinessSetting::where('type', 'sales_privacy_policy')->first();
+        return view('admin-views.business-settings.sales-privacy-policy', compact('privacy_policy'));
+    }
+
+    public function sales_privacy_policy_update(Request $data)
+    {
+        $validatedData = $data->validate([
+            'value' => 'required',
+        ]);
+        BusinessSetting::updateOrCreate(
+            ['type' => 'sales_privacy_policy'],
+            ['value' => $data->value]
+        );
+        return redirect()->back();
+    }
     public function updateProfile(Request $request) {
         $admin = auth('admin')->user();
         $admin->name = $request->name;

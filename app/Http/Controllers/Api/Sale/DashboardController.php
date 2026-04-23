@@ -625,4 +625,24 @@ class DashboardController extends Controller
         ], 401);
     }
 
+    public function salesTermsAndConditions(Request $request)
+    {
+        $terms = Helpers::get_business_settings('sales_terms_condition');
+        return response()->json([
+            'status' => true,
+            'message' => 'Sales Terms and Conditions retrieved successfully',
+            'data' => $terms
+        ], 200);
+    }
+
+    public function salesPrivacyPolicy(Request $request)
+    {
+        $policy = Helpers::get_business_settings('sales_privacy_policy');
+        return response()->json([
+            'status' => true,
+            'message' => 'Sales Privacy Policy retrieved successfully',
+            'data' => $policy
+        ], 200);
+    }
+
 }

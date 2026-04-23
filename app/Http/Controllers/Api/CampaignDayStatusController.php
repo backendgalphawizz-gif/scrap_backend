@@ -10,22 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
-use App\Models\Campaign;
 
 class CampaignDayStatusController extends Controller
 {
     private const MAX_DAY_STATUS = 7;
 
-    /** Days after campaign end_date before completed → approved. */
-    private const COMPLETED_TO_APPROVED_AFTER_DAYS = 10;
-
     /**
-     * Resolve scraped post storage: Instagram uses tagged_posts_test, Facebook uses facebook_posts_test
-     * (same as ProcessScrapeResults command).
+     * Resolve scraped post storage for both platforms.
      */
     private function scrapedPostsTable(string $sharedOn): string
     {
-        return $sharedOn === 'facebook' ? 'facebook_posts_test' : 'scrapped_posts';
+        return 'scrapped_posts';
     }
 
     private function latestScrapedAt(string $uniqueCode, string $sharedOn): ?string
@@ -56,65 +51,26 @@ class CampaignDayStatusController extends Controller
         return min(self::MAX_DAY_STATUS, max(0, $days));
     }
 
-    /**
-     * No valid scrape after campaign start: first cron → flagged, next cron still missing → deleted.
-     */
-    private function applyMissingPostEscalation(CampaignTransaction $transaction): void
-    {
-        if (in_array($transaction->status, ['completed', 'rejected', 'deleted'], true)) {
-            return;
-        }
-
-        if ($transaction->status === 'flagged') {
-            $transaction->status = 'deleted';
-            $camp = Campaign::find($transaction->campaign_id);
-            $camp->decrement('used_post');
-
-
-            return;
-        }
-
-        if (in_array($transaction->status, ['pending', 'active'], true)) {
-            $transaction->status = 'flagged';
-        }
-    }
-
-    /**
-     * All rows with status completed whose end_date is at least 10 days in the past → approved.
-     */
     private function approveEligibleCompletedTransactions(?int $restrictUserId): int
     {
-        $cutoffDate = Carbon::now()->startOfDay()->subDays(self::COMPLETED_TO_APPROVED_AFTER_DAYS)->toDateString();
-
-        $query = CampaignTransaction::query()
-            ->where('status', 'completed')
-            ->whereNotNull('end_date')
-            ->whereDate('end_date', '<=', $cutoffDate);
-
-        if ($restrictUserId !== null) {
-            $query->where('user_id', $restrictUserId);
-        }
-
-        $promoted = 0;
-
-        $query->orderBy('id')->chunkById(100, function ($transactions) use (&$promoted) {
-            foreach ($transactions as $transaction) {
-                $transaction->status = 'approved';
-                $transaction->save();
-                $promoted++;
-            }
-        });
-
-        return $promoted;
+        // Status transitions and wallet releases are handled by campaign:process-results.
+        return 0;
     }
 
     /**
-     * @return string skipped_no_code|updated|updated_absent
+     * Read-only diagnostics for day_status; no mutation is applied here.
+     *
+     * @return array{outcome:string,computed_day_status:int,has_valid_scrape:bool,scraped_at:?string}
      */
-    private function syncOneTransaction(CampaignTransaction $transaction): string
+    private function syncOneTransaction(CampaignTransaction $transaction): array
     {
         if ($transaction->unique_code === null || $transaction->unique_code === '') {
-            return 'skipped_no_code';
+            return [
+                'outcome' => 'skipped_no_code',
+                'computed_day_status' => (int) ($transaction->day_status ?? 0),
+                'has_valid_scrape' => false,
+                'scraped_at' => null,
+            ];
         }
 
         $scrapedAtRaw = $this->latestScrapedAt($transaction->unique_code, $transaction->shared_on);
@@ -126,33 +82,15 @@ class CampaignDayStatusController extends Controller
             $hasValidScrape = $scrapedAt->greaterThan($start);
         }
 
-        if (! $hasValidScrape) {
-            $this->applyMissingPostEscalation($transaction);
-            $transaction->save();
-
-            return 'updated_absent';
-        }
-
         $today = Carbon::now()->startOfDay();
-        $dayStatus = $this->calendarDayStatus($start, $today);
+        $dayStatus = $hasValidScrape ? $this->calendarDayStatus($start, $today) : 0;
 
-        $transaction->day_status = $dayStatus;
-
-        if ($dayStatus >= self::MAX_DAY_STATUS) {
-            if (! in_array($transaction->status, ['rejected', 'deleted'], true)) {
-                $transaction->status = 'completed';
-            }
-        } elseif ($dayStatus >= 1) {
-            if (! in_array($transaction->status, ['rejected', 'deleted', 'completed'], true)) {
-                $transaction->status = 'active';
-            }
-        } elseif ($transaction->status === 'flagged') {
-            $transaction->status = 'pending';
-        }
-
-        $transaction->save();
-
-        return 'updated';
+        return [
+            'outcome' => $hasValidScrape ? 'updated' : 'updated_absent',
+            'computed_day_status' => $dayStatus,
+            'has_valid_scrape' => $hasValidScrape,
+            'scraped_at' => $scrapedAtRaw,
+        ];
     }
 
     public function syncForUser(Request $request): JsonResponse
@@ -183,6 +121,7 @@ class CampaignDayStatusController extends Controller
             'updated' => 0,
             'updated_absent' => 0,
             'skipped_no_code' => 0,
+            'diagnostics_only' => true,
             'errors' => [],
         ];
 
@@ -202,7 +141,7 @@ class CampaignDayStatusController extends Controller
                 $stats['processed']++;
                 try {
                     $outcome = $this->syncOneTransaction($transaction);
-                    $stats[$this->statKeyForOutcome($outcome)]++;
+                    $stats[$this->statKeyForOutcome($outcome['outcome'])]++;
                 } catch (Throwable $e) {
                     $stats['errors'][] = [
                         'campaign_transaction_id' => $transaction->id,
@@ -224,7 +163,7 @@ class CampaignDayStatusController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'day_status sync completed.',
+            'message' => 'day_status diagnostics completed (no status mutation).',
             'data' => $stats,
         ]);
     }
@@ -266,39 +205,41 @@ class CampaignDayStatusController extends Controller
 
         $transaction->refresh();
 
-        if ($outcome === 'updated_absent') {
-            $scrapedAtRaw = $this->latestScrapedAt($transaction->unique_code, $transaction->shared_on);
+        if ($outcome['outcome'] === 'updated_absent') {
+            $scrapedAtRaw = $outcome['scraped_at'];
 
             return response()->json([
                 'status' => true,
-                'message' => 'No valid scraped post after start_date; status escalated (flagged → deleted on repeat).',
+                'message' => 'No valid scraped post after start_date (diagnostics only).',
                 'data' => [
                     'table' => $this->scrapedPostsTable($transaction->shared_on),
                     'start_date' => $transaction->start_date,
                     'scraped_at' => $scrapedAtRaw,
-                    'day_status' => $transaction->day_status,
+                    'computed_day_status' => $outcome['computed_day_status'],
+                    'stored_day_status' => $transaction->day_status,
                     'transaction_status' => $transaction->status,
                 ],
             ]);
         }
 
-        if ($outcome === 'skipped_no_code') {
+        if ($outcome['outcome'] === 'skipped_no_code') {
             return response()->json([
                 'status' => false,
                 'message' => 'Transaction has no unique_code.',
             ], 422);
         }
 
-        $scrapedAtRaw = $this->latestScrapedAt($transaction->unique_code, $transaction->shared_on);
+        $scrapedAtRaw = $outcome['scraped_at'];
 
         return response()->json([
             'status' => true,
-            'message' => 'day_status updated from scraped post.',
+            'message' => 'day_status diagnostics generated from scraped post.',
             'data' => [
                 'unique_code' => $transaction->unique_code,
                 'start_date' => $transaction->start_date,
                 'scraped_at' => $scrapedAtRaw,
-                'day_status' => $transaction->day_status,
+                'computed_day_status' => $outcome['computed_day_status'],
+                'stored_day_status' => $transaction->day_status,
                 'transaction_status' => $transaction->status,
             ],
         ]);

@@ -51,11 +51,7 @@ class ProcessSocialVerifications extends Command
 
     private function findUniqueCodeInScrapedPosts(string $uniqueCode, string $platform, string $username): bool
     {
-        $table = $platform === SocialVerificationTransaction::PLATFORM_FACEBOOK
-            ? 'facebook_posts_test'
-            : 'tagged_posts_test';
-
-        return DB::table($table)
+        return DB::table('scrapped_posts')
             ->where('unique_code', $uniqueCode)
             ->exists();
     }

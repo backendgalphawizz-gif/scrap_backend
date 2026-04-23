@@ -89,53 +89,52 @@
                     <h6 class="p-3 mb-0 text-center">4 new messages</h6>
                 </div>
             </li>
-            <li class="nav-item dropdown d-none">
+            <li class="nav-item dropdown">
                 <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#"
                     data-bs-toggle="dropdown">
                     <i class="mdi mdi-bell-outline"></i>
-                    <span class="count-symbol bg-danger"></span>
+                    <span id="admin-bell-count" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle {{ ($adminUnreadCount ?? 0) > 0 ? '' : 'd-none' }}" style="font-size: 0.6rem; padding: 0.25em 0.4em;">
+                        {{ $adminUnreadCount ?? 0 }}
+                    </span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end navbar-dropdown preview-list"
-                    aria-labelledby="notificationDropdown">
-                    <h6 class="p-3 mb-0">Notifications</h6>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item preview-item">
-                        <div class="preview-thumbnail">
-                            <div class="preview-icon bg-success">
-                                <i class="mdi mdi-calendar"></i>
+                <div class="dropdown-menu dropdown-menu-end navbar-dropdown preview-list p-0"
+                    aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                    <div class="p-3 d-flex justify-content-between align-items-center bg-light border-bottom">
+                        <h6 class="mb-0 fw-bold">Notifications</h6>
+                        @if(($adminUnreadCount ?? 0) > 0)
+                            <span class="badge bg-danger rounded-pill">{{ $adminUnreadCount }} New</span>
+                        @endif
+                    </div>
+                    
+                    <?php
+                        // Fetch a quick preview directly in the header if available, otherwise just use empty state
+                        $headerNotifs = \App\Models\AdminNotification::orderByDesc('created_at')->limit(5)->get();
+                    ?>
+
+                    @forelse($headerNotifs as $n)
+                        <a href="{{ $n->link ?? '#' }}" class="dropdown-item preview-item border-bottom py-3 {{ $n->is_read ? '' : 'bg-light' }}">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-{{ $n->color }}">
+                                    <i class="mdi {{ $n->icon }}"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="preview-item-content d-flex align-items-start flex-column justify-content-center">
-                            <h6 class="preview-subject font-weight-normal mb-1">Event today</h6>
-                            <p class="text-gray ellipsis mb-0"> Just a reminder that you have an event today </p>
-                        </div>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item preview-item">
-                        <div class="preview-thumbnail">
-                            <div class="preview-icon bg-warning">
-                                <i class="mdi mdi-cog"></i>
+                            <div class="preview-item-content d-flex align-items-start flex-column justify-content-center">
+                                <h6 class="preview-subject font-weight-normal mb-1" style="white-space: normal; line-height: 1.2; font-size: 0.85rem;">{{ $n->title }}</h6>
+                                <p class="text-gray mb-0" style="font-size: 0.75rem;">
+                                    {{ $n->created_at->diffForHumans() }}
+                                </p>
                             </div>
+                        </a>
+                    @empty
+                        <div class="p-4 text-center text-muted">
+                            <i class="mdi mdi-bell-sleep mdi-36px"></i>
+                            <p class="mb-0 mt-2">No notifications yet</p>
                         </div>
-                        <div class="preview-item-content d-flex align-items-start flex-column justify-content-center">
-                            <h6 class="preview-subject font-weight-normal mb-1">Settings</h6>
-                            <p class="text-gray ellipsis mb-0"> Update dashboard </p>
-                        </div>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item preview-item">
-                        <div class="preview-thumbnail">
-                            <div class="preview-icon bg-info">
-                                <i class="mdi mdi-link-variant"></i>
-                            </div>
-                        </div>
-                        <div class="preview-item-content d-flex align-items-start flex-column justify-content-center">
-                            <h6 class="preview-subject font-weight-normal mb-1">Launch Admin</h6>
-                            <p class="text-gray ellipsis mb-0"> New admin wow! </p>
-                        </div>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <h6 class="p-3 mb-0 text-center">See all notifications</h6>
+                    @endforelse
+
+                    <div class="p-2 border-top bg-light">
+                        <a href="{{ route('admin.dashboard') }}#notif-panel-row" class="btn btn-sm btn-block btn-outline-primary w-100">View All in Dashboard</a>
+                    </div>
                 </div>
             </li>
             <li class="nav-item nav-logout d-none">

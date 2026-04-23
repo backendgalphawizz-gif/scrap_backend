@@ -529,4 +529,8 @@
   'New Password' => 'New Password',
   'Old Password' => 'Old Password',
   'Please verify your Instagram and Facebook accounts before creating a campaign.' => 'Please verify your Instagram and Facebook accounts before creating a campaign.',
+  'Sales Terms_&_Conditions' => 'Sales Terms & Conditions',
+  'Sales Privacy_Policy' => 'Sales Privacy Policy',
+  'Sales Terms & Condition' => 'Sales Terms & Condition',
+  'Sales Privacy Policy' => 'Sales Privacy Policy',
 );
