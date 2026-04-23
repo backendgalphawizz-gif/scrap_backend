@@ -147,10 +147,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
 
     // get user level and benefits
-    Route::get('user-levels', [UserLevelController::class, 'index']);
-
-
-    
+    Route::get('user-levels', [UserLevelController::class, 'index']);   
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);

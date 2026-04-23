@@ -376,6 +376,8 @@ class SellerDashboardController extends Controller
                 $campaign->images = implode(',', $product_images);
             }
 
+
+            
             $paymentSplit = PaymentSplit::first();
             $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
             $total_campaign_budget = $request->total_campaign_budget;

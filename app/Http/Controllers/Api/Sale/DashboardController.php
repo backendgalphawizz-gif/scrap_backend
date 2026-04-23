@@ -13,9 +13,12 @@ use App\CPU\Helpers;
 use App\CPU\ImageManager;
 use App\Models\Campaign;
 use App\Models\Notification;
+use App\Models\PaymentSplit;
 use App\Models\SaleCommissionLedger;
+use App\Models\SocialVerificationTransaction;
 use App\Http\Resources\CommonResource;
 use Illuminate\Support\Str;
+use function App\CPU\translate;
 use Hash;
 
 class DashboardController extends Controller
@@ -143,6 +146,61 @@ class DashboardController extends Controller
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $salesId = $seller['id'];
+
+            $brand = Seller::find($request->brand_id);
+
+            $verifiedSocial = SocialVerificationTransaction::STATUS_VERIFIED;
+            if ($brand->instagram_status !== $verifiedSocial || $brand->facebook_status !== $verifiedSocial) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please verify your Instagram and Facebook accounts before creating a campaign.',
+                    'data' => [],
+                ], 200);
+            }
+
+            if ($brand->pan_status !== 'Verified') {
+                return response()->json([
+                    'status' => false,
+                    'message' => translate('Please complete KYC verification before creating a campaign.'),
+                    'data' => [],
+                ], 200);
+            }
+
+            $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
+            $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
+            if ($maxPerWindow > 0 && $windowHours > 0) {
+                $recentCount = Campaign::where('brand_id', $request->brand_id)
+                    ->where('created_at', '>=', now()->subHours($windowHours))
+                    ->count();
+                if ($recentCount >= $maxPerWindow) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => translate('You have reached the maximum number of campaigns allowed for your brand in the current period. Please try again later.'),
+                        'data' => [],
+                        'campaign_rate_limit' => [
+                            'max_campaigns_per_timeframe' => $maxPerWindow,
+                            'timeframe_hours' => $windowHours,
+                            'campaigns_created_in_window' => $recentCount,
+                        ],
+                    ], 200);
+                }
+            }
+
+
+            $sellerWallet = Helpers::get_seller_wallet($request->brand_id);
+
+            if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Insufficient fund. Please recharge wallet.',
+                    'data' => [],
+                    'balance_sufficient' => false,
+                    'current_balance' => $sellerWallet->wallet_amount,
+                    'balance_required' => $request->total_campaign_budget
+                ], 200);
+            }
+
+
             // Logic to create campaign
 
             $campaign = new Campaign;
@@ -156,10 +214,18 @@ class DashboardController extends Controller
                     $product_images[] = $image_name;
                 }
                 $campaign->images = json_encode($product_images);
-            }            
+            } 
+            
+              
+            $paymentSplit = PaymentSplit::first();
+            $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
+            $total_campaign_budget = $request->total_campaign_budget;
+            $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
+
             $campaign->brand_id = $request->brand_id;
-            $campaign->sale_id = $seller['id'];
-            $campaign->title = $request->caption;
+            $caption = (string) ($request->caption ?? '');
+            $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
+            $campaign->post_type = $request->post_type ?? 'post';
             $campaign->descriptions = $request->caption;
             $campaign->tags = $request->hashtags;
             $campaign->share_on = $request->social_media;
@@ -169,23 +235,39 @@ class DashboardController extends Controller
             $campaign->state = $request->state;
             $campaign->city = $request->city;
             $campaign->guidelines = implode('|', $request->guidelines);
-            $campaign->coins = $request->reward_per_user;
+            //$campaign->coins = $request->reward_per_user;
 
             $campaign->total_user_required = $request->total_user_required;
             $campaign->reward_per_user = $request->reward_per_user;
+            // $campaign->reward_per_post = $request->reward_per_post;
             $campaign->number_of_post = $request->number_of_post;
             $campaign->daily_budget_cap = $request->daily_budget_cap;
             $campaign->total_campaign_budget = $request->total_campaign_budget;
             $campaign->age_range = $request->age_range;
+            $campaign->admin_percentage = $paymentSplit->admin_percentage;
+            $campaign->user_percentage = $paymentSplit->user_percentage;
+            $campaign->sales_percentage = $paymentSplit->sales_percentage;
+            $campaign->sales_referal_code = $data['referral_code'] ?? null;
+            $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+            $upi_value =  strval(Helpers::get_business_settings('upi_value'));
+
+            if($paymentSplit->user_percentage){
+                $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
+                $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
+                $campaign->final_reward_for_user = $final_reward_for_user;
+                $campaign->coins = $upi_value * $final_reward_for_user;
+            }else{
+                $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
+                $final_reward_for_user = ($request->reward_per_user * 50) / 100;
+                $campaign->final_reward_for_user = $final_reward_for_user;
+                $campaign->coins = $upi_value * $final_reward_for_user;
+            }
+           
             $campaign->save();
 
-            /**
-             * Create Activity Log
-             */
-            Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created', $campaign);
-            /**
-             * Create Activity Log
-             */
+            // here remove amount from wellert and create transaction for campaign creation
+
+            Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
 
             $commissionRate = Helpers::get_business_settings('sale_post_commission');
             $commissionAmount = ($campaign->total_campaign_budget * $commissionRate) / 100;
@@ -200,11 +282,10 @@ class DashboardController extends Controller
                 'commission_amount' => $commissionAmount,
                 'reference_type' => 'campaign_budget'
             ]);
-
         } else {
             return response()->json([
                 'status' => false,
-                'message' => ('Your existing session token does not authorize you any more'),
+                'message' => translate('Your existing session token does not authorize you any more'),
                 'data' => []
             ], 401);
         }
@@ -215,6 +296,9 @@ class DashboardController extends Controller
             'data' => []
         ], 200);
     }
+
+
+  
 
     public function detailCampaign(Request $request, $id) {
         $data = Helpers::get_sale_by_token($request);
