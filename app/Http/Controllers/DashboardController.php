@@ -251,6 +251,10 @@ class DashboardController extends Controller
 
     public function viewUser(Request $request, $id) {
         $user = User::find($id);
+        return view('admin-views.customer.view-customer', compact('user'));
+    }
+    public function editUser(Request $request, $id) {
+        $user = User::find($id);
         return view('admin-views.customer.edit-customer', compact('user'));
     }
 

@@ -413,6 +413,14 @@
                                         href="{{ route('admin.user.view',[$customer['id']]) }}">
                                             <i class="mdi mdi-eye-outline"></i>
                                         </a>
+
+                                         <a title="{{\App\CPU\translate('View')}}"
+                                        class="btn btn-sm action-icon-btn view-btn"
+                                        aria-label="{{\App\CPU\translate('View')}}"
+                                        target="_self"
+                                        href="{{ route('admin.user.edit',[$customer['id']]) }}">
+                                            <i class="mdi mdi-pencil-outline"></i>
+                                        </a>
                                         <a title="{{\App\CPU\translate('Delete')}}"
                                         class="btn btn-sm delete action-icon-btn delete-btn"
                                         aria-label="{{\App\CPU\translate('Delete')}}"

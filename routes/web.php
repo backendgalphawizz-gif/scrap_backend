@@ -45,6 +45,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/update-profile/{id}', [DashboardController::class, 'updateProfile'])->name('admin.profile.update');
     Route::get('/users', [DashboardController::class, 'users'])->name('admin.user');
     Route::get('/user-view/{id}', [DashboardController::class, 'viewUser'])->name('admin.user.view');
+    Route::get('/user-edit/{id}', [DashboardController::class, 'editUser'])->name('admin.user.edit');
     Route::post('/user-update/{id}', [DashboardController::class, 'updateUser'])->name('admin.user.update');
     Route::get('/delete-user/{id}', [DashboardController::class, 'deleteUser'])->name('admin.user.delete');
     Route::get('/user-wallet', [DashboardController::class, 'userWallet'])->name('admin.user.wallet');
