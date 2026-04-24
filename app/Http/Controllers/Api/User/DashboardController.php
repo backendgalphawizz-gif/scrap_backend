@@ -141,7 +141,6 @@ class DashboardController extends Controller
         }])
             ->withCount(['occupiedTransactions as occupied_slots'])
             ->where('id', $id)
-            ->whereIn('status', ['active', 'completed'])
             ->orderBy('id', 'DESC')
             ->get();
 
