@@ -138,19 +138,7 @@
                 </div>
             </div>
         </div>
-            <!-- Upcoming Events Box -->
-            <!-- <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
-                <div class="card bg-gradient-warning card-img-holder text-white">
-                    <div class="card-body">
-                        <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute" alt="circle-image" />
-                        <h4 class="font-weight-normal mb-3 small cardText">
-                            <span>Upcoming Events</span>
-                            <i class="mdi mdi-calendar-clock mdi-24px float-end"></i>
-                        </h4>
-                        <h2 class="small">15</h2>
-                    </div>
-                </div>
-            </div> -->
+            
     </div>
 
     {{-- ══════════ NOTIFICATION & TASK PANEL ══════════ --}}

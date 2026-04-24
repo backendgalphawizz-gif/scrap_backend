@@ -446,18 +446,50 @@ class UserProfileController extends Controller
             ];
         }
 
-        $feedback = Feedback::updateOrCreate(
-            [
+        $existingFeedback = Feedback::where('campaign_id', $campaign->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingFeedback) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You have already submitted feedback for this campaign.'
+            ], 422);
+        }
+
+        $feedback = Feedback::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $user->id,
+            'brand_id' => $campaign->brand_id,
+            'ratings' => $request->input('rating'),
+            'questions' => json_encode($normalizedAnswers),
+            'user_feedback' => $request->input('user_feedback', $request->input('feedback')),
+        ]);
+
+        $feedbackCoin = $campaign->feedback_coin ?? 0;
+        if ($feedbackCoin > 0) {
+            $wallet = CoinWallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
+
+            $wallet->balance += $feedbackCoin;
+            $wallet->save();
+
+            $wallet->transactions()->create([
+                'coin' => $feedbackCoin,
+                'amount' => 0,
+                'tds' => 0,
+                'convertion_rate' => Helpers::get_business_settings('upi_value') ?? 0,
                 'campaign_id' => $campaign->id,
-                'user_id' => $user->id,
-            ],
-            [
-                'brand_id' => $campaign->brand_id,
-                'ratings' => $request->input('rating'),
-                'questions' => json_encode($normalizedAnswers),
-                'user_feedback' => $request->input('user_feedback', $request->input('feedback')),
-            ]
-        );
+                'transaction_id' => time() . rand(100, 999),
+                'type' => 'credit',
+                'status' => 'completed',
+                'transaction_type' => 'campaign_feedback',
+                'value' => 'Campaign Feedback',
+                'description' => 'Coins earned for submitting feedback on campaign: ' . $campaign->title,
+            ]);
+        }
 
         return response()->json([
             'status' => true,
