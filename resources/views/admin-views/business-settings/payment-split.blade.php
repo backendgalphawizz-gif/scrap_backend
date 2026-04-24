@@ -35,6 +35,10 @@
                             <label>Admin Percentage (%)</label>
                             <input type="number" name="admin_percentage" class="form-control" value="{{ old('admin_percentage', $split->admin_percentage) }}" min="0" max="100" required>
                         </div>
+                        <div class="form-group">
+                            <label>User Feedback Percentage (%)</label>
+                            <input type="number" name="feedback_percentage" class="form-control" value="{{ old('feedback_percentage', $split->feedback_percentage) }}" min="0" max="100" required>
+                        </div>
                         <button type="submit" class="btn btn-primary mt-3">Save</button>
                     </form>
                 </div>

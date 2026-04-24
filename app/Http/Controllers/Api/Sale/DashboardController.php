@@ -251,6 +251,15 @@ class DashboardController extends Controller
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
+            if($paymentSplit->feedback_percentage){
+                $campaign->feedback_percentage = $paymentSplit->feedback_percentage;
+                $final_feedback_reward = ($request->reward_per_user * $paymentSplit->feedback_percentage) / 100;
+                $campaign->feedback_coin = $upi_value * $final_feedback_reward;
+            } else {
+                $campaign->feedback_percentage = 0;
+                $campaign->feedback_coin = 0;
+            }
+
             if($paymentSplit->user_percentage){
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
                 $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;

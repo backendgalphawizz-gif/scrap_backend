@@ -96,10 +96,33 @@ class CampaignController extends Controller
         $campaign->admin_percentage = $paymentSplit->admin_percentage;
         $campaign->user_percentage = $paymentSplit->user_percentage;
         $campaign->sales_percentage = $paymentSplit->sales_percentage;
+        $campaign->sales_referal_code = $request->sales_referal_code;
+        
+        $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
+        $compign_budget_with_gst = $request->total_campaign_budget + ($request->total_campaign_budget * $gst_percentage / 100);
+        $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+        
+        $upi_value =  strval(Helpers::get_business_settings('upi_value'));
+
+        if($paymentSplit->feedback_percentage){
+            $campaign->feedback_percentage = $paymentSplit->feedback_percentage;
+            $final_feedback_reward = ($request->reward_per_user * $paymentSplit->feedback_percentage) / 100;
+            $campaign->feedback_coin = $upi_value * $final_feedback_reward;
+        } else {
+            $campaign->feedback_percentage = 0;
+            $campaign->feedback_coin = 0;
+        }
+
         if($paymentSplit->user_percentage){
             $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
+            $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
+            $campaign->final_reward_for_user = $final_reward_for_user;
+            $campaign->coins = $upi_value * $final_reward_for_user;
         }else{
             $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
+            $final_reward_for_user = ($request->reward_per_user * 50) / 100;
+            $campaign->final_reward_for_user = $final_reward_for_user;
+            $campaign->coins = $upi_value * $final_reward_for_user;
         }
         
         $campaign->save();
