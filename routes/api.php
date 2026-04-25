@@ -54,7 +54,8 @@ Route::post('/optimize-clear', function () {
         'output' => Artisan::output()
     ]);
 });
-// Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+
+Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
