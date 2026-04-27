@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +13,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $hasUsersPersonalClient = DB::table('oauth_clients')
+            ->where('provider', 'users')
+            ->where('grant_types', 'like', '%personal_access%')
+            ->exists();
+
+        if (!$hasUsersPersonalClient) {
+            Artisan::call('passport:client', [
+                '--personal' => true,
+                '--name' => 'Default Personal Access Client',
+                '--provider' => 'users',
+            ]);
+        }
+
         $this->call(RoleSeeder::class);
         $this->call(PermissionSeeder::class);
         $this->call(RolePermissionSeeder::class);
