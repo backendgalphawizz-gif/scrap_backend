@@ -250,8 +250,19 @@ class DashboardController extends Controller
     }
 
     public function viewUser(Request $request, $id) {
-        $user = User::find($id);
-        return view('admin-views.customer.view-customer', compact('user'));
+        $customer = User::findOrFail($id);
+        $search = trim((string) $request->get('search', ''));
+
+        $orders = DB::table('orders')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('id', 'like', "%{$search}%");
+            })
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin-views.customer.customer-view', compact('customer', 'orders', 'search'));
     }
     public function editUser(Request $request, $id) {
         $user = User::find($id);

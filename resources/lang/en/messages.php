@@ -551,4 +551,8 @@
   'Brand Categories' => 'Brand Categories',
   'Add Brand Category' => 'Add Brand Category',
   'Please complete KYC verification before creating a campaign.' => 'Please complete KYC verification before creating a campaign.',
+  'Customer Details' => 'Customer Details',
+  'customer_details' => 'Customer details',
+  'Customer ID' => 'Customer ID',
+  'No_data_to_show' => 'No data to show',
 );
