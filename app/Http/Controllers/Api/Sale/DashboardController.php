@@ -15,7 +15,7 @@ use App\Models\Campaign;
 use App\Models\Notification;
 use App\Models\PaymentSplit;
 use App\Models\SaleCommissionLedger;
-use App\Models\SocialVerificationTransaction;
+use App\Models\BrandCategory;
 use App\Http\Resources\CommonResource;
 use Illuminate\Support\Str;
 use function App\CPU\translate;
@@ -148,14 +148,12 @@ class DashboardController extends Controller
             $salesId = $seller['id'];
 
             $brand = Seller::find($request->brand_id);
-
-            $verifiedSocial = SocialVerificationTransaction::STATUS_VERIFIED;
-            if ($brand->instagram_status !== $verifiedSocial || $brand->facebook_status !== $verifiedSocial) {
+            if (!$brand) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Please verify your Instagram and Facebook accounts before creating a campaign.',
+                    'message' => 'Brand not found.',
                     'data' => [],
-                ], 200);
+                ], 404);
             }
 
             if ($brand->pan_status !== 'Verified') {
@@ -200,6 +198,33 @@ class DashboardController extends Controller
                 ], 200);
             }
 
+            $category = BrandCategory::where('id', $request->category_id)
+                ->where(function ($query) {
+                    $query->whereNull('parent_id')->orWhere('parent_id', 0);
+                })
+                ->first();
+            if (!$category) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Valid category is required.',
+                    'data' => [],
+                ], 422);
+            }
+
+            $subCategoryId = $request->sub_category_id ?: null;
+            if ($subCategoryId) {
+                $subCategory = BrandCategory::where('id', $subCategoryId)
+                    ->where('parent_id', $category->id)
+                    ->first();
+                if (!$subCategory) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Selected sub category is invalid for selected category.',
+                        'data' => [],
+                    ], 422);
+                }
+            }
+
 
             // Logic to create campaign
 
@@ -234,7 +259,10 @@ class DashboardController extends Controller
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
             $campaign->city = $request->city;
-            $campaign->guidelines = implode('|', $request->guidelines);
+            $campaign->category_id = $category->id;
+            $campaign->sub_category_id = $subCategoryId;
+            $campaign_guideline = Helpers::get_business_settings('campaign_guideline');
+            $campaign->guidelines = $campaign_guideline ?? '';
             //$campaign->coins = $request->reward_per_user;
 
             $campaign->total_user_required = $request->total_user_required;
