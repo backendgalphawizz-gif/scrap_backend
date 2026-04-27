@@ -550,4 +550,5 @@
   'Brand Category List' => 'Brand Category List',
   'Brand Categories' => 'Brand Categories',
   'Add Brand Category' => 'Add Brand Category',
+  'Please complete KYC verification before creating a campaign.' => 'Please complete KYC verification before creating a campaign.',
 );

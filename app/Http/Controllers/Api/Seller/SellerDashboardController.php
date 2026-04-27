@@ -360,8 +360,10 @@ class SellerDashboardController extends Controller
                 ], 200);
             }
 
-            $category = BrandCategory::whereNull('parent_id')
-                ->where('id', $request->category_id)
+            $category = BrandCategory::where('id', $request->category_id)
+                ->where(function ($query) {
+                    $query->whereNull('parent_id')->orWhere('parent_id', 0);
+                })
                 ->first();
             if (!$category) {
                 return response()->json([
@@ -531,8 +533,10 @@ class SellerDashboardController extends Controller
             // Logic to create campaign
 
             $campaign = Campaign::find($id);
-            $category = BrandCategory::whereNull('parent_id')
-                ->where('id', $request->category_id)
+            $category = BrandCategory::where('id', $request->category_id)
+                ->where(function ($query) {
+                    $query->whereNull('parent_id')->orWhere('parent_id', 0);
+                })
                 ->first();
             if (!$category) {
                 return response()->json([
