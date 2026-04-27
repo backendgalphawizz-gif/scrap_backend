@@ -219,6 +219,66 @@
             </div>
         </div>
 
+        <div class="col-md-12 mt-4">
+            <div class="card">
+                <div class="card-header text-capitalize">
+                    <h5 class="mb-0">Social Media Verification</h5>
+                </div>
+                <div class="card-body">
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('admin.brand.updateStatus', [$seller->id]) }}" method="POST">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Instagram Verification Status</label>
+                                    <select name="instagram_status" class="form-control form-select">
+                                        <option value="not_verified" {{ $seller->instagram_status === 'not_verified' ? 'selected' : '' }}>Not Verified</option>
+                                        <option value="pending" {{ $seller->instagram_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="verified" {{ $seller->instagram_status === 'verified' ? 'selected' : '' }}>Verified</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Facebook Verification Status</label>
+                                    <select name="facebook_status" class="form-control form-select">
+                                        <option value="not_verified" {{ $seller->facebook_status === 'not_verified' ? 'selected' : '' }}>Not Verified</option>
+                                        <option value="pending" {{ $seller->facebook_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="verified" {{ $seller->facebook_status === 'verified' ? 'selected' : '' }}>Verified</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Brand Account Status</label>
+                                    <select name="status" class="form-control form-select">
+                                        <option value="approved" {{ $seller->status === 'approved' ? 'selected' : '' }}>Active</option>
+                                        <option value="pending" {{ $seller->status === 'pending' ? 'selected' : '' }}>In-Active</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Update Verification</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection

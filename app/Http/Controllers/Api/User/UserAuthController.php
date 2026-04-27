@@ -249,6 +249,7 @@ class UserAuthController extends Controller
             'minimum_wallet_balance' => Helpers::get_business_settings('minimum_wallet_balance'),
             'campaign_gst_percentage' => Helpers::get_business_settings('campaign_gst_percentage'), 
             'campaign_gst_percentage' => Helpers::get_business_settings('campaign_gst_percentage'), 
+            'campaign_guideline' => Helpers::get_business_settings('campaign_guideline'), 
             'admin_comission' => $paymentSplit->admin_percentage ?? 0,
             'user_comission' => $paymentSplit->user_percentage ?? 0,
             'sale_comission' => $paymentSplit->sales_percentage ?? 0,

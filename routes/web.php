@@ -151,6 +151,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/website-info/brand-update_terms_condition', [DashboardController::class, 'brand_updateTermsCondition'])->name('admin.business-settings.brand-update-terms');
     Route::get('/website-info/brand-privacy_policy', [DashboardController::class, 'brand_privacy_policy'])->name('admin.business-settings.brand-privacy-policy');
     Route::post('/website-info/brand-update_privacy_policy', [DashboardController::class, 'brand_privacy_policy_update'])->name('admin.business-settings.brand-privacy-policy-update');
+    Route::get('/brand-management/campaign-guideline', [DashboardController::class, 'campaign_guideline'])->name('admin.business-settings.campaign-guideline');
+    Route::post('/brand-management/campaign-guideline', [DashboardController::class, 'campaign_guideline_update'])->name('admin.business-settings.campaign-guideline-update');
     
     // Sales Terms & Conditions & Privacy Policy
     Route::get('/website-info/sales-terms_condition', [DashboardController::class, 'sales_terms_condition'])->name('admin.business-settings.sales-terms-condition');

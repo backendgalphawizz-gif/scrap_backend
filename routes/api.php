@@ -167,6 +167,7 @@ Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'socia
 
 Route::group(['prefix' => 'brand'], function () {
     Route::get('brand-category-list', [SellerAuthController::class, 'brandCategoryList']);
+    Route::get('campaign-guideline', [SellerAuthController::class, 'campaignGuideline']);
     Route::post('auth/send-otp', [SellerAuthController::class, 'sendOtp']);
     Route::post('auth/verify-otp', [SellerAuthController::class, 'verifyOtp']);
     Route::post('auth/resend-otp', [SellerAuthController::class, 'resendOtp']);

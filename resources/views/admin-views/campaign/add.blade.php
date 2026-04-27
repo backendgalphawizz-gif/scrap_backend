@@ -166,15 +166,22 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="age_range">{{ \App\CPU\translate('Age Range')}}</label>
-                                    <select name="age_range" id="age_range" class="form-select form-control" required>
-                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                        <option value="18-24">18-24</option>
-                                        <option value="25-34">25-34</option>
-                                        <option value="35-44">35-44</option>
-                                        <option value="45-54">45-54</option>
-                                        <option value="55-64">55-64</option>
-                                        <option value="65+">65+</option>
-                                    </select>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select name="age_range_min" id="age_range_min" class="form-select form-control" required>
+                                            <option value="">{{ \App\CPU\translate('Min')}}</option>
+                                            @for($age = 18; $age <= 65; $age++)
+                                                <option value="{{ $age }}">{{ $age }}</option>
+                                            @endfor
+                                        </select>
+                                        <span>-</span>
+                                        <select name="age_range_max" id="age_range_max" class="form-select form-control" required>
+                                            <option value="">{{ \App\CPU\translate('Max')}}</option>
+                                            @for($age = 18; $age <= 65; $age++)
+                                                <option value="{{ $age }}">{{ $age }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <input type="hidden" name="age_range" id="age_range" value="">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -224,13 +231,18 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guidelines">{{ \App\CPU\translate('Guidelines')}}</label>
-                                    <div id="guidelinesContainer">
-                                        <div class="guideline-item d-flex gap-2 mb-2">
-                                            <input type="text" name="guidelines[]" class="form-control" placeholder="GD 1">
-                                            <button type="button" class="btn btn-danger btn-sm removeGuideline" style="display:none;">Remove</button>
-                                        </div>
+                                    <div id="guidelinesContainer" class="border rounded p-2" style="max-height: 220px; overflow-y: auto;">
+                                        @forelse($guidelineOptions as $guideline)
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="guidelines[]" value="{{ $guideline }}" id="guideline_{{ $loop->index }}">
+                                                <label class="form-check-label" for="guideline_{{ $loop->index }}">
+                                                    {{ $guideline }}
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <p class="mb-0 text-muted">No campaign guidelines configured. Please add them from Brand Management > Campaign Guideline.</p>
+                                        @endforelse
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-sm mt-2" id="addGuideline">{{ \App\CPU\translate('Add Guidelines')}}</button>
                                 </div>
                             </div>
 
@@ -290,6 +302,36 @@
 
 @push('script')
 <script>
+    function syncAgeRangeValue() {
+        const min = $('#age_range_min').val();
+        const max = $('#age_range_max').val();
+
+        if (!min || !max) {
+            $('#age_range').val('');
+            return;
+        }
+
+        if (parseInt(min, 10) > parseInt(max, 10)) {
+            $('#age_range').val('');
+            return;
+        }
+
+        $('#age_range').val(`${min}-${max}`);
+    }
+
+    $('#age_range_min, #age_range_max').on('change', syncAgeRangeValue);
+
+    $('.banner_form').on('submit', function(e) {
+        syncAgeRangeValue();
+
+        const min = $('#age_range_min').val();
+        const max = $('#age_range_max').val();
+        if (!min || !max || parseInt(min, 10) > parseInt(max, 10)) {
+            e.preventDefault();
+            alert('Please select a valid age range (min age must be less than or equal to max age).');
+        }
+    });
+
     $('#mbimageFileUploader').change(function() {
         readURL(this);
     });
@@ -305,33 +347,6 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
-</script>
-<script>
-    $(document).ready(function() {
-        $('#addGuideline').click(function() {
-            let newItem = `
-                    <div class="guideline-item d-flex gap-2 mb-2">
-                        <input type="text" name="guidelines[]" class="form-control" placeholder="GD">
-                        <button type="button" class="btn btn-danger btn-sm removeGuideline">Remove</button>
-                    </div>
-                `;
-            $('#guidelinesContainer').append(newItem);
-            updateRemoveButtons();
-        });
-
-        $(document).on('click', '.removeGuideline', function(e) {
-            e.preventDefault();
-            $(this).closest('.guideline-item').remove();
-            updateRemoveButtons();
-        });
-
-        function updateRemoveButtons() {
-            let count = $('#guidelinesContainer .guideline-item').length;
-            $('#guidelinesContainer .removeGuideline').toggle(count > 1);
-        }
-
-        updateRemoveButtons();
-    });
 </script>
 <script>
     $('#multipleImageUploader').change(function() {

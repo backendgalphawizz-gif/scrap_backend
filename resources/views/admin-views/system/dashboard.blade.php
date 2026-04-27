@@ -289,7 +289,7 @@
                         <tbody>
                             @forelse($campaigns as $campaign)
                             <tr>
-                                <td>{{ $campaign->brand->username }}</td>
+                                <td>{{ optional($campaign->brand)->username ?? 'N/A' }}</td>
                                 <td>{{ $campaign->title }}</td>
                                 <td>
                                     @if($campaign->status == 'active')

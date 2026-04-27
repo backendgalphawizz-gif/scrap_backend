@@ -254,7 +254,7 @@ class DashboardController extends Controller
             if($paymentSplit->feedback_percentage){
                 $campaign->feedback_percentage = $paymentSplit->feedback_percentage;
                 $final_feedback_reward = ($request->reward_per_user * $paymentSplit->feedback_percentage) / 100;
-                $campaign->feedback_coin = $upi_value * $final_feedback_reward;
+                $campaign->feedback_coin = $final_feedback_reward / $upi_value;
             } else {
                 $campaign->feedback_percentage = 0;
                 $campaign->feedback_coin = 0;
@@ -264,12 +264,12 @@ class DashboardController extends Controller
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
                 $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
                 $campaign->final_reward_for_user = $final_reward_for_user;
-                $campaign->coins = $upi_value * $final_reward_for_user;
+                $campaign->coins = $final_reward_for_user / $upi_value;
             }else{
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
                 $final_reward_for_user = ($request->reward_per_user * 50) / 100;
                 $campaign->final_reward_for_user = $final_reward_for_user;
-                $campaign->coins = $upi_value * $final_reward_for_user;
+                $campaign->coins = $final_reward_for_user / $upi_value;
             }
            
             $campaign->save();

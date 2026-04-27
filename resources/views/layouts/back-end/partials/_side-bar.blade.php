@@ -86,6 +86,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participants</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.business-settings.campaign-guideline') }}">Campaign Guideline</a>
+                    </li>
                 </ul>
             </div>
         </li>

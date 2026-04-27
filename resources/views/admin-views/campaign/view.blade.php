@@ -200,7 +200,7 @@
                                         <th>{{\App\CPU\translate('image')}}</th>
                                         <th>{{\App\CPU\translate('brand_name')}}</th>
                                         <th>{{\App\CPU\translate('title')}}</th>
-                                        <th>{{\App\CPU\translate('earning coins')}}</th>
+                                        <th>{{\App\CPU\translate('earning amount')}}</th>
                                         <th>{{\App\CPU\translate('start_date')}}</th>
                                         <th>{{\App\CPU\translate('end_date')}}</th>
                                         <th>{{\App\CPU\translate('city')}}</th>
@@ -211,6 +211,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php($upiValue = (float) (\App\CPU\Helpers::get_business_settings('upi_value') ?? 0))
                                     @foreach($campaigns as $key=>$campaign)
                                     <tr id="data-{{$campaign->id}}">
                                         <td class="pl-xl-5">{{$campaigns->firstItem()+$key}}</td>
@@ -219,9 +220,12 @@
                                                 onerror="this.src='{{asset('assets/logo/logo-1.png')}}'"
                                                 src="{{$campaign->thumbnail}}">
                                         </td>
-                                        <td class="pl-xl-5">{{$campaign->brand->username}}</td>
+                                        <td class="pl-xl-5">{{ optional($campaign->brand)->username ?? 'N/A' }}</td>
                                         <td class="pl-xl-5">{{$campaign->title}}</td>
-                                        <td class="pl-xl-5">{{$campaign->coins}}</td>
+                                        <td class="pl-xl-5">
+                                            ₹ {{ number_format(((float) $campaign->coins) * $upiValue, 2) }}
+                                            <small class="d-block text-muted">({{ $campaign->coins }} x {{ $upiValue }})</small>
+                                        </td>
                                         <td class="pl-xl-5">{{$campaign->start_date}}</td>
                                         <td class="pl-xl-5">{{$campaign->end_date}}</td>
                                         <td class="pl-xl-5">{{$campaign->city}}</td>

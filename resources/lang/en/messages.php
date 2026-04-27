@@ -533,4 +533,8 @@
   'Sales Privacy_Policy' => 'Sales Privacy Policy',
   'Sales Terms & Condition' => 'Sales Terms & Condition',
   'Sales Privacy Policy' => 'Sales Privacy Policy',
+  'Campaign Guideline' => 'Campaign Guideline',
+  'earning amount' => 'Earning amount',
+  'Min' => 'Min',
+  'Max' => 'Max',
 );
