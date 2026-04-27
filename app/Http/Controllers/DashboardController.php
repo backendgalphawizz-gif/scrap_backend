@@ -370,10 +370,29 @@ class DashboardController extends Controller
     }
 
     public function updateBrand(Request $request, $id) {
-        $seller = Seller::find($id);
-        $seller->status = $request->status;
+        $seller = Seller::findOrFail($id);
+
+        $request->validate([
+            'status' => 'nullable|in:approved,pending',
+            'instagram_status' => 'nullable|in:not_verified,pending,verified',
+            'facebook_status' => 'nullable|in:not_verified,pending,verified',
+        ]);
+
+        if ($request->filled('status')) {
+            $seller->status = $request->status;
+        }
+
+        if ($request->filled('instagram_status')) {
+            $seller->instagram_status = $request->instagram_status;
+        }
+
+        if ($request->filled('facebook_status')) {
+            $seller->facebook_status = $request->facebook_status;
+        }
+
         $seller->save();
-        return redirect()->back();
+
+        return redirect()->back()->with('success', 'Brand user updated successfully.');
     }
     
     public function settings(Request $request) {
@@ -649,6 +668,26 @@ class DashboardController extends Controller
         ]);
         BusinessSetting::where('type', 'brand_privacy_policy')->update(['value' => $data->value]);
         // Toastr::success('Privacy policy Updated successfully!');
+        return redirect()->back();
+    }
+
+    public function campaign_guideline()
+    {
+        $campaign_guideline = BusinessSetting::where('type', 'campaign_guideline')->first();
+        return view('admin-views.business-settings.campaign-guideline', compact('campaign_guideline'));
+    }
+
+    public function campaign_guideline_update(Request $request)
+    {
+        $request->validate([
+            'value' => 'required',
+        ]);
+
+        \DB::table('business_settings')->updateOrInsert(
+            ['type' => 'campaign_guideline'],
+            ['value' => $request->value]
+        );
+
         return redirect()->back();
     }
 

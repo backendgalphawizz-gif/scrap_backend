@@ -334,6 +334,17 @@ class SellerAuthController extends Controller
         ]);
     }
 
+    public function campaignGuideline()
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Campaign guideline retrieved successfully',
+            'data' => [
+                'campaign_guideline' => Helpers::get_business_settings('campaign_guideline') ?? '',
+            ],
+        ]);
+    }
+
     public function sendNotification(Request $request)
     {
         $token = $request->input('fcm_id');

@@ -53,11 +53,17 @@ class CampaignController extends Controller
     public function create()
     {
         $sellers = Seller::where('status', 'approved')->get();
-        return view('admin-views.campaign.add', compact('sellers'));
+        $guidelineOptions = $this->getCampaignGuidelineOptions();
+        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions'));
     }
 
     public function store(Request $request)
     {
+        $ageRange = $request->age_range;
+        if ($request->filled('age_range_min') && $request->filled('age_range_max')) {
+            $ageRange = $request->age_range_min . '-' . $request->age_range_max;
+        }
+
         $campaign = new Campaign;
         if($request->hasFile('thumbnail')) {
             $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
@@ -83,7 +89,7 @@ class CampaignController extends Controller
         $campaign->gender = $request->gender;
         $campaign->state = $request->state;
         $campaign->city = $request->city;
-        $campaign->guidelines = implode('|', $request->guidelines);
+        $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->reward_per_user;
 
         $campaign->total_user_required = $request->total_user_required;
@@ -92,7 +98,7 @@ class CampaignController extends Controller
         $campaign->number_of_post = $request->number_of_post;
         $campaign->daily_budget_cap = $request->daily_budget_cap;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
-        $campaign->age_range = $request->age_range;
+        $campaign->age_range = $ageRange;
         $campaign->admin_percentage = $paymentSplit->admin_percentage;
         $campaign->user_percentage = $paymentSplit->user_percentage;
         $campaign->sales_percentage = $paymentSplit->sales_percentage;
@@ -107,7 +113,7 @@ class CampaignController extends Controller
         if($paymentSplit->feedback_percentage){
             $campaign->feedback_percentage = $paymentSplit->feedback_percentage;
             $final_feedback_reward = ($request->reward_per_user * $paymentSplit->feedback_percentage) / 100;
-            $campaign->feedback_coin = $upi_value * $final_feedback_reward;
+            $campaign->feedback_coin = $final_feedback_reward / $upi_value;
         } else {
             $campaign->feedback_percentage = 0;
             $campaign->feedback_coin = 0;
@@ -117,12 +123,12 @@ class CampaignController extends Controller
             $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
             $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
             $campaign->final_reward_for_user = $final_reward_for_user;
-            $campaign->coins = $upi_value * $final_reward_for_user;
+            $campaign->coins = $final_reward_for_user / $upi_value;
         }else{
             $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
             $final_reward_for_user = ($request->reward_per_user * 50) / 100;
             $campaign->final_reward_for_user = $final_reward_for_user;
-            $campaign->coins = $upi_value * $final_reward_for_user;
+            $campaign->coins = $final_reward_for_user / $upi_value;
         }
         
         $campaign->save();
@@ -154,11 +160,16 @@ class CampaignController extends Controller
         $campaign = Campaign::with(['brand'])->where('id', $id)->first();
         // dd($campaign->images);
         $sellers = Seller::where('status', 'approved')->get();
-        return view('admin-views.campaign.edit', compact('campaign', 'sellers'));
+        $guidelineOptions = $this->getCampaignGuidelineOptions();
+        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions'));
     }
 
     public function update(Request $request, $id)
     {
+        $ageRange = $request->age_range;
+        if ($request->filled('age_range_min') && $request->filled('age_range_max')) {
+            $ageRange = $request->age_range_min . '-' . $request->age_range_max;
+        }
 
         $campaign = Campaign::find($id);
         if($request->hasFile('thumbnail')) {
@@ -190,14 +201,14 @@ class CampaignController extends Controller
         $campaign->gender = $request->gender;
         $campaign->state = $request->state;
         $campaign->city = $request->city;
-        $campaign->guidelines = implode('|', $request->guidelines);
+        $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->reward_per_user;
         $campaign->total_user_required = $request->total_user_required;
         $campaign->reward_per_user = $request->reward_per_user;
         $campaign->number_of_post = $request->number_of_post;
         $campaign->daily_budget_cap = $request->daily_budget_cap;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
-        $campaign->age_range = $request->age_range;
+        $campaign->age_range = $ageRange;
         $campaign->save();
 
         return redirect()->route('admin.campaign.list');
@@ -219,6 +230,26 @@ class CampaignController extends Controller
             ->paginate(10)
             ->withQueryString();
         return view('admin-views.campaign.transactions', compact('transactions'));
+    }
+
+    private function getCampaignGuidelineOptions(): array
+    {
+        $rawGuidelines = (string) (Helpers::get_business_settings('campaign_guideline') ?? '');
+        if ($rawGuidelines === '') {
+            return [];
+        }
+
+        preg_match_all('/<li[^>]*>(.*?)<\/li>/is', $rawGuidelines, $liMatches);
+        if (!empty($liMatches[1])) {
+            $options = array_map(static fn($item) => trim(strip_tags(html_entity_decode($item))), $liMatches[1]);
+            return array_values(array_unique(array_filter($options)));
+        }
+
+        $text = html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />'], PHP_EOL, $rawGuidelines)));
+        $parts = preg_split('/\r\n|\r|\n/', $text) ?: [];
+        $options = array_map(static fn($item) => trim($item), $parts);
+
+        return array_values(array_unique(array_filter($options)));
     }
 
 }

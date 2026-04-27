@@ -60,6 +60,7 @@ class DashboardController extends Controller
         
 
         $user = $request->user();
+        $ageRange = trim((string) $request->input('age_range', ''));
    
         $filters = [];
         $query = Campaign::with(['brand'])
@@ -109,6 +110,10 @@ class DashboardController extends Controller
                     $sub->where('state', $state)
                         ->orWhere('state', 'any');
                 });
+            })
+            ->when($ageRange !== '' && preg_match('/^\d{1,2}\s*-\s*\d{1,2}$/', $ageRange), function ($q) use ($ageRange) {
+                $normalizedAgeRange = preg_replace('/\s+/', '', $ageRange);
+                $q->whereRaw('REPLACE(age_range, " ", "") = ?', [$normalizedAgeRange]);
             })
             ->where(['status' => 'active'])
             ->whereNotIn('id', function ($sub) use ($user) {
