@@ -72,8 +72,6 @@ class UserAuthController extends Controller
             $user->device_type = $request->device_type;
             $user->unique_code = 'RX-' . $user->id;
             $user->save();
-
-            $token = $user->createToken('UserToken')->accessToken;
         }
 
         //     $user = User::firstOrCreate(
