@@ -16,6 +16,7 @@ use App\Http\Controllers\FeedbackQuestionController;
 use App\Http\Controllers\VoucherBrandController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\Admin\PaymentSplitController;
+use App\Http\Controllers\Admin\BrandCategoryController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -129,6 +130,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/update/{id}', [VoucherController::class, 'update'])->name('update');
         Route::post('/active-status', [VoucherController::class, 'activeStatus'])->name('active-status');
         Route::post('/delete', [VoucherController::class, 'delete'])->name('delete');
+    });
+
+    Route::group(['prefix' => 'brand-categories', 'as' => 'admin.brand-category.'], function() {
+        Route::get('/', [BrandCategoryController::class, 'index'])->name('index');
+        Route::get('/create', [BrandCategoryController::class, 'create'])->name('create');
+        Route::post('/store', [BrandCategoryController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [BrandCategoryController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [BrandCategoryController::class, 'update'])->name('update');
+        Route::post('/status', [BrandCategoryController::class, 'status'])->name('status');
+        Route::post('/delete', [BrandCategoryController::class, 'delete'])->name('delete');
     });
     
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');
