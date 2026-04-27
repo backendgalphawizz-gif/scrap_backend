@@ -269,6 +269,32 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>GST Verification Status</label>
+                                    <select name="gst_status" class="form-control form-select">
+                                        <option value="Not Submitted" {{ $seller->gst_status === 'Not Submitted' ? 'selected' : '' }}>Not Submitted</option>
+                                        <option value="Submitted" {{ $seller->gst_status === 'Submitted' ? 'selected' : '' }}>Submitted</option>
+                                        <option value="Under Verification" {{ $seller->gst_status === 'Under Verification' ? 'selected' : '' }}>Under Verification</option>
+                                        <option value="Verified" {{ $seller->gst_status === 'Verified' ? 'selected' : '' }}>Verified</option>
+                                        <option value="Rejected" {{ $seller->gst_status === 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>PAN Verification Status</label>
+                                    <select name="pan_status" class="form-control form-select">
+                                        <option value="Not Submitted" {{ $seller->pan_status === 'Not Submitted' ? 'selected' : '' }}>Not Submitted</option>
+                                        <option value="Submitted" {{ $seller->pan_status === 'Submitted' ? 'selected' : '' }}>Submitted</option>
+                                        <option value="Under Verification" {{ $seller->pan_status === 'Under Verification' ? 'selected' : '' }}>Under Verification</option>
+                                        <option value="Verified" {{ $seller->pan_status === 'Verified' ? 'selected' : '' }}>Verified</option>
+                                        <option value="Rejected" {{ $seller->pan_status === 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mt-3">

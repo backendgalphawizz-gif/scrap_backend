@@ -69,25 +69,29 @@
             </div>
         </li>
         @endif
+        @php($brandMenuOpen = request()->routeIs('admin.brand*') || request()->routeIs('admin.campaign.*') || request()->routeIs('admin.campaigns-transactions.*') || request()->routeIs('admin.business-settings.campaign-guideline*') || request()->routeIs('admin.brand-category.*'))
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#brands" aria-expanded="false" aria-controls="brands">
+            <a class="nav-link {{ $brandMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands" aria-expanded="{{ $brandMenuOpen ? 'true' : 'false' }}" aria-controls="brands">
                 <span class="menu-title">Brand Management</span>
                 <i class="mdi mdi-store menu-icon"></i>
             </a>
-            <div class="collapse" id="brands">
+            <div class="collapse {{ $brandMenuOpen ? 'show' : '' }}" id="brands">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.brand') }}">Brand User</a>
+                        <a class="nav-link {{ request()->routeIs('admin.brand') || request()->routeIs('admin.brand.view') || request()->routeIs('admin.brand.updateStatus') ? 'active' : '' }}" href="{{ route('admin.brand') }}">Brand User</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.campaign.list') }}">Campaigns</a>
+                        <a class="nav-link {{ request()->routeIs('admin.campaign.*') ? 'active' : '' }}" href="{{ route('admin.campaign.list') }}">Campaigns</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participants</a>
+                        <a class="nav-link {{ request()->routeIs('admin.campaigns-transactions.*') ? 'active' : '' }}" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participants</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.business-settings.campaign-guideline') }}">Campaign Guideline</a>
+                        <a class="nav-link {{ request()->routeIs('admin.business-settings.campaign-guideline*') ? 'active' : '' }}" href="{{ route('admin.business-settings.campaign-guideline') }}">Campaign Guideline</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.brand-category.*') ? 'active' : '' }}" href="{{ route('admin.brand-category.index') }}">Brand Categories</a>
                     </li>
                 </ul>
             </div>
@@ -113,19 +117,20 @@
         </li>
         @endif
 
+        @php($voucherMenuOpen = request()->routeIs('admin.voucher-brand.*') || request()->routeIs('admin.voucher.*'))
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="false" aria-controls="brands-voucher-manage">
+            <a class="nav-link {{ $voucherMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="{{ $voucherMenuOpen ? 'true' : 'false' }}" aria-controls="brands-voucher-manage">
                 <span class="menu-title">Voucher Manage</span>
                 <i class="mdi mdi-ticket-percent menu-icon"></i>
             </a>
-            <div class="collapse" id="brands-voucher-manage">
+            <div class="collapse {{ $voucherMenuOpen ? 'show' : '' }}" id="brands-voucher-manage">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
+                        <a class="nav-link {{ request()->routeIs('admin.voucher-brand.*') ? 'active' : '' }}" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.voucher.index') }}">Vouchers</a>
+                        <a class="nav-link {{ request()->routeIs('admin.voucher.*') ? 'active' : '' }}" href="{{ route('admin.voucher.index') }}">Vouchers</a>
                     </li>
                 </ul>
             </div>

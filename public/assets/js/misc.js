@@ -20,6 +20,32 @@ var lightColor = getComputedStyle(document.body).getPropertyValue('--light');
     //Add active class to nav-link based on url dynamically
     //Active class can be hard coded directly in html file also as required
 
+    function normalizePath(path) {
+      if (!path) return '';
+      return path.replace(/^\/|\/$/g, '');
+    }
+
+    function elementMatchesCurrent(element) {
+      var href = element.attr('href');
+      if (!href || href === '#') {
+        return false;
+      }
+
+      // Skip javascript/mailto/tel links
+      if (/^(javascript:|mailto:|tel:)/i.test(href)) {
+        return false;
+      }
+
+      var linkPath = '';
+      try {
+        linkPath = normalizePath(new URL(href, window.location.origin).pathname);
+      } catch (e) {
+        return false;
+      }
+
+      return linkPath === currentPath || normalizePath(linkPath.split('/').slice(-1)[0]) === current;
+    }
+
     function addActiveClass(element) {
       if (current === "") {
         //for root url
@@ -32,7 +58,7 @@ var lightColor = getComputedStyle(document.body).getPropertyValue('--light');
         }
       } else {
         //for other url
-        if (element.attr('href').indexOf(current) !== -1) {
+        if (elementMatchesCurrent(element)) {
           element.parents('.nav-item').last().addClass('active');
           if (element.parents('.sub-menu').length) {
             element.closest('.collapse').addClass('show');
@@ -45,7 +71,8 @@ var lightColor = getComputedStyle(document.body).getPropertyValue('--light');
       }
     }
 
-    var current = location.pathname.split("/").slice(-1)[0].replace(/^\/|\/$/g, '');
+    var currentPath = normalizePath(location.pathname);
+    var current = currentPath.split("/").slice(-1)[0];
     $('.nav li a', sidebar).each(function() {
       var $this = $(this);
       addActiveClass($this);

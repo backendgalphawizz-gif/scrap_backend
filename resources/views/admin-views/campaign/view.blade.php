@@ -223,8 +223,7 @@
                                         <td class="pl-xl-5">{{ optional($campaign->brand)->username ?? 'N/A' }}</td>
                                         <td class="pl-xl-5">{{$campaign->title}}</td>
                                         <td class="pl-xl-5">
-                                            ₹ {{ number_format(((float) $campaign->coins) * $upiValue, 2) }}
-                                            <small class="d-block text-muted">({{ $campaign->coins }} x {{ $upiValue }})</small>
+                                            ₹ {{  @$campaign->reward_per_user }}
                                         </td>
                                         <td class="pl-xl-5">{{$campaign->start_date}}</td>
                                         <td class="pl-xl-5">{{$campaign->end_date}}</td>

@@ -61,6 +61,7 @@ class DashboardController extends Controller
 
         $user = $request->user();
         $ageRange = trim((string) $request->input('age_range', ''));
+        $isLocalForVocal = filter_var($request->input('local_for_vocal', false), FILTER_VALIDATE_BOOLEAN);
    
         $filters = [];
         $query = Campaign::with(['brand'])
@@ -99,13 +100,19 @@ class DashboardController extends Controller
                         ->orWhere('gender', 'both');
                 });
             })
-            ->when($city != '' && $city != 'any', function ($q) use ($city) {
+            ->when($isLocalForVocal && $city != '', function ($q) use ($city) {
+                $q->where('city', $city);
+            })
+            ->when(!$isLocalForVocal && $city != '' && $city != 'any', function ($q) use ($city) {
                 $q->where(function ($sub) use ($city) {
                     $sub->where('city', $city)
                         ->orWhere('city', 'any');
                 });
             })
-            ->when($state != '' && $state != 'any', function ($q) use ($state) {
+            ->when($isLocalForVocal && $state != '', function ($q) use ($state) {
+                $q->where('state', $state);
+            })
+            ->when(!$isLocalForVocal && $state != '' && $state != 'any', function ($q) use ($state) {
                 $q->where(function ($sub) use ($state) {
                     $sub->where('state', $state)
                         ->orWhere('state', 'any');

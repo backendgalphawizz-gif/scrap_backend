@@ -15,6 +15,7 @@ use App\Models\CampaignTransaction;
 use App\Models\SocialVerificationTransaction;
 use App\Models\PaymentSplit;
 use App\Models\BusinessSetting;
+use App\Models\BrandCategory;
 
 use Illuminate\Http\Request;
 use function App\CPU\translate;
@@ -327,6 +328,7 @@ class SellerDashboardController extends Controller
 
             $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
             $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
+           
             if ($maxPerWindow > 0 && $windowHours > 0) {
                 $recentCount = Campaign::where('brand_id', $seller['id'])
                     ->where('created_at', '>=', now()->subHours($windowHours))
@@ -356,6 +358,31 @@ class SellerDashboardController extends Controller
                     'current_balance' => $sellerWallet->wallet_amount,
                     'balance_required' => $request->total_campaign_budget
                 ], 200);
+            }
+
+            $category = BrandCategory::whereNull('parent_id')
+                ->where('id', $request->category_id)
+                ->first();
+            if (!$category) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Valid category is required.',
+                    'data' => [],
+                ], 422);
+            }
+
+            $subCategoryId = $request->sub_category_id ?: null;
+            if ($subCategoryId) {
+                $subCategory = BrandCategory::where('id', $subCategoryId)
+                    ->where('parent_id', $category->id)
+                    ->first();
+                if (!$subCategory) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Selected sub category is invalid for selected category.',
+                        'data' => [],
+                    ], 422);
+                }
             }
 
             $campaign = new Campaign;
@@ -395,7 +422,10 @@ class SellerDashboardController extends Controller
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
             $campaign->city = $request->city;
-            $campaign->guidelines = implode('|', $request->guidelines);
+            $campaign->category_id = $category->id;
+            $campaign->sub_category_id = $subCategoryId;
+            $campaign_guideline = Helpers::get_business_settings('campaign_guideline');
+            $campaign->guidelines = $campaign_guideline ?? '';
             //$campaign->coins = $request->reward_per_user;
 
             $campaign->total_user_required = $request->total_user_required;
@@ -501,6 +531,31 @@ class SellerDashboardController extends Controller
             // Logic to create campaign
 
             $campaign = Campaign::find($id);
+            $category = BrandCategory::whereNull('parent_id')
+                ->where('id', $request->category_id)
+                ->first();
+            if (!$category) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Valid category is required.',
+                    'data' => [],
+                ], 422);
+            }
+
+            $subCategoryId = $request->sub_category_id ?: null;
+            if ($subCategoryId) {
+                $subCategory = BrandCategory::where('id', $subCategoryId)
+                    ->where('parent_id', $category->id)
+                    ->first();
+                if (!$subCategory) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Selected sub category is invalid for selected category.',
+                        'data' => [],
+                    ], 422);
+                }
+            }
+
             if ($request->hasFile('thumbnail')) {
                 try {
                     //code...
@@ -542,6 +597,8 @@ class SellerDashboardController extends Controller
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
             $campaign->city = $request->city;
+            $campaign->category_id = $category->id;
+            $campaign->sub_category_id = $subCategoryId;
             $campaign->guidelines = implode('|', $request->guidelines);
             $campaign->coins = $request->reward_per_user;
 

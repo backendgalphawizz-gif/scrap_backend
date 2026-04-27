@@ -376,6 +376,8 @@ class DashboardController extends Controller
             'status' => 'nullable|in:approved,pending',
             'instagram_status' => 'nullable|in:not_verified,pending,verified',
             'facebook_status' => 'nullable|in:not_verified,pending,verified',
+            'gst_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'pan_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
         ]);
 
         if ($request->filled('status')) {
@@ -388,6 +390,20 @@ class DashboardController extends Controller
 
         if ($request->filled('facebook_status')) {
             $seller->facebook_status = $request->facebook_status;
+        }
+
+        if ($request->filled('gst_status')) {
+            $seller->gst_status = $request->gst_status;
+            if ($request->gst_status !== 'Rejected') {
+                $seller->gst_rejection_reason = null;
+            }
+        }
+
+        if ($request->filled('pan_status')) {
+            $seller->pan_status = $request->pan_status;
+            if ($request->pan_status !== 'Rejected') {
+                $seller->pan_rejection_reason = null;
+            }
         }
 
         $seller->save();

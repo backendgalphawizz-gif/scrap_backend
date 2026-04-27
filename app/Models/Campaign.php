@@ -26,6 +26,8 @@ class Campaign extends Model
         'thumbnail',
         'images',
         'share_on',
+        'category_id',
+        'sub_category_id',
         'unique_code','used_post','total_user_required','sale_id','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst'
     ];
 
