@@ -351,11 +351,35 @@ class UserAuthController extends Controller
 
     public function categories()
     {
-        $banners = BrandCategory::with(['childes'])->where('status', 1)->latest()->get();
+        $categories = BrandCategory::with([
+                'childes' => function ($query) {
+                    $query->where('status', 1)->latest();
+                }
+            ])
+            ->where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->latest()
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'name' => $category->name,
+                    'id' => $category->id,
+                    'childes' => $category->childes->map(function ($child) {
+                        return [
+                            'name' => $child->name,
+                            'id' => $child->id,
+                        ];
+                    })->values(),
+                ];
+            })
+            ->values();
+
         return response()->json([
             'status' => true,
             'message' => 'Brand Category retrieved successfully',
-            'data' => $banners
+            'data' => $categories
         ]);
     }
 

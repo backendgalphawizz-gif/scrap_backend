@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('campaigns', function (Blueprint $table) {
-            $table->string('unique_code', 100)->nullable()->unique()->change();
+            $table->string('unique_code', 100)->nullable()->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('campaigns', function (Blueprint $table) {
-            $table->string('unique_code', 50)->nullable()->unique()->change();
+            $table->string('unique_code', 50)->nullable()->change();
         });
     }
 };
