@@ -304,6 +304,8 @@ class DashboardController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'instagram_status' => 'nullable|in:not_submitted,pending,verified,not_verified',
+            'facebook_status' => 'nullable|in:not_submitted,pending,verified,not_verified',
             'upi_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
             'bank_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
             'pan_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
@@ -320,6 +322,8 @@ class DashboardController extends Controller
         $user->profession = $request->profession;
         $user->instagram_username = $request->instagram_username;
         $user->facebook_username = $request->facebook_username;
+        $user->instagram_status = $request->instagram_status ?? $user->instagram_status;
+        $user->facebook_status = $request->facebook_status ?? $user->facebook_status;
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->phone;

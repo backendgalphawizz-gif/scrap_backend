@@ -9,6 +9,6 @@ class Banner extends Model
 
     public function getImageAttribute($value)
     {
-        return asset('storage/banners/' . $value);
+        return asset('storage/banner/' . $value);
     }
 }

@@ -76,7 +76,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/store', [BannerController::class, 'store'])->name('admin.banner.store');
         Route::post('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update');
         Route::post('/status', [BannerController::class, 'status'])->name('admin.banner.status');
-        Route::get('/delete', [BannerController::class, 'delete'])->name('admin.banner.delete');
+        Route::post('/delete', [BannerController::class, 'delete'])->name('admin.banner.delete');
     });
 
     // CampaignController

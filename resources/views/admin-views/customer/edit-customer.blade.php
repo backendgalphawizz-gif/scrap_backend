@@ -152,6 +152,18 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Instagram Verification Status</label>
+                                    <select name="instagram_status" class="form-control form-select">
+                                        <option value="not_submitted" {{ $user->instagram_status == 'not_submitted' ? 'selected' : '' }}>Not Submitted</option>
+                                        <option value="pending" {{ $user->instagram_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="verified" {{ $user->instagram_status == 'verified' ? 'selected' : '' }}>Verified</option>
+                                        <option value="not_verified" {{ $user->instagram_status == 'not_verified' ? 'selected' : '' }}>Not Verified</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- Facebook -->
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -160,6 +172,18 @@
                                         name="facebook_username"
                                         value="{{ $user->facebook_username ?? old('facebook_username') }}"
                                         class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Facebook Verification Status</label>
+                                    <select name="facebook_status" class="form-control form-select">
+                                        <option value="not_submitted" {{ $user->facebook_status == 'not_submitted' ? 'selected' : '' }}>Not Submitted</option>
+                                        <option value="pending" {{ $user->facebook_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="verified" {{ $user->facebook_status == 'verified' ? 'selected' : '' }}>Verified</option>
+                                        <option value="not_verified" {{ $user->facebook_status == 'not_verified' ? 'selected' : '' }}>Not Verified</option>
+                                    </select>
                                 </div>
                             </div>
 

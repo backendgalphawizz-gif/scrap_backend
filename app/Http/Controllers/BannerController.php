@@ -92,7 +92,7 @@ class BannerController extends Controller
         // $banner->background_color = $request->background_color;
         // $banner->url = $request->url;
         if ($request->file('image')) {
-            $banner->image = ImageManager::update('banner/', $banner['image'], 'png', $request->file('image'));
+            $banner->image = ImageManager::update('banner/', $banner->getRawOriginal('image'), 'png', $request->file('image'));
         }
         $banner->save();
 
@@ -103,8 +103,10 @@ class BannerController extends Controller
     public function delete(Request $request)
     {
         $br = Banner::find($request->id);
-        ImageManager::delete('/banner/' . $br['photo']);
-        Banner::where('id', $request->id)->delete();
+        if ($br) {
+            ImageManager::delete('banner/' . $br->getRawOriginal('image'));
+            $br->delete();
+        }
         return response()->json();
     }
 }
