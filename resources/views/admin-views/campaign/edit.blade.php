@@ -179,6 +179,7 @@
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
                                     <select name="state" id="state" class="form-select form-control @error('state') is-invalid @enderror" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        <option value="Any" {{ old('state', $campaign->state) === 'Any' ? 'selected' : '' }}>Any</option>
                                         <option value="Andhra Pradesh" {{ old('state', $campaign->state) === 'Andhra Pradesh' ? 'selected' : '' }}>Andhra Pradesh</option>
                                         <option value="Arunachal Pradesh" {{ old('state', $campaign->state) === 'Arunachal Pradesh' ? 'selected' : '' }}>Arunachal Pradesh</option>
                                         <option value="Assam" {{ old('state', $campaign->state) === 'Assam' ? 'selected' : '' }}>Assam</option>
@@ -220,24 +221,16 @@
                                     @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                 </div>
                             </div> -->
-                           <div class="col-md-4">
-    <div class="form-group">
-        <label for="city">{{ \App\CPU\translate('City')}}</label>
-
-        <select name="city" class="form-select form-control @error('city') is-invalid @enderror" required>
-            <option value="">Select City</option>
-
-            <option value="Delhi" {{ old('city', $campaign->city) == 'Delhi' ? 'selected' : '' }}>Delhi</option>
-            <option value="Mumbai" {{ old('city', $campaign->city) == 'Mumbai' ? 'selected' : '' }}>Mumbai</option>
-            <option value="Indore" {{ old('city', $campaign->city) == 'Indore' ? 'selected' : '' }}>Indore</option>
-            <option value="Bhopal" {{ old('city', $campaign->city) == 'Bhopal' ? 'selected' : '' }}>Bhopal</option>
-            <option value="Jaipur" {{ old('city', $campaign->city) == 'Jaipur' ? 'selected' : '' }}>Jaipur</option>
-
-        </select>
-
-        @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
-    </div>
-</div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="city">{{ \App\CPU\translate('City')}}</label>
+                                    <select name="city" id="city" class="form-select form-control @error('city') is-invalid @enderror" required>
+                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        <option value="Any" {{ old('city', $campaign->city) === 'Any' ? 'selected' : '' }}>Any</option>
+                                    </select>
+                                    @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guidelines">{{ \App\CPU\translate('Guidelines')}}</label>
@@ -421,22 +414,26 @@
         'West Bengal': ['Kolkata', 'Darjeeling', 'Asansol']
     };
 
-    $('#state').change(function() {
-        let state = $(this).val();
-        let citySelect = $('#city');
+    function syncCityOptions() {
+        const state = $('#state').val();
+        const selectedCity = @json(old('city', $campaign->city));
+        const citySelect = $('#city');
+        citySelect.empty();
+        citySelect.append(`<option value="Any" ${selectedCity === 'Any' ? 'selected' : ''}>Any</option>`);
+        citySelect.append(`<option value="">{{ \App\CPU\translate('Select')}}</option>`);
 
         if (state && cityData[state]) {
-            citySelect.replaceWith(`
-                    <select name="city" id="city" class="form-control" required>
-                        <option value="">{{ \App\CPU\translate('Select')}}</option>
-                        ${cityData[state].map(city => `<option value="${city}" ${city === '{{ old('city', $campaign->city) }}' ? 'selected' : ''}>${city}</option>`).join('')}
-                    </select>
-                `);
+            cityData[state].forEach(function(city) {
+                const selectedAttr = city === selectedCity ? 'selected' : '';
+                citySelect.append(`<option value="${city}" ${selectedAttr}>${city}</option>`);
+            });
         }
-    });
+    }
+
+    $('#state').change(syncCityOptions);
 
     $(document).ready(function() {
-        $('#state').trigger('change');
+        syncCityOptions();
     });
 </script>
 @endpush

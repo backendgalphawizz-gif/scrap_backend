@@ -249,51 +249,15 @@ class DashboardController extends Controller
         return view('admin-views.customer.list', compact('customers'));
     }
 
-    public function viewUser(Request $request, $id) {
-        $customer = User::findOrFail($id);
-        $search = trim((string) $request->get('search', ''));
-
-        $orders = DB::table('orders')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where('id', 'like', "%{$search}%");
-            })
-            ->where('customer_id', $customer->id)
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('admin-views.customer.customer-view', compact('customer', 'orders', 'search'));
+     public function viewUser(Request $request, $id) {
+        $user = User::find($id);
+        return view('admin-views.customer.edit-customer', compact('user'));
     }
     public function editUser(Request $request, $id) {
         $user = User::find($id);
         return view('admin-views.customer.edit-customer', compact('user'));
     }
-
-    // public function updateUser(Request $request) {
-    //     $user = User::find($request->id);
-
-    //     $request->validate([
-    //         'name' => 'required',
-    //         'email' => 'required|email|unique:users,email,'.$user->id,
-    //         'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
-    //     ]);
-
-    //     $request->validate([
-    //         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-    //     ]);
-
-    //     $request->has('image') && $user->image = ImageManager::upload('profile/', 'png', $request->file('image'), $user->image);
-    //     $user->dob = $request->dob;
-    //     $user->gender = $request->gender;
-    //     $user->profession = $request->profession;
-    //     $user->instagram_username = $request->instagram_username;
-    //     $user->facebook_username = $request->facebook_username;
-    //     $user->name = $request->name;
-    //     $user->email = $request->email;
-    //     $user->mobile = $request->phone;
-    //     $user->save();
-    //     return redirect()->back();
-    // }
+   
 
     public function updateUser(Request $request) {
     try {
