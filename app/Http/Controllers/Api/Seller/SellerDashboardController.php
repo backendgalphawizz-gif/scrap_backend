@@ -16,6 +16,7 @@ use App\Models\SocialVerificationTransaction;
 use App\Models\PaymentSplit;
 use App\Models\BusinessSetting;
 use App\Models\BrandCategory;
+use App\Models\Sale;
 
 use Illuminate\Http\Request;
 use function App\CPU\translate;
@@ -387,6 +388,19 @@ class SellerDashboardController extends Controller
                 }
             }
 
+            if ($request->filled('sales_referal_code')) {
+                $salesReferralCode = trim((string) $request->sales_referal_code);
+                $isValidSalesReferral = Sale::where('referral_code', $salesReferralCode)->exists();
+
+                if (!$isValidSalesReferral) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid sales referral code.',
+                        'data' => [],
+                    ], 422);
+                }
+            }
+
             $campaign = new Campaign;
             if ($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
@@ -507,7 +521,21 @@ class SellerDashboardController extends Controller
             $seller = $data['data'];
             // Logic to create campaign
 
-            $campaign = Campaign::with(['brand', 'feedbacks.user', 'campaign_transactions.user'])->find($id);
+            $campaign = Campaign::with(['brand', 'feedbacks.user', 'campaign_transactions.user'])
+                ->withCount(['occupiedTransactions as occupied_slots'])
+                ->find($id);
+
+            if ($campaign) {
+                $totalCampaignBudget = (float) ($campaign->total_campaign_budget ?? 0);
+                $numberOfPost = (int) ($campaign->number_of_post ?? 0);
+                $occupiedSlots = (int) ($campaign->occupied_slots ?? 0);
+
+                $perPostBudget = $numberOfPost > 0 ? ($totalCampaignBudget / $numberOfPost) : 0;
+                $budgetUtilized = $perPostBudget * $occupiedSlots;
+
+                $campaign->setAttribute('per_post_budget', round($perPostBudget, 2));
+                $campaign->setAttribute('budget_utilized', round($budgetUtilized, 2));
+            }
 
             return response()->json([
                 'status' => true,
