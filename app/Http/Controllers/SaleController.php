@@ -62,7 +62,9 @@ class SaleController extends Controller
 
     public function show($id)
     {
-        $sale = Sale::with(['brands'])->where('id', $id)->first();
+        $sale = Sale::with(['brands'])
+            ->withCount(['brands', 'campaigns'])
+            ->findOrFail($id);
         return view('admin-views.sale.show', compact('sale'));
     }
 
@@ -82,20 +84,57 @@ class SaleController extends Controller
 
     public function edit($id)
     {
-        $sale = Sale::find($id);
-        return view('admin-views.sale.edit', compact('sale'));
+        $sale = Sale::findOrFail($id);
+        $bankDetail = (array) ($sale->bank_detail ?? []);
+
+        return view('admin-views.sale.edit', compact('sale', 'bankDetail'));
     }
 
     public function update(Request $request, $id)
     {
+        $sale = Sale::findOrFail($id);
 
-        $sale = Sale::find($id);
-        if($request->hasFile('image')) {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'status' => 'required|in:pending,active,inactive,blocked',
+            'pan_number' => 'nullable|string|max:10',
+            'pan_status' => 'nullable|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'pan_rejection_reason' => 'nullable|string|max:1000',
+            'bank_status' => 'nullable|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'bank_rejection_reason' => 'nullable|string|max:1000',
+            'kyc_status' => 'nullable|in:pending,verified,rejected',
+            'kyc_rejection_reason' => 'nullable|string|max:1000',
+            'bank_name' => 'nullable|string|max:120',
+            'account_number' => 'nullable|string|max:60',
+            'ifsc_code' => 'nullable|string|max:30',
+            'branch_name' => 'nullable|string|max:120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'pan_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
             $sale->image = ImageManager::upload('profile/', 'png', $request->file('image'));
         }
+
+        if ($request->hasFile('pan_image')) {
+            $sale->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
+        }
+
         $sale->name = $request->name;
-        $sale->email = $request->email;
-        $sale->mobile = $request->mobile;
+        $sale->status = $request->status;
+        $sale->pan_number = $request->pan_number;
+        $sale->pan_status = $request->pan_status ?? $sale->pan_status;
+        $sale->pan_rejection_reason = $request->pan_rejection_reason;
+        $sale->bank_status = $request->bank_status ?? $sale->bank_status;
+        $sale->bank_rejection_reason = $request->bank_rejection_reason;
+        $sale->kyc_status = $request->kyc_status ?? $sale->kyc_status;
+        $sale->kyc_rejection_reason = $request->kyc_rejection_reason;
+        $sale->bank_detail = json_encode([
+            'bank_name' => $request->bank_name,
+            'account_number' => $request->account_number,
+            'ifsc_code' => $request->ifsc_code,
+            'branch_name' => $request->branch_name,
+        ]);
         $sale->save();
 
         Helpers::systemActivity('sale', auth()->user(), 'updated', 'Sale profile updated by admin', $sale);
