@@ -7,6 +7,12 @@
 @endpush
 
 @section('content')
+@php
+    $platforms = array_filter(explode(',', (string) $campaign->share_on));
+    $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'paused', 'stopped', 'violated'];
+    $guidelines = is_array($campaign->guidelines) ? array_filter($campaign->guidelines) : [];
+    $images = is_array($campaign->images) ? $campaign->images : [];
+@endphp
 <div class="content-wrapper">
     <div class="page-header">
         <h3 class="page-title">
@@ -23,128 +29,215 @@
         </nav>
     </div>
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
             <div class="card">
                 <div class="card-header">
-                    <h4>{{\App\CPU\translate('view_campaign')}}</h4>
+                    <h4 class="mb-0">{{ \App\CPU\translate('view_campaign') }}</h4>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-lg-4 col-md-4">
-                            <img class="ratio-4:1 w-100" src="{{ $campaign->thumbnail }}" onerror='this.src="{{asset('assets/logo/logo-3.png')}}"' alt="Campaign"/>
-                        </div>
-                        @foreach($campaign->images ?? [] as $image)
-                            <div class="col-lg-4 col-md-4">
-                                <img src="{{ $image }}" class="img-thumbnail w-100">
-                            </div>
-                        @endforeach
-                        <div class="col-lg-12"></div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Caption')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->descriptions }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Hashtags')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->tags }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Reward Per User')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->reward_per_user }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Start Date')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->start_date }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('End Date')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->end_date }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Gender')}}</label>
-                                <p class="form-control-plaintext">{{ ucfirst($campaign->gender) }}</p>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Campaign Overview') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Campaign ID') }}</small>
+                                    <strong>#{{ $campaign->id }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Unique Code') }}</small>
+                                    <strong>{{ $campaign->unique_code ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Brand') }}</small>
+                                    <strong>{{ $campaign->brand->name ?? $campaign->brand->username ?? 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Sale Referral Code') }}</small>
+                                    <strong>{{ $campaign->sales_referal_code ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-12">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Caption') }}</small>
+                                    <p class="mb-0">{{ $campaign->descriptions ?: 'N/A' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Hashtags') }}</small>
+                                    <p class="mb-0">{{ $campaign->tags ?: 'N/A' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Platforms') }}</small>
+                                    <div>
+                                        @forelse($platforms as $platform)
+                                            <span class="badge badge-soft-info text-dark me-1">{{ ucfirst($platform) }}</span>
+                                        @empty
+                                            <span class="text-muted">N/A</span>
+                                        @endforelse
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Age Range')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->age_range }}</p>
+
+                        <div class="col-12">
+                            <hr class="my-0">
+                        </div>
+
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Media') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Thumbnail') }}</small>
+                                    <img
+                                        class="img-fluid rounded border w-100"
+                                        src="{{ $campaign->thumbnail }}"
+                                        onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'
+                                        alt="Campaign Thumbnail"
+                                    />
+                                </div>
+                                <div class="col-md-8">
+                                    <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Gallery Images') }}</small>
+                                    <div class="row g-2">
+                                        @forelse($images as $image)
+                                            <div class="col-md-4 col-sm-6">
+                                                <img src="{{ $image }}" class="img-thumbnail w-100 campaign-gallery-image" alt="Campaign Image">
+                                            </div>
+                                        @empty
+                                            <div class="col-12 text-muted">No additional images.</div>
+                                        @endforelse
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('State')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->state }}</p>
+
+                        <div class="col-12">
+                            <hr class="my-0">
+                        </div>
+
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Targeting & Scheduling') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Start Date') }}</small>
+                                    <strong>{{ $campaign->start_date ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('End Date') }}</small>
+                                    <strong>{{ $campaign->end_date ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Left Days') }}</small>
+                                    <strong>{{ $campaign->left_days }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Gender') }}</small>
+                                    <strong>{{ $campaign->gender ? ucfirst($campaign->gender) : 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Age Range') }}</small>
+                                    <strong>{{ $campaign->age_range ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('State') }}</small>
+                                    <strong>{{ $campaign->state ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('City') }}</small>
+                                    <strong>{{ $campaign->city ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="col-md-8">
+                                    <small class="text-muted d-block">{{ \App\CPU\translate('Guidelines') }}</small>
+                                    <div>
+                                        @forelse($guidelines as $guideline)
+                                            <span class="badge badge-soft-success text-dark me-1 mb-1">{{ $guideline }}</span>
+                                        @empty
+                                            <span class="text-muted">N/A</span>
+                                        @endforelse
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('City')}}</label>
-                                <p class="form-control-plaintext">{{ $campaign->city }}</p>
+
+                        <div class="col-12">
+                            <hr class="my-0">
+                        </div>
+
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Budget, Rewards & Performance') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Reward Per User') }}</small><strong>{{ $campaign->reward_per_user ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Coins') }}</small><strong>{{ $campaign->coins ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Final Reward For User') }}</small><strong>{{ $campaign->final_reward_for_user ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Coin') }}</small><strong>{{ $campaign->feedback_coin ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Users Required') }}</small><strong>{{ $campaign->total_user_required ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Number Of Posts') }}</small><strong>{{ $campaign->number_of_post ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Used Posts') }}</small><strong>{{ $campaign->used_post ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Daily Budget Cap') }}</small><strong>{{ $campaign->daily_budget_cap ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Campaign Budget') }}</small><strong>{{ $campaign->total_campaign_budget ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign User Budget') }}</small><strong>{{ $campaign->campaign_user_budget ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign Budget With GST') }}</small><strong>{{ $campaign->compign_budget_with_gst ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Shared') }}</small><strong>{{ $campaign->campaign_transactions->count() }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Occupied Slots') }}</small><strong>{{ $campaign->occupied_slots }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Available Slots') }}</small><strong>{{ $campaign->available_slots }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Slot Full') }}</small><strong>{{ $campaign->is_slot_full ? 'Yes' : 'No' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Average Feedback') }}</small><strong>{{ $campaign->avg_feedback }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Engagement') }}</small><strong>{{ $campaign->engagement }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Cost Per Click') }}</small><strong>{{ $campaign->cost_per_click }}</strong></div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>{{ \App\CPU\translate('Guidelines')}}</label>
-                                <p class="form-control-plaintext">
-                                    @foreach($campaign->guidelines ?? [] as $guideline)
-                                        <span class="badge bg-info me-1">{{ $guideline }}</span>
-                                    @endforeach
-                                </p>
-                            </div>
+
+                        <div class="col-12">
+                            <hr class="my-0">
                         </div>
-                        <div class="col-md-12 d-flex justify-content-end gap-3">
-                            <a href="{{ route('admin.campaign.list') }}" class="btn btn-secondary">{{ \App\CPU\translate('back') }}</a>
+
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Other Details') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Category ID') }}</small><strong>{{ $campaign->category_id ?: 'N/A' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sub Category ID') }}</small><strong>{{ $campaign->sub_category_id ?: 'N/A' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sale ID') }}</small><strong>{{ $campaign->sale_id ?: 'N/A' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Post Type') }}</small><strong>{{ $campaign->post_type ?: 'N/A' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Admin Percentage') }}</small><strong>{{ $campaign->admin_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('User Percentage') }}</small><strong>{{ $campaign->user_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sales Percentage') }}</small><strong>{{ $campaign->sales_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Percentage') }}</small><strong>{{ $campaign->feedback_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-6"><small class="text-muted d-block">{{ \App\CPU\translate('Created At') }}</small><strong>{{ $campaign->created_at ?: 'N/A' }}</strong></div>
+                                <div class="col-md-6"><small class="text-muted d-block">{{ \App\CPU\translate('Updated At') }}</small><strong>{{ $campaign->updated_at ?: 'N/A' }}</strong></div>
+                            </div>
                         </div>
                     </div>
-                    
                 </div>
             </div>
+            <div class="mt-3 d-flex justify-content-end">
+                <a href="{{ route('admin.campaign.list') }}" class="btn btn-secondary">{{ \App\CPU\translate('back') }}</a>
+            </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-3">
             <div class="card">
                 <div class="card-header">
-                    <span>{!! in_array('instagram', explode(',', $campaign->share_on)) ? '<i class="fa fa-instagram"></i>': '' !!}
-                    {!! in_array('facebook', explode(',', $campaign->share_on)) ? '<i class="fa fa-facebook"></i>':'' !!}</span>
-                    <i class="fa fa-facebook"></i>
+                    <h5 class="mb-0">{{ \App\CPU\translate('Campaign Controls') }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Status</label>
+                        <label>{{ \App\CPU\translate('Status') }}</label>
                         <select name="status" class="form-select form-control change-status" data-id="{{ $campaign->id }}">
-                            @php($statusLists=['pending','active','inactive','accepted','rejected','completed','paused','stopped','violated'])
                             @foreach($statusLists as $status)
                                 <option value="{{$status}}" {{ $status == $campaign->status ? 'selected' : '' }}>{{ucwords($status)}}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="">Total Shared: {{ $campaign->campaign_transactions->count( ) }}</label>
+                    <div class="form-group mb-2">
+                        <small class="text-muted d-block">{{ \App\CPU\translate('Current Status') }}</small>
+                        <span class="badge badge-soft-primary text-dark">{{ ucfirst($campaign->status) }}</span>
                     </div>
-                    <div class="form-group">
-                        <label for="">Post Type: {{ $campaign->post_type }}</label>
+                    <div class="form-group mb-2">
+                        <small class="text-muted d-block">{{ \App\CPU\translate('Platforms') }}</small>
+                        @forelse($platforms as $platform)
+                            <span class="badge badge-soft-info text-dark me-1">{{ ucfirst($platform) }}</span>
+                        @empty
+                            <span class="text-muted">N/A</span>
+                        @endforelse
                     </div>
-                    <div class="form-group">
-                        <label for="">Total user required: {{ $campaign->total_user_required }}</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="">Number of post: {{ $campaign->number_of_post }}</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="">Daily budget cap: {{ $campaign->daily_budget_cap }}</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="">Total Budget: {{ $campaign->total_campaign_budget }}</label>
+                    <div class="form-group mb-0">
+                        <small class="text-muted d-block">{{ \App\CPU\translate('Brand') }}</small>
+                        <strong>{{ $campaign->brand->name ?? $campaign->brand->username ?? 'N/A' }}</strong>
                     </div>
                 </div>
             </div>
@@ -154,141 +247,41 @@
 @endsection
 
 @push('script')
-    <script>
-        $('#mbimageFileUploader').change(function () {
-            readURL(this);
+<script>
+    $(document).on('change', '.change-status', function() {
+        var id = $(this).attr('data-id');
+        var status = $(this).val();
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
         });
 
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $('#mbImageviewer').attr('src', e.target.result);
+        $.ajax({
+            url: "{{ route('admin.campaign.status') }}",
+            method: 'POST',
+            data: {
+                id: id,
+                status: status
+            },
+            success: function(response) {
+                if (response.status) {
+                    swal.fire('', '{{ \App\CPU\translate('Status updated successfully!') }}', 'success');
+                } else {
+                    swal.fire('', '{{ \App\CPU\translate('Something went wrong!') }}', 'error');
                 }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-    </script>
-    <script>
-        $(document).ready(function() {
-            $('#addGuideline').click(function() {
-                let newItem = `
-                    <div class="guideline-item d-flex gap-2 mb-2">
-                        <input type="text" name="guidelines[]" class="form-control" placeholder="GD">
-                        <button type="button" class="btn btn-danger btn-sm removeGuideline">Remove</button>
-                    </div>
-                `;
-                $('#guidelinesContainer').append(newItem);
-                updateRemoveButtons();
-            });
-
-            $(document).on('click', '.removeGuideline', function(e) {
-                e.preventDefault();
-                $(this).closest('.guideline-item').remove();
-                updateRemoveButtons();
-            });
-
-            function updateRemoveButtons() {
-                let count = $('#guidelinesContainer .guideline-item').length;
-                $('#guidelinesContainer .removeGuideline').toggle(count > 1);
-            }
-            
-            updateRemoveButtons();
-        });
-    </script>
-    <script>
-        $('#multipleImageUploader').change(function () {
-            previewMultipleImages(this);
-        });
-
-        function previewMultipleImages(input) {
-            $('#imagePreview').empty();
-            if (input.files && input.files.length) {
-                $.each(input.files, function (index, file) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        $('<img>').attr('src', e.target.result).addClass('img-thumbnail').css({'width': '100px', 'height': '100px', 'object-fit': 'cover'}).appendTo('#imagePreview');
-                    }
-                    reader.readAsDataURL(file);
-                });
-            }
-        }
-    </script>
-    <script>
-        const cityData = {
-            'Andhra Pradesh': ['Hyderabad', 'Visakhapatnam', 'Vijayawada', 'Nellore'],
-            'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Papumpare'],
-            'Assam': ['Guwahati', 'Silchar', 'Dibruganj'],
-            'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur'],
-            'Chhattisgarh': ['Raipur', 'Bilaspur', 'Durg'],
-            'Goa': ['Panaji', 'Margao', 'Vasco da Gama'],
-            'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot'],
-            'Haryana': ['Faridabad', 'Gurgaon', 'Hisar', 'Rohtak'],
-            'Himachal Pradesh': ['Shimla', 'Solan', 'Mandi'],
-            'Jharkhand': ['Ranchi', 'Dhanbad', 'Giridih'],
-            'Karnataka': ['Bangalore', 'Mysore', 'Mangalore', 'Belgaum'],
-            'Kerala': ['Kochi', 'Thiruvananthapuram', 'Kozhikode'],
-            'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur'],
-            'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Aurangabad'],
-            'Manipur': ['Imphal', 'Bishnupur'],
-            'Meghalaya': ['Shillong', 'Tura'],
-            'Mizoram': ['Aizawl', 'Lunglei'],
-            'Nagaland': ['Kohima', 'Dimapur'],
-            'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela'],
-            'Punjab': ['Chandigarh', 'Amritsar', 'Ludhiana', 'Jalandhar'],
-            'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota'],
-            'Sikkim': ['Gangtok', 'Pelling'],
-            'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem'],
-            'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad'],
-            'Tripura': ['Agartala', 'Udaipur'],
-            'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra'],
-            'Uttarakhand': ['Dehradun', 'Haridwar', 'Nainital'],
-            'West Bengal': ['Kolkata', 'Darjeeling', 'Asansol']
-        };
-
-        $('#state').change(function() {
-            let state = $(this).val();
-            let citySelect = $('#city');
-            
-            if (state && cityData[state]) {
-                citySelect.replaceWith(`
-                    <select name="city" id="city" class="form-control" required>
-                        <option value="">{{ \App\CPU\translate('Select')}}</option>
-                        ${cityData[state].map(city => `<option value="${city}" ${city === '{{ old('city', $campaign->city) }}' ? 'selected' : ''}>${city}</option>`).join('')}
-                    </select>
-                `);
             }
         });
+    });
+</script>
+@endpush
 
-        $(document).ready(function() {
-            $('#state').trigger('change');
-        });
-
-        $(document).on('change','.change-status', function() {
-            var id = $(this).attr("data-id")
-            var status = $(this).val()
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                }
-            });
-
-            $.ajax({
-                url: "{{route('admin.campaign.status')}}",
-                method: 'POST',
-                data: {
-                    id: id,
-                    status: status
-                },
-                success: function (response) {
-                    if (response.status) {
-                        swal.fire('', '{{ \App\CPU\translate('Status updated successfully!')}}', 'success');
-                    } else {
-                        swal.fire('', '{{ \App\CPU\translate('Something went wrong!')}}', 'error');
-                    }
-                }
-            });
-        })
-
-    </script>
+@push('css')
+<style>
+    .campaign-gallery-image {
+        height: 120px;
+        object-fit: cover;
+    }
+</style>
 @endpush

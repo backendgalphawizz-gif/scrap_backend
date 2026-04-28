@@ -80,10 +80,11 @@ class CampaignController extends Controller
         $paymentSplit = PaymentSplit::first();
 
         $campaign->brand_id = $request->brand_id;
-        $campaign->title = $request->caption;
+        $campaign->title = $request->title ?? $request->caption;
         $campaign->descriptions = $request->caption;
         $campaign->tags = $request->hashtags;
         $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
+        $campaign->status = $request->status ?? $campaign->status;
         $campaign->start_date = $request->start_date;
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
@@ -192,23 +193,34 @@ class CampaignController extends Controller
             $campaign->images = implode(',', $product_images);
         }
         $campaign->brand_id = $request->brand_id;
-        $campaign->title = $request->caption;
+        $campaign->title = $request->title ?? $request->caption;
         $campaign->descriptions = $request->caption;
         $campaign->tags = $request->hashtags;
         $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
+        $campaign->status = $request->status ?? $campaign->status;
         $campaign->start_date = $request->start_date;
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
         $campaign->state = $request->state;
         $campaign->city = $request->city;
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
-        $campaign->coins = $request->reward_per_user;
+        $campaign->coins = $request->coins ?? $campaign->coins;
         $campaign->total_user_required = $request->total_user_required;
         $campaign->reward_per_user = $request->reward_per_user;
         $campaign->number_of_post = $request->number_of_post;
+        $campaign->used_post = $request->used_post ?? $campaign->used_post;
         $campaign->daily_budget_cap = $request->daily_budget_cap;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
         $campaign->age_range = $ageRange;
+        $campaign->sales_referal_code = $request->sales_referal_code;
+        $campaign->admin_percentage = $request->admin_percentage ?? $campaign->admin_percentage;
+        $campaign->user_percentage = $request->user_percentage ?? $campaign->user_percentage;
+        $campaign->sales_percentage = $request->sales_percentage ?? $campaign->sales_percentage;
+        $campaign->feedback_percentage = $request->feedback_percentage ?? $campaign->feedback_percentage;
+        $campaign->campaign_user_budget = $request->campaign_user_budget ?? $campaign->campaign_user_budget;
+        $campaign->compign_budget_with_gst = $request->compign_budget_with_gst ?? $campaign->compign_budget_with_gst;
+        $campaign->final_reward_for_user = $request->final_reward_for_user ?? $campaign->final_reward_for_user;
+        $campaign->feedback_coin = $request->feedback_coin ?? $campaign->feedback_coin;
         $campaign->save();
 
         return redirect()->route('admin.campaign.list');

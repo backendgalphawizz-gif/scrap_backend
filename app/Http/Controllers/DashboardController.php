@@ -344,7 +344,7 @@ class DashboardController extends Controller
     }
 
     public function showBrand(Request $request, $id) {
-        $seller = Seller::find($id);
+        $seller = Seller::withCount('campaigns')->findOrFail($id);
         return view('admin-views.seller.view', compact('seller'));
     }
 
