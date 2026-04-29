@@ -93,7 +93,7 @@
                 <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#"
                     data-bs-toggle="dropdown">
                     <i class="mdi mdi-bell-outline"></i>
-                    <span id="admin-bell-count" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle {{ ($adminUnreadCount ?? 0) > 0 ? '' : 'd-none' }}" style="font-size: 0.6rem; padding: 0.25em 0.4em;">
+                    <span id="admin-bell-count" class="badge bg-danger rounded-pill top-0 start-100 translate-middle {{ ($adminUnreadCount ?? 0) > 0 ? '' : 'd-none' }}" style="font-size: 0.6rem; padding: 0.25em 0.4em;">
                         {{ $adminUnreadCount ?? 0 }}
                     </span>
                 </a>
