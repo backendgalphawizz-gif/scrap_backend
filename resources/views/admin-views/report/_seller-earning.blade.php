@@ -213,33 +213,56 @@
                         <thead class="text-capitalize">
                             <tr>
                                 <th>Brand</th>
-                                <th>Campaigns</th>
-                                <th>Budget</th>
-                                <th>Spent</th>
-                                <th>Participants</th>
-                                <th>Engagement</th>
-                                <th>Avg Rating</th>
+                                <th>Campaign</th>
+                                <th>Total Amount with GST</th>
+                                <th>GST</th>
+                                <th>Total Amount without GST</th>
+                                <th>Total Amount without GST + Discount</th>
+                                <th>Discount</th>
+                                <th>Users</th>
+                                <th>Sales</th>
+                                <th>Referral</th>
+                                <th>Admin</th>
                             </tr>
                         </thead>
 
                         <tbody>
+                            @if(($brands->count() > 0) && isset($totals))
+                                <tr class="fw-bold">
+                                    <td>Total</td>
+                                    <td></td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['amount_with_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['amount_without_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['amount_without_gst_with_discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['users'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['sales'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['referral'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['admin'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                </tr>
+                            @endif
 
                             @forelse($brands as $brand)
 
                             <tr>
-                                <td>{{ $brand->username }}</td>
-                                <td>{{ $brand->total_campaign }}</td>
-                                <td>{{ $brand->total_campaign_budget }}</td>
-                                <td>{{ $brand->total_campaign_budget_spent }}</td>
-                                <td>{{ $brand->total_campaign_participant }}</td>
-                                <td>{{ $brand->campaign_engagement }}</td>
-                                <td>{{ $brand->total_campaign_ratings }}</td>
+                                <td>{{ $brand['brand'] }}</td>
+                                <td>{{ $brand['campaign'] }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['amount_with_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['amount_without_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['amount_without_gst_with_discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['users'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['sales'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['referral'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['admin'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                             </tr>
 
                             @empty
 
                             <tr>
-                                <th colspan="7">
+                                <th colspan="11">
                                     No Report Available
                                 </th>
                             </tr>

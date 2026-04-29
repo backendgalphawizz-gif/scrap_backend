@@ -54,19 +54,66 @@ class ReportController extends Controller
                 $to = now()->endOfYear();
         }
         
-        $limit = request('limit') ?? 10;
-        $brands = Seller::whereBetween('created_at', [$from, $to])->paginate($limit);
-        $brandsCount = Seller::whereBetween('created_at', [$from, $to])->count();
-        $campaignCount = Campaign::whereBetween('created_at', [$from, $to])->count();
+        $limit = (int) (request('limit') ?? 10);
+        $campaignQuery = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to], 'and', false);
 
-        $data['rejected_product'] = Campaign::whereBetween('created_at', [$from, $to])
-            ->where('status', 'inactive')->count();
-        $data['pending_product'] = Campaign::whereBetween('created_at', [$from, $to])
-            ->where('status', 'pending')->count();
-        $data['active_product'] = Campaign::whereBetween('created_at', [$from, $to])
-            ->where('status', 'active')->count();
+        $campaignCount = (clone $campaignQuery)->count();
+        $brandsCount = (clone $campaignQuery)->distinct('brand_id')->count('brand_id');
 
-        return view('admin-views.report._seller-earning',compact('data', 'campaignCount', 'brandsCount', 'brands', 'date_type','from', 'to'));
+        $data['rejected_product'] = (clone $campaignQuery)->where('status', 'inactive')->count();
+        $data['pending_product'] = (clone $campaignQuery)->where('status', 'pending')->count();
+        $data['active_product'] = (clone $campaignQuery)->where('status', 'active')->count();
+
+        $mapCampaignRow = function ($campaign) {
+            $baseAmount = (float) ($campaign->total_campaign_budget ?? 0);
+            $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
+            $gstAmount = max(0, $amountWithGst - $baseAmount);
+
+            $userPercentage = (float) ($campaign->user_percentage ?? 0);
+            $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
+            $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
+            $adminPercentage = (float) ($campaign->admin_percentage ?? 0);
+
+            $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
+            $discountAmount = ($baseAmount * $discountPercentage) / 100;
+            $amountWithoutGst = $baseAmount - $discountAmount;
+
+            return [
+                'brand' => $campaign->brand->username ?? '-',
+                'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'amount_with_gst' => $amountWithGst,
+                'gst' => $gstAmount,
+                'amount_without_gst' => $amountWithoutGst,
+                'amount_without_gst_with_discount' => $baseAmount,
+                'discount' => $discountAmount,
+                'users' => ($amountWithoutGst * $userPercentage) / 100,
+                'sales' => ($amountWithoutGst * $salesPercentage) / 100,
+                'referral' => ($amountWithoutGst * $referralPercentage) / 100,
+                'admin' => ($amountWithoutGst * $adminPercentage) / 100,
+            ];
+        };
+
+        $allRows = (clone $campaignQuery)->get()->map($mapCampaignRow);
+        $totals = [
+            'amount_with_gst' => $allRows->sum('amount_with_gst'),
+            'gst' => $allRows->sum('gst'),
+            'amount_without_gst' => $allRows->sum('amount_without_gst'),
+            'amount_without_gst_with_discount' => $allRows->sum('amount_without_gst_with_discount'),
+            'discount' => $allRows->sum('discount'),
+            'users' => $allRows->sum('users'),
+            'sales' => $allRows->sum('sales'),
+            'referral' => $allRows->sum('referral'),
+            'admin' => $allRows->sum('admin'),
+        ];
+
+        $brands = $campaignQuery
+            ->orderByDesc('id')
+            ->paginate($limit)
+            ->through($mapCampaignRow)
+            ->withQueryString();
+
+        return view('admin-views.report._seller-earning',compact('data', 'campaignCount', 'brandsCount', 'brands', 'totals', 'date_type','from', 'to'));
     }
 
     public function campaignReport(Request $request) {
