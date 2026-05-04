@@ -285,7 +285,7 @@ class DashboardController extends Controller
             return;
         }
 
-        $coins = $campaign->reward_per_user ?? $campaign->coins ?? 0;
+        $coins = $campaign->coins ?? 0;
 
         CoinTransaction::create([
             'coin_wallet_id'   => $wallet->id,
