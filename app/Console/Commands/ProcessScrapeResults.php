@@ -16,7 +16,7 @@ class ProcessScrapeResults extends Command
     protected $signature = 'campaign:process-results';
 
     protected $description = 'Verify campaign posts, keep rewards pending, and release them 3 days after campaign completion';
-    private const MAX_VERIFIED_DAYS = 7;
+    private const MAX_VERIFIED_DAYS = 3;
 
     public function handle(): void
     {

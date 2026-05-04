@@ -2,7 +2,7 @@
 <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
         @php($company_web_logo=\App\CPU\Helpers::get_business_settings('company_web_logo'))
-        <a class="navbar-brand brand-logo" href="#"><img src="{{ asset('storage/company/'.$company_web_logo) }}" alt="logo" /></a>
+        <a class="navbar-brand brand-logo" href="#"><img src="{{ asset('storage/company/'.$company_web_logo) }}" alt="logo" style="width:75%; height:auto;" /></a>
         <a class="navbar-brand brand-logo-mini" href="#"><img src="{{ asset('storage/company/'.$company_web_logo) }}"
                 alt="logo" /></a>
     </div>

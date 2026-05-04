@@ -608,4 +608,5 @@
   'Category' => 'Category',
   'Sub Category' => 'Sub Category',
   'Edit Brand Category' => 'Edit Brand Category',
+  'View User' => 'View User',
 );
