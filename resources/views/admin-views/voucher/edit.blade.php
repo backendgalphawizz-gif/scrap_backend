@@ -20,6 +20,18 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
+                        <label>Sales User (Discount Bucket)</label>
+                        <select name="sale_id" class="form-control" required>
+                            <option value="">Select Sales User</option>
+                            @foreach($sales as $sale)
+                                <option value="{{ $sale->id }}" {{ (int) old('sale_id', $voucher->sale_id) === (int) $sale->id ? 'selected' : '' }}>
+                                    {{ $sale->name }} (Balance: {{ number_format((float) $sale->balance, 2) }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('sale_id')<small class="text-danger">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="col-md-6">
                         <label>Voucher Brand</label>
                         <select name="voucher_brands_id" class="form-control" required>
                             <option value="">Select Brand</option>
@@ -47,6 +59,7 @@
                     <div class="col-md-4">
                         <label>Fiat Value</label>
                         <input type="number" step="0.01" min="0" name="fiat_value" class="form-control" value="{{ old('fiat_value', $voucher->fiat_value) }}" required>
+                        <small class="text-muted">This amount is always debited from the selected Sales user balance.</small>
                         @error('fiat_value')<small class="text-danger">{{ $message }}</small>@enderror
                     </div>
                     <div class="col-md-4">
@@ -67,6 +80,26 @@
                         <label>Validity Days</label>
                         <input type="number" min="0" name="validity_days" class="form-control" value="{{ old('validity_days', $voucher->validity_days) }}" required>
                         @error('validity_days')<small class="text-danger">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label>Valid From</label>
+                        <input type="date" name="valid_from" class="form-control" value="{{ old('valid_from', optional($voucher->valid_from)->format('Y-m-d')) }}" required>
+                        @error('valid_from')<small class="text-danger">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label>Valid To</label>
+                        <input type="date" name="valid_to" class="form-control" value="{{ old('valid_to', optional($voucher->valid_to)->format('Y-m-d')) }}" required>
+                        @error('valid_to')<small class="text-danger">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label>Max Uses (Leave blank for unlimited)</label>
+                        <input type="number" min="1" name="max_uses" class="form-control" value="{{ old('max_uses', $voucher->max_uses) }}">
+                        @error('max_uses')<small class="text-danger">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label>Max Uses Per User</label>
+                        <input type="number" min="1" name="max_uses_per_user" class="form-control" value="{{ old('max_uses_per_user', $voucher->max_uses_per_user ?? 1) }}" required>
+                        @error('max_uses_per_user')<small class="text-danger">{{ $message }}</small>@enderror
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check mb-2">

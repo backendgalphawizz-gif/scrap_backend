@@ -138,14 +138,15 @@
                 <thead>
                     <tr>
                         <th>SL</th>
+                        <th>Sales User</th>
                         <th>Brand</th>
                         <th>Title</th>
                         <th>Code</th>
                         <th>Coin Price</th>
                         <th>Fiat Value</th>
                         <th>Status</th>
-                        <th>Validity Days</th>
-                        <th>Expires On</th>
+                        <th>Validity</th>
+                        <th>Usage</th>
                         <th>Active</th>
                         <th class="text-right" style="width: 220px;">Action</th>
                     </tr>
@@ -154,6 +155,7 @@
                     @forelse($vouchers as $key => $voucher)
                         <tr>
                             <td>{{ $vouchers->firstItem() + $key }}</td>
+                            <td>{{ optional($voucher->sale)->name ?? 'N/A' }}</td>
                             <td>{{ optional($voucher->voucherBrand)->name ?? 'N/A' }}</td>
                             <td>{{ $voucher->title }}</td>
                             <td>{{ $voucher->code }}</td>
@@ -162,9 +164,15 @@
                             <td>
                                 <span class="badge {{ $voucher->status === 'purchased' ? 'badge-warning' : 'badge-info' }}">{{ ucfirst($voucher->status) }}</span>
                             </td>
-                            <td>{{ $voucher->validity_days }}</td>
                             <td>
-                                {{ optional($voucher->created_at)->addDays((int) $voucher->validity_days)?->format('Y-m-d') }}
+                                {{ optional($voucher->valid_from)->format('Y-m-d') ?? 'N/A' }}
+                                to
+                                {{ optional($voucher->valid_to)->format('Y-m-d') ?? 'N/A' }}
+                            </td>
+                            <td>
+                                {{ (int) $voucher->used_count }} / {{ $voucher->max_uses ?: 'Unlimited' }}
+                                <br>
+                                <small class="text-muted">Per user: {{ (int) ($voucher->max_uses_per_user ?? 1) }}</small>
                             </td>
                             <td>
                                 @if($voucher->is_active)
@@ -209,7 +217,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center py-4">No data found</td>
+                            <td colspan="12" class="text-center py-4">No data found</td>
                         </tr>
                     @endforelse
                 </tbody>

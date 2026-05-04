@@ -19,10 +19,18 @@ class VoucherController extends Controller
         try {
             $limit = (int) ($request->limit ?? 25);
 
-            $brands = VoucherBrand::where('is_active', 1)
+            $brands = VoucherBrand::where('is_active', '=', 1, 'and')
                 ->withCount(['vouchers' => function ($q) {
                     $q->where('status', 'available')->where('is_active', 1)
-                        ->whereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()');
+                        ->where(function ($validityQuery) {
+                            $validityQuery->where(function ($dateRangeQuery) {
+                                $dateRangeQuery
+                                    ->whereNotNull('valid_from')
+                                    ->whereNotNull('valid_to')
+                                    ->whereDate('valid_from', '<=', now()->toDateString())
+                                    ->whereDate('valid_to', '>=', now()->toDateString());
+                            })->orWhereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()');
+                        });
                 }])
                 ->orderByDesc('id')
                 ->paginate($limit);
@@ -75,7 +83,15 @@ class VoucherController extends Controller
                 }, function ($q) {
                     $q->where('status', 'available');
                 })
-                ->whereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()')
+                ->where(function ($validityQuery) {
+                    $validityQuery->where(function ($dateRangeQuery) {
+                        $dateRangeQuery
+                            ->whereNotNull('valid_from')
+                            ->whereNotNull('valid_to')
+                            ->whereDate('valid_from', '<=', now()->toDateString())
+                            ->whereDate('valid_to', '>=', now()->toDateString());
+                    })->orWhereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()');
+                })
                 ->orderByDesc('id');
 
             $vouchers = $query->paginate($limit);
@@ -97,7 +113,7 @@ class VoucherController extends Controller
     public function byBrand(Request $request, $brandId)
     {
         try {
-            $brand = VoucherBrand::where('id', $brandId)->where('is_active', 1)->first();
+            $brand = VoucherBrand::where('id', '=', $brandId, 'and')->where('is_active', '=', 1, 'and')->first();
             if (!$brand) {
                 return response()->json([
                     'status' => false,
@@ -117,7 +133,15 @@ class VoucherController extends Controller
                 }, function ($q) {
                     $q->where('status', 'available');
                 })
-                ->whereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()')
+                ->where(function ($validityQuery) {
+                    $validityQuery->where(function ($dateRangeQuery) {
+                        $dateRangeQuery
+                            ->whereNotNull('valid_from')
+                            ->whereNotNull('valid_to')
+                            ->whereDate('valid_from', '<=', now()->toDateString())
+                            ->whereDate('valid_to', '>=', now()->toDateString());
+                    })->orWhereRaw('DATE_ADD(created_at, INTERVAL validity_days DAY) >= NOW()');
+                })
                 ->orderByDesc('id')
                 ->paginate($limit);
 
@@ -180,7 +204,7 @@ class VoucherController extends Controller
 
         DB::beginTransaction();
         try {
-            $voucher = Voucher::where('id', $request->voucher_id)->lockForUpdate()->first();
+            $voucher = Voucher::where('id', '=', $request->voucher_id, 'and')->lockForUpdate()->first();
             if (!$voucher || !$voucher->is_active) {
                 DB::rollBack();
                 return response()->json([
@@ -199,8 +223,12 @@ class VoucherController extends Controller
                 ], 422);
             }
 
-            $expiresAt = $voucher->created_at->copy()->addDays((int) $voucher->validity_days);
-            if ($expiresAt->isPast()) {
+            $hasDateRange = !empty($voucher->valid_from) && !empty($voucher->valid_to);
+            $isExpired = $hasDateRange
+                ? now()->toDateString() > $voucher->valid_to->format('Y-m-d')
+                : $voucher->created_at->copy()->addDays((int) $voucher->validity_days)->isPast();
+
+            if ($isExpired) {
                 $voucher->status = 'expired';
                 $voucher->save();
 
@@ -212,13 +240,13 @@ class VoucherController extends Controller
                 ], 422);
             }
 
-            $wallet = CoinWallet::where('user_id', $user->id)->lockForUpdate()->first();
+            $wallet = CoinWallet::where('user_id', '=', $user->id, 'and')->lockForUpdate()->first();
             if (!$wallet) {
                 $wallet = CoinWallet::create([
                     'user_id' => $user->id,
                     'balance' => 0,
                 ]);
-                $wallet = CoinWallet::where('id', $wallet->id)->lockForUpdate()->first();
+                $wallet = CoinWallet::where('id', '=', $wallet->id, 'and')->lockForUpdate()->first();
             }
 
             if ((float) $wallet->balance < (float) $voucher->coin_price) {

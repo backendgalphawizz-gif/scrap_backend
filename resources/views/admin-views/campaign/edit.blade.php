@@ -10,6 +10,16 @@
 @php
     $selectedPlatforms = old('social_media', explode(',', (string) $campaign->share_on));
     $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'paused', 'stopped', 'violated'];
+    $selectedCategoryId = old('category_id', $campaign->category_id);
+    $selectedSubCategoryId = old('sub_category_id', $campaign->sub_category_id);
+    $categoryOptions = $categories->map(function ($category) {
+        return [
+            'id' => $category->id,
+            'children' => $category->childes->map(function ($child) {
+                return ['id' => $child->id, 'name' => $child->name];
+            })->values(),
+        ];
+    })->values();
 @endphp
 <div class="content-wrapper">
     <div class="page-header">
@@ -67,6 +77,27 @@
                                             @endforeach
                                         </select>
                                         @error('status') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="category_id">{{ \App\CPU\translate('Category')}}</label>
+                                        <select name="category_id" id="category_id" class="form-select form-control @error('category_id') is-invalid @enderror" required>
+                                            <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}" {{ (string)$selectedCategoryId === (string)$category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('category_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="sub_category_id">{{ \App\CPU\translate('Sub Category')}}</label>
+                                        <select name="sub_category_id" id="sub_category_id" class="form-select form-control @error('sub_category_id') is-invalid @enderror">
+                                            <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        </select>
+                                        @error('sub_category_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
                                 <div class="col-md-8">
@@ -285,6 +316,31 @@
 
 @push('script')
 <script>
+    const categoryData = @json($categoryOptions);
+    let selectedSubCategoryId = @json((string) $selectedSubCategoryId);
+
+    function syncSubCategoryOptions() {
+        const categoryId = String($('#category_id').val() || '');
+        const subCategorySelect = $('#sub_category_id');
+        subCategorySelect.empty();
+        subCategorySelect.append('<option value="">{{ \App\CPU\translate("Select") }}</option>');
+
+        const matchedCategory = categoryData.find(item => String(item.id) === categoryId);
+        if (!matchedCategory || !matchedCategory.children) {
+            return;
+        }
+
+        matchedCategory.children.forEach(function (child) {
+            const selectedAttr = String(child.id) === selectedSubCategoryId ? 'selected' : '';
+            subCategorySelect.append(`<option value="${child.id}" ${selectedAttr}>${child.name}</option>`);
+        });
+    }
+
+    $('#category_id').on('change', function() {
+        selectedSubCategoryId = '';
+        syncSubCategoryOptions();
+    });
+
     function syncAgeRangeValue() {
         const min = $('#age_range_min').val();
         const max = $('#age_range_max').val();
@@ -305,6 +361,7 @@
     $('#age_range_min, #age_range_max').on('change', syncAgeRangeValue);
 
     $(document).ready(function() {
+        syncSubCategoryOptions();
         syncAgeRangeValue();
     });
 

@@ -7,6 +7,10 @@
 @endpush
 
 @section('content')
+@php
+    $selectedCategoryId = old('category_id');
+    $selectedSubCategoryId = old('sub_category_id');
+@endphp
 <div class="content-wrapper">
     <div class="page-header">
         <h3 class="page-title">
@@ -57,22 +61,47 @@
                                     <select name="brand_id" id="brand_id" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         @foreach($sellers as $seller)
-                                        <option value="{{ $seller->id }}">{{ $seller->username }}</option>
+                                        <option value="{{ $seller->id }}" {{ old('brand_id') == $seller->id ? 'selected' : '' }}>{{ $seller->username }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
+                                    <label for="category_id">{{ \App\CPU\translate('Category')}}</label>
+                                    <select name="category_id" id="category_id" class="form-select form-control @error('category_id') is-invalid @enderror" required>
+                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ (string)$selectedCategoryId === (string)$category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('category_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="sub_category_id">{{ \App\CPU\translate('Sub Category')}}</label>
+                                    <select name="sub_category_id" id="sub_category_id" class="form-select form-control @error('sub_category_id') is-invalid @enderror">
+                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                    </select>
+                                    @error('sub_category_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
                                     <label for="caption">{{ \App\CPU\translate('Caption')}}</label>
-                                    <textarea name="caption" id="caption" class="form-control" rows="4" required></textarea>
+                                    <textarea name="caption" id="caption" class="form-control" rows="4" required>{{ old('caption') }}</textarea>
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="hashtags">{{ \App\CPU\translate('Hashtags')}}</label>
-                                    <input type="text" name="hashtags" id="hashtags" class="form-control" placeholder="#abc #test" required>
+                                    <input type="text" name="hashtags" id="hashtags" class="form-control" placeholder="#abc #test" value="{{ old('hashtags') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -108,48 +137,62 @@
 
                                 <div class="form-group">
                                     <label for="reward_per_user">{{ \App\CPU\translate('Reward Per User')}}</label>
-                                    <input type="number" name="reward_per_user" id="reward_per_user" class="form-control" required>
+                                    <input type="number" name="reward_per_user" id="reward_per_user" class="form-control" value="{{ old('reward_per_user') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="sales_referal_code">{{ \App\CPU\translate('Sale Referral Code')}} ({{ \App\CPU\translate('Optional') }})</label>
+                                    <input type="text"
+                                        name="sales_referal_code"
+                                        id="sales_referal_code"
+                                        class="form-control @error('sales_referal_code') is-invalid @enderror"
+                                        value="{{ old('sales_referal_code') }}"
+                                        placeholder="Enter sale referral code">
+                                    @error('sales_referal_code')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="total_user_required">{{ \App\CPU\translate('Total Users Required')}}</label>
-                                    <input type="number" name="total_user_required" id="total_user_required" class="form-control" required>
+                                    <input type="number" name="total_user_required" id="total_user_required" class="form-control" value="{{ old('total_user_required') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="number_of_post">{{ \App\CPU\translate('Number Of Posts')}}</label>
-                                    <input type="number" name="number_of_post" id="number_of_post" class="form-control" required>
+                                    <input type="number" name="number_of_post" id="number_of_post" class="form-control" value="{{ old('number_of_post') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="start_date">{{ \App\CPU\translate('Start Date')}}</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control" required>
+                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ old('start_date') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="end_date">{{ \App\CPU\translate('End Date')}}</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control" required>
+                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ old('end_date') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="daily_budget_cap">{{ \App\CPU\translate('Daily Budget Cap')}}</label>
-                                    <input type="number" name="daily_budget_cap" id="daily_budget_cap" class="form-control" step="0.01" required>
+                                    <input type="number" name="daily_budget_cap" id="daily_budget_cap" class="form-control" step="0.01" value="{{ old('daily_budget_cap') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label for="total_campaign_budget">{{ \App\CPU\translate('Total Campaign Budget')}}</label>
-                                    <input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control" step="0.01" required>
+                                    <input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control" step="0.01" value="{{ old('total_campaign_budget') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -158,8 +201,8 @@
                                     <label for="gender">{{ \App\CPU\translate('Gender')}}</label>
                                     <select name="gender" id="gender" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                        <option value="male">{{ \App\CPU\translate('Male')}}</option>
-                                        <option value="female">{{ \App\CPU\translate('Female')}}</option>
+                                        <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>{{ \App\CPU\translate('Male')}}</option>
+                                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>{{ \App\CPU\translate('Female')}}</option>
                                     </select>
                                 </div>
                             </div>
@@ -170,18 +213,18 @@
                                         <select name="age_range_min" id="age_range_min" class="form-select form-control" required>
                                             <option value="">{{ \App\CPU\translate('Min')}}</option>
                                             @for($age = 18; $age <= 65; $age++)
-                                                <option value="{{ $age }}">{{ $age }}</option>
+                                                <option value="{{ $age }}" {{ (string)old('age_range_min') === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                             @endfor
                                         </select>
                                         <span>-</span>
                                         <select name="age_range_max" id="age_range_max" class="form-select form-control" required>
                                             <option value="">{{ \App\CPU\translate('Max')}}</option>
                                             @for($age = 18; $age <= 65; $age++)
-                                                <option value="{{ $age }}">{{ $age }}</option>
+                                                <option value="{{ $age }}" {{ (string)old('age_range_max') === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                             @endfor
                                         </select>
                                     </div>
-                                    <input type="hidden" name="age_range" id="age_range" value="">
+                                    <input type="hidden" name="age_range" id="age_range" value="{{ old('age_range') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -189,34 +232,34 @@
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
                                     <select name="state" id="state" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                        <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                                        <option value="Assam">Assam</option>
-                                        <option value="Bihar">Bihar</option>
-                                        <option value="Chhattisgarh">Chhattisgarh</option>
-                                        <option value="Goa">Goa</option>
-                                        <option value="Gujarat">Gujarat</option>
-                                        <option value="Haryana">Haryana</option>
-                                        <option value="Himachal Pradesh">Himachal Pradesh</option>
-                                        <option value="Jharkhand">Jharkhand</option>
-                                        <option value="Karnataka">Karnataka</option>
-                                        <option value="Kerala">Kerala</option>
-                                        <option value="Madhya Pradesh">Madhya Pradesh</option>
-                                        <option value="Maharashtra">Maharashtra</option>
-                                        <option value="Manipur">Manipur</option>
-                                        <option value="Meghalaya">Meghalaya</option>
-                                        <option value="Mizoram">Mizoram</option>
-                                        <option value="Nagaland">Nagaland</option>
-                                        <option value="Odisha">Odisha</option>
-                                        <option value="Punjab">Punjab</option>
-                                        <option value="Rajasthan">Rajasthan</option>
-                                        <option value="Sikkim">Sikkim</option>
-                                        <option value="Tamil Nadu">Tamil Nadu</option>
-                                        <option value="Telangana">Telangana</option>
-                                        <option value="Tripura">Tripura</option>
-                                        <option value="Uttar Pradesh">Uttar Pradesh</option>
-                                        <option value="Uttarakhand">Uttarakhand</option>
-                                        <option value="West Bengal">West Bengal</option>
+                                        <option value="Andhra Pradesh" {{ old('state') === 'Andhra Pradesh' ? 'selected' : '' }}>Andhra Pradesh</option>
+                                        <option value="Arunachal Pradesh" {{ old('state') === 'Arunachal Pradesh' ? 'selected' : '' }}>Arunachal Pradesh</option>
+                                        <option value="Assam" {{ old('state') === 'Assam' ? 'selected' : '' }}>Assam</option>
+                                        <option value="Bihar" {{ old('state') === 'Bihar' ? 'selected' : '' }}>Bihar</option>
+                                        <option value="Chhattisgarh" {{ old('state') === 'Chhattisgarh' ? 'selected' : '' }}>Chhattisgarh</option>
+                                        <option value="Goa" {{ old('state') === 'Goa' ? 'selected' : '' }}>Goa</option>
+                                        <option value="Gujarat" {{ old('state') === 'Gujarat' ? 'selected' : '' }}>Gujarat</option>
+                                        <option value="Haryana" {{ old('state') === 'Haryana' ? 'selected' : '' }}>Haryana</option>
+                                        <option value="Himachal Pradesh" {{ old('state') === 'Himachal Pradesh' ? 'selected' : '' }}>Himachal Pradesh</option>
+                                        <option value="Jharkhand" {{ old('state') === 'Jharkhand' ? 'selected' : '' }}>Jharkhand</option>
+                                        <option value="Karnataka" {{ old('state') === 'Karnataka' ? 'selected' : '' }}>Karnataka</option>
+                                        <option value="Kerala" {{ old('state') === 'Kerala' ? 'selected' : '' }}>Kerala</option>
+                                        <option value="Madhya Pradesh" {{ old('state') === 'Madhya Pradesh' ? 'selected' : '' }}>Madhya Pradesh</option>
+                                        <option value="Maharashtra" {{ old('state') === 'Maharashtra' ? 'selected' : '' }}>Maharashtra</option>
+                                        <option value="Manipur" {{ old('state') === 'Manipur' ? 'selected' : '' }}>Manipur</option>
+                                        <option value="Meghalaya" {{ old('state') === 'Meghalaya' ? 'selected' : '' }}>Meghalaya</option>
+                                        <option value="Mizoram" {{ old('state') === 'Mizoram' ? 'selected' : '' }}>Mizoram</option>
+                                        <option value="Nagaland" {{ old('state') === 'Nagaland' ? 'selected' : '' }}>Nagaland</option>
+                                        <option value="Odisha" {{ old('state') === 'Odisha' ? 'selected' : '' }}>Odisha</option>
+                                        <option value="Punjab" {{ old('state') === 'Punjab' ? 'selected' : '' }}>Punjab</option>
+                                        <option value="Rajasthan" {{ old('state') === 'Rajasthan' ? 'selected' : '' }}>Rajasthan</option>
+                                        <option value="Sikkim" {{ old('state') === 'Sikkim' ? 'selected' : '' }}>Sikkim</option>
+                                        <option value="Tamil Nadu" {{ old('state') === 'Tamil Nadu' ? 'selected' : '' }}>Tamil Nadu</option>
+                                        <option value="Telangana" {{ old('state') === 'Telangana' ? 'selected' : '' }}>Telangana</option>
+                                        <option value="Tripura" {{ old('state') === 'Tripura' ? 'selected' : '' }}>Tripura</option>
+                                        <option value="Uttar Pradesh" {{ old('state') === 'Uttar Pradesh' ? 'selected' : '' }}>Uttar Pradesh</option>
+                                        <option value="Uttarakhand" {{ old('state') === 'Uttarakhand' ? 'selected' : '' }}>Uttarakhand</option>
+                                        <option value="West Bengal" {{ old('state') === 'West Bengal' ? 'selected' : '' }}>West Bengal</option>
                                     </select>
                                 </div>
                             </div>
@@ -224,7 +267,7 @@
                                 <div class="form-group">
                                     <label for="city">{{ \App\CPU\translate('City')}}</label>
                                     <div id="city">
-                                        <input type="text" name="city" class="form-control" required>
+                                        <input type="text" name="city" class="form-control" value="{{ old('city') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -302,6 +345,44 @@
 
 @push('script')
 <script>
+    const categoryData = @json(
+        $categories->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'children' => $category->childes->map(function ($child) {
+                    return ['id' => $child->id, 'name' => $child->name];
+                })->values(),
+            ];
+        })->values()
+    );
+    let selectedSubCategoryId = @json((string) $selectedSubCategoryId);
+
+    function syncSubCategoryOptions() {
+        const categoryId = String($('#category_id').val() || '');
+        const subCategorySelect = $('#sub_category_id');
+        subCategorySelect.empty();
+        subCategorySelect.append('<option value="">{{ \App\CPU\translate('Select')}}</option>');
+
+        const matchedCategory = categoryData.find(item => String(item.id) === categoryId);
+        if (!matchedCategory || !matchedCategory.children) {
+            return;
+        }
+
+        matchedCategory.children.forEach(function (child) {
+            const selectedAttr = String(child.id) === selectedSubCategoryId ? 'selected' : '';
+            subCategorySelect.append(`<option value="${child.id}" ${selectedAttr}>${child.name}</option>`);
+        });
+    }
+
+    $('#category_id').on('change', function() {
+        selectedSubCategoryId = '';
+        syncSubCategoryOptions();
+    });
+
+    $(document).ready(function() {
+        syncSubCategoryOptions();
+    });
+
     function syncAgeRangeValue() {
         const min = $('#age_range_min').val();
         const max = $('#age_range_max').val();

@@ -606,12 +606,14 @@ class DashboardController extends Controller
         }
     }
 
-    public function detailBrand(Request $request, $id) {
+    public function detailBrand(Request $request, int|string $id) {
         $data = Helpers::get_sale_by_token($request);
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            $brand = Seller::find($id);
+            $brand = Seller::where('id', '=', $id, 'and')
+                ->where('sale_id', '=', $seller['id'], 'and')
+                ->first();
             
             if ($brand && $brand->sale_id == $seller['id']) {
                 return response()->json([
@@ -640,7 +642,7 @@ class DashboardController extends Controller
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            $transactions = SaleWalletTransaction::where('sale_id', $seller['id'])
+            $transactions = SaleWalletTransaction::where('sale_id', '=', $seller['id'], 'and')
                 ->orderBy('id', 'DESC')
                 ->paginate($request->get('per_page', 10));
             
@@ -673,12 +675,11 @@ class DashboardController extends Controller
                 ], 200);
             }
 
-            if(SaleWalletTransaction::where([
-                'sale_id' => $seller['id'],
-                'amount' => $request->amount,
-                'type' => 'debit',
-                'status' => 'pending'
-            ])->first()) {
+            if (SaleWalletTransaction::where('sale_id', '=', $seller['id'], 'and')
+                ->where('amount', '=', $request->amount, 'and')
+                ->where('type', '=', 'debit', 'and')
+                ->where('status', '=', 'pending', 'and')
+                ->first()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'One request is already pending',
@@ -717,7 +718,10 @@ class DashboardController extends Controller
     public function notifications(Request $request) {
 
         $limit = $request->limit ?? 25;
-        $notifications = Notification::where(['status' => 1, 'type' => 'sale'])->orderBy('id', 'DESC')->paginate($limit);
+        $notifications = Notification::where('status', '=', 1, 'and')
+            ->where('type', '=', 'sale', 'and')
+            ->orderBy('id', 'DESC')
+            ->paginate($limit);
         return response()->json([
             'status' => true,
             'message' => 'Notification retrieved successfully',
@@ -732,7 +736,9 @@ class DashboardController extends Controller
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $saleId = $seller['id'];
-            $transactions = SaleCommissionLedger::where('sale_id', $saleId)->with(['sale', 'brand','campaign'])->orderBy('id', 'desc')->paginate(25);
+            $transactions = SaleCommissionLedger::where('sale_id', '=', $saleId, 'and')
+            ->with(['sale', 'brand','campaign'])
+            ->orderBy('id', 'desc')->paginate(25);
             return response()->json([
                 'status' => true,
                 'message' => 'Ledger Transactions retrieved successfully',

@@ -62,6 +62,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.voucher.*') ? 'active' : '' }}" href="{{ route('admin.voucher.index') }}">Discount Vouchers</a>
+                    </li>
                     <li class="nav-item d-none">
                         <a class="nav-link" href="{{ route('admin.roles-nd-permissions') }}">Roles & Permission</a>
                     </li>
@@ -117,7 +120,7 @@
         </li>
         @endif
 
-        @php($voucherMenuOpen = request()->routeIs('admin.voucher-brand.*') || request()->routeIs('admin.voucher.*'))
+        @php($voucherMenuOpen = request()->routeIs('admin.voucher-brand.*'))
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
             <a class="nav-link {{ $voucherMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="{{ $voucherMenuOpen ? 'true' : 'false' }}" aria-controls="brands-voucher-manage">
@@ -128,9 +131,6 @@
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.voucher-brand.*') ? 'active' : '' }}" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.voucher.*') ? 'active' : '' }}" href="{{ route('admin.voucher.index') }}">Vouchers</a>
                     </li>
                 </ul>
             </div>
