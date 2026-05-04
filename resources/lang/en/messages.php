@@ -605,4 +605,7 @@
   'Basic Information' => 'Basic Information',
   'Targeting & Schedule' => 'Targeting & Schedule',
   'Budget & Rewards' => 'Budget & Rewards',
+  'Category' => 'Category',
+  'Sub Category' => 'Sub Category',
+  'Edit Brand Category' => 'Edit Brand Category',
 );

@@ -7,6 +7,7 @@ use App\CPU\ImageManager;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignTransaction;
+use App\Models\BrandCategory;
 use App\Models\Seller;
 use App\Models\PaymentSplit;
 // use Brian2694\Toastr\Facades\Toastr;
@@ -53,12 +54,46 @@ class CampaignController extends Controller
     public function create()
     {
         $sellers = Seller::where('status', 'approved')->get();
+        $categories = BrandCategory::query()
+            ->where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->with(['childes' => function ($query) {
+                $query->where('status', 1)->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $guidelineOptions = $this->getCampaignGuidelineOptions();
-        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions'));
+        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions', 'categories'));
     }
 
     public function store(Request $request)
     {
+        $request->validate([
+            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,paused,stopped,rejected,accepted',
+        ]);
+        $category = BrandCategory::where('id', $request->category_id)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->where('status', 1)
+            ->first();
+        if (!$category) {
+            return back()->withErrors(['category_id' => 'Valid category is required.'])->withInput();
+        }
+
+        $subCategoryId = $request->sub_category_id ?: null;
+        if ($subCategoryId) {
+            $subCategory = BrandCategory::where('id', $subCategoryId)
+                ->where('parent_id', $category->id)
+                ->where('status', 1)
+                ->first();
+            if (!$subCategory) {
+                return back()->withErrors(['sub_category_id' => 'Selected sub category is invalid for selected category.'])->withInput();
+            }
+        }
+
         $ageRange = $request->age_range;
         if ($request->filled('age_range_min') && $request->filled('age_range_max')) {
             $ageRange = $request->age_range_min . '-' . $request->age_range_max;
@@ -84,7 +119,9 @@ class CampaignController extends Controller
         $campaign->descriptions = $request->caption;
         $campaign->tags = $request->hashtags;
         $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
-        $campaign->status = $request->status ?? $campaign->status;
+        $campaign->status = $request->filled('status') ? $request->status : 'pending';
+        $campaign->category_id = $category->id;
+        $campaign->sub_category_id = $subCategoryId;
         $campaign->start_date = $request->start_date;
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
@@ -161,12 +198,46 @@ class CampaignController extends Controller
         $campaign = Campaign::with(['brand'])->where('id', $id)->first();
         // dd($campaign->images);
         $sellers = Seller::where('status', 'approved')->get();
+        $categories = BrandCategory::query()
+            ->where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->with(['childes' => function ($query) {
+                $query->where('status', 1)->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $guidelineOptions = $this->getCampaignGuidelineOptions();
-        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions'));
+        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions', 'categories'));
     }
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,paused,stopped,rejected,accepted',
+        ]);
+        $category = BrandCategory::where('id', $request->category_id)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->where('status', 1)
+            ->first();
+        if (!$category) {
+            return back()->withErrors(['category_id' => 'Valid category is required.'])->withInput();
+        }
+
+        $subCategoryId = $request->sub_category_id ?: null;
+        if ($subCategoryId) {
+            $subCategory = BrandCategory::where('id', $subCategoryId)
+                ->where('parent_id', $category->id)
+                ->where('status', 1)
+                ->first();
+            if (!$subCategory) {
+                return back()->withErrors(['sub_category_id' => 'Selected sub category is invalid for selected category.'])->withInput();
+            }
+        }
+
         $ageRange = $request->age_range;
         if ($request->filled('age_range_min') && $request->filled('age_range_max')) {
             $ageRange = $request->age_range_min . '-' . $request->age_range_max;
@@ -197,7 +268,9 @@ class CampaignController extends Controller
         $campaign->descriptions = $request->caption;
         $campaign->tags = $request->hashtags;
         $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
-        $campaign->status = $request->status ?? $campaign->status;
+        $campaign->status = $request->filled('status') ? $request->status : ($campaign->status ?: 'pending');
+        $campaign->category_id = $category->id;
+        $campaign->sub_category_id = $subCategoryId;
         $campaign->start_date = $request->start_date;
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
@@ -229,9 +302,14 @@ class CampaignController extends Controller
 
     public function delete(Request $request)
     {
-        $br = Campaign::find($request->id);
-        ImageManager::delete('/profile/' . $br['thumbnail']);
-        Campaign::where('id', $request->id)->delete();
+        $br = Campaign::query()->where('id', '=', $request->id, 'and')->first();
+        if ($br) {
+            $thumbnailName = $br->getRawOriginal('thumbnail');
+            if (!empty($thumbnailName)) {
+                ImageManager::delete('profile/' . ltrim($thumbnailName, '/'));
+            }
+            Campaign::query()->where('id', '=', $request->id, 'and')->delete();
+        }
         return response()->json();
     }
 
