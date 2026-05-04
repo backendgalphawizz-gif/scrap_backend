@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\User\DashboardController as UserDashboardController
 use App\Http\Controllers\Api\User\UserAuthController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use App\Http\Controllers\Api\User\SocialAuthController;
+use App\Http\Controllers\Api\User\UserCampaignActivityLogController;
 use App\Http\Controllers\Api\User\VoucherController as UserVoucherController;
 use App\Http\Controllers\Api\User\UserLevelController as UserLevelController;
 use App\Http\Controllers\Api\Seller\SellerAuthController;
@@ -129,6 +130,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('share-campaign/{id}', [UserDashboardController::class, 'shareCampaign']);
     Route::post('campaign/skip', [UserDashboardController::class, 'skipCampaign']);
     Route::post('campaign/updateScrappedPosts', [UserDashboardController::class, 'updateScrappedPosts']);
+    Route::post('campaign/activity-log', [UserCampaignActivityLogController::class, 'store']);
     
 
     // User Feedback related routes

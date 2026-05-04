@@ -34,6 +34,12 @@
         </nav>
     </div>
 
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('admin.user.activity.logs', $user->id) }}" class="btn btn-outline-success">
+            <i class="mdi mdi-timeline-text-outline me-1"></i> User Activity Logs
+        </a>
+    </div>
+
 
     <div class="row">
 

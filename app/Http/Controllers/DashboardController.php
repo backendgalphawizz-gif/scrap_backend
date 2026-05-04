@@ -15,6 +15,7 @@ use App\Models\CoinTransaction;
 use App\Models\CoinWallet;
 use App\Models\Seller;
 use App\Models\User;
+use App\Models\UserCampaignActivityLog;
 use App\Models\Voucher;
 use App\Http\Resources\CommonResource;
 use DB;
@@ -250,12 +251,32 @@ class DashboardController extends Controller
     }
 
      public function viewUser(Request $request, $id) {
-        $user = User::find($id);
-        return view('admin-views.customer.edit-customer', compact('user'));
+        $user = User::with(['coinWallet'])->withCount('campaigns')->findOrFail($id);
+        return view('admin-views.customer.view-user', compact('user'));
     }
     public function editUser(Request $request, $id) {
         $user = User::find($id);
         return view('admin-views.customer.edit-customer', compact('user'));
+    }
+
+    public function userActivityLogs(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $logs = UserCampaignActivityLog::query()
+            ->with(['campaign:id,title'])
+            ->where('user_id', $user->id)
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . trim($request->name) . '%');
+            })
+            ->when($request->filled('campaigns_id'), function ($query) use ($request) {
+                $query->where('campaigns_id', (int) $request->campaigns_id);
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin-views.customer.activity-logs', compact('user', 'logs'));
     }
    
 

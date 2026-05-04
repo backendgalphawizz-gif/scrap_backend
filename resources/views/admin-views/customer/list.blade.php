@@ -167,6 +167,18 @@
             box-shadow: 0 11px 20px rgba(15, 76, 129, 0.24);
         }
 
+        .premium-user-table .action-icon-btn.log-btn {
+            background: linear-gradient(135deg, #f3fff3 0%, #e9fbe9 100%);
+            color: #177a3f;
+            box-shadow: 0 7px 14px rgba(23, 122, 63, 0.12);
+        }
+
+        .premium-user-table .action-icon-btn.log-btn:hover {
+            background: linear-gradient(135deg, #177a3f 0%, #239a52 100%);
+            color: #ffffff;
+            box-shadow: 0 11px 20px rgba(23, 122, 63, 0.24);
+        }
+
         .premium-user-table .action-icon-btn.delete-btn {
             background: linear-gradient(135deg, #fff4f6 0%, #ffe9ee 100%);
             color: #c73a57;
@@ -420,6 +432,14 @@
                                         target="_self"
                                         href="{{ route('admin.user.edit',[$customer['id']]) }}">
                                             <i class="mdi mdi-pencil-outline"></i>
+                                        </a>
+
+                                        <a title="User Activity Logs"
+                                        class="btn btn-sm action-icon-btn log-btn"
+                                        aria-label="User Activity Logs"
+                                        target="_self"
+                                        href="{{ route('admin.user.activity.logs',[$customer['id']]) }}">
+                                            <i class="mdi mdi-timeline-text-outline"></i>
                                         </a>
                                         <a title="{{\App\CPU\translate('Delete')}}"
                                         class="btn btn-sm delete action-icon-btn delete-btn"

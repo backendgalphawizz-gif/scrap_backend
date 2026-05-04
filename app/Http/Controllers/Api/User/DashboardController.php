@@ -57,10 +57,10 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        
-
         $user = $request->user();
-        $ageRange = trim((string) $request->input('age_range', ''));
+
+        $userAge = $this->calculateAgeFromDob($user->dob ?? null);
+    
         $isLocalForVocal = filter_var($request->input('local_for_vocal', false), FILTER_VALIDATE_BOOLEAN);
    
         $filters = [];
@@ -118,9 +118,12 @@ class DashboardController extends Controller
                         ->orWhere('state', 'any');
                 });
             })
-            ->when($ageRange !== '' && preg_match('/^\d{1,2}\s*-\s*\d{1,2}$/', $ageRange), function ($q) use ($ageRange) {
-                $normalizedAgeRange = preg_replace('/\s+/', '', $ageRange);
-                $q->whereRaw('REPLACE(age_range, " ", "") = ?', [$normalizedAgeRange]);
+            ->when($userAge !== null, function ($q) use ($userAge) {
+                $q->whereRaw(
+                    'CAST(SUBSTRING_INDEX(REPLACE(age_range, " ", ""), "-", 1) AS UNSIGNED) <= ?
+                     AND CAST(SUBSTRING_INDEX(REPLACE(age_range, " ", ""), "-", -1) AS UNSIGNED) >= ?',
+                    [$userAge, $userAge]
+                );
             })
             ->where(['status' => 'active'])
             ->whereNotIn('id', function ($sub) use ($user) {
@@ -382,5 +385,20 @@ class DashboardController extends Controller
         }
 
         return $campaign->occupiedTransactions()->count() >= $requiredSlots;
+    }
+
+    private function calculateAgeFromDob($dob): ?int
+    {
+        if (empty($dob)) {
+            return null;
+        }
+
+        try {
+            $birthDate = Carbon::parse($dob);
+
+            return $birthDate->isFuture() ? null : $birthDate->age;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }
