@@ -62,9 +62,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.voucher.*') ? 'active' : '' }}" href="{{ route('admin.voucher.index') }}">Discount Vouchers</a>
-                    </li>
+                   
                     <li class="nav-item d-none">
                         <a class="nav-link" href="{{ route('admin.roles-nd-permissions') }}">Roles & Permission</a>
                     </li>
@@ -129,6 +127,9 @@
             </a>
             <div class="collapse {{ $voucherMenuOpen ? 'show' : '' }}" id="brands-voucher-manage">
                 <ul class="nav flex-column sub-menu">
+                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.voucher.*') ? 'active' : '' }}" href="{{ route('admin.voucher.index') }}">Discount Vouchers</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.voucher-brand.*') ? 'active' : '' }}" href="{{ route('admin.voucher-brand.index') }}">Voucher Brands</a>
                     </li>
