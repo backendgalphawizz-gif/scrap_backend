@@ -20,18 +20,6 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label>Sales User (Discount Bucket)</label>
-                        <select name="sale_id" class="form-control" required>
-                            <option value="">Select Sales User</option>
-                            @foreach($sales as $sale)
-                                <option value="{{ $sale->id }}" {{ (int) old('sale_id') === (int) $sale->id ? 'selected' : '' }}>
-                                    {{ $sale->name }} (Balance: {{ number_format((float) $sale->balance, 2) }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('sale_id')<small class="text-danger">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="col-md-6">
                         <label>Voucher Brand</label>
                         <select name="voucher_brands_id" class="form-control" required>
                             <option value="">Select Brand</option>
