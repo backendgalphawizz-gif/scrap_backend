@@ -99,7 +99,7 @@ Route::prefix('admin')
         // Route::middleware('admin:create_role')
         //     ->post('/roles', [RoleController::class, 'store']);
     });
-
+    Route::get('user/user-levels', [UserLevelController::class, 'index']);   
 Route::prefix('user')->middleware('auth:api')->group(function () {
 
     // User profile related routes
@@ -150,7 +150,7 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
 
     // get user level and benefits
-    Route::get('user-levels', [UserLevelController::class, 'index']);   
+    
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);

@@ -25,12 +25,12 @@ return new class extends Migration
 
         // Add social verification status columns to sellers
         Schema::table('sellers', function (Blueprint $table) {
-            $table->enum('instagram_status', ['not_verified', 'pending', 'verified'])
-                ->default('not_verified')
+            $table->enum('instagram_status', ['not_verified', 'pending', 'verified', 'not_submitted'])
+                ->default('not_submitted')
                 ->after('instagram_username');
 
-            $table->enum('facebook_status', ['not_verified', 'pending', 'verified'])
-                ->default('not_verified')
+            $table->enum('facebook_status', ['not_verified', 'pending', 'verified', 'not_submitted'])
+                ->default('not_submitted')
                 ->after('facebook_username');
         });
     }

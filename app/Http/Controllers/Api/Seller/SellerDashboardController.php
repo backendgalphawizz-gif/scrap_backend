@@ -319,13 +319,13 @@ class SellerDashboardController extends Controller
             //     ], 200);
             // }
 
-            if ($shop->pan_status !== 'Verified') {
-                return response()->json([
-                    'status' => false,
-                    'message' => translate('Please complete KYC verification before creating a campaign.'),
-                    'data' => [],
-                ], 200);
-            }
+            // if ($shop->pan_status !== 'Verified') {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => translate('Please complete KYC verification before creating a campaign.'),
+            //         'data' => [],
+            //     ], 200);
+            // }
 
             $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
             $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
