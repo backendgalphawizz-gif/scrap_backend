@@ -578,24 +578,33 @@
     }
 
     function markAllRead() {
+        const btn = document.getElementById('mark-all-read-btn');
+        if(btn) btn.disabled = true;
+
         fetch(NOTIF_MARK_READ_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
             }
         })
         .then(res => res.json())
         .then(res => {
+            if(btn) btn.disabled = false;
             if(res.status) {
-                // Instantly update UI without waiting for next poll
-                document.querySelectorAll('#activity-feed-list .bg-light').forEach(el => el.classList.remove('bg-light'));
+                // Clear the feed list and show empty state
+                const list = document.getElementById('activity-feed-list');
+                if(list) {
+                    list.innerHTML = `<li class="list-group-item text-center text-muted py-4" id="empty-feed-state"><i class="mdi mdi-bell-sleep mdi-24px"></i><br>No recent activity</li>`;
+                }
                 const headerBell = document.getElementById('admin-bell-count');
                 if(headerBell) headerBell.classList.add('d-none');
                 const feedBadge = document.getElementById('unread-feed-badge');
                 if(feedBadge) feedBadge.classList.add('d-none');
+                refreshCounts();
             }
-        });
+        })
+        .catch(() => { if(btn) btn.disabled = false; });
     }
 
     // Start polling
