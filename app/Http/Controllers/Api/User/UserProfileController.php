@@ -16,8 +16,9 @@ use App\Models\User;
 use App\Models\Seller;
 use App\Models\Notification;
 use App\Models\SocialVerificationTransaction;
+use App\Models\UserLevel;
+use App\Models\CampaignTransaction;
 use Illuminate\Support\Str;
-
 
 class UserProfileController extends Controller
 {
@@ -596,15 +597,26 @@ class UserProfileController extends Controller
     {
         $user = $request->user();
 
-        $instagram = SocialVerificationTransaction::where('user_id', $user->id)
-            ->where('platform', SocialVerificationTransaction::PLATFORM_INSTAGRAM)
-            ->latest()
+        // Determine user's level based on total coin earnings
+        $wallet = CoinWallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+        $totalEarnings = $wallet->total_coin_earning;
+
+        $level = UserLevel::where('range_min', '<=', $totalEarnings)
+            ->where('range_max', '>=', $totalEarnings)
             ->first();
 
-        $facebook = SocialVerificationTransaction::where('user_id', $user->id)
-            ->where('platform', SocialVerificationTransaction::PLATFORM_FACEBOOK)
-            ->latest()
-            ->first();
+        $maxPostsPerDay = $level ? (int) $level->max_participations_per_day : 0;
+
+        // Count today's posts (excluding deleted and rejected)
+        $todaysPostCount = CampaignTransaction::where('user_id', $user->id)
+            ->whereDate('created_at', today())
+            ->whereNotIn('status', [CampaignTransaction::STATUS_DELETED, CampaignTransaction::STATUS_REJECTED])
+            ->count();
+
+        $canPostMore = $maxPostsPerDay > 0 && $todaysPostCount < $maxPostsPerDay;
 
         return response()->json([
             'status'  => true,
@@ -618,6 +630,10 @@ class UserProfileController extends Controller
                     'status'           => $user->facebook_status,
                     'username'         => $user->facebook_username,
                 ],
+                'level'             => $level ? $level->name : null,
+                'max_posts_per_day' => $maxPostsPerDay,
+                'todays_post_count' => $todaysPostCount,
+                'can_post_more'     => $canPostMore,
             ],
         ]);
     }

@@ -187,9 +187,9 @@ class UserAuthController extends Controller
                 'state' => $request->state,
                 'post_slots' => '10', // Default post slots, can be updated later based on user level
                 'instagram_username' => $request->instagram_username,
-                'instagram_status' => $request->instagram_username ? 'pending' : 'not_submitted',
+                'instagram_status' =>  'not_submitted',
                 'facebook_username' => $request->facebook_username,
-                'facebook_status' => $request->facebook_username ? 'pending' : 'not_submitted',
+                'facebook_status' => 'not_submitted',
             ]);
 
             $user->fcm_id = $request->fcm_id;
