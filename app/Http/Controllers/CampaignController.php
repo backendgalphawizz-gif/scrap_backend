@@ -12,6 +12,7 @@ use App\Models\Seller;
 use App\Models\PaymentSplit;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CampaignController extends Controller
 {
@@ -209,7 +210,9 @@ class CampaignController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
         $guidelineOptions = $this->getCampaignGuidelineOptions();
-        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions', 'categories'));
+        $states = DB::table('states')->where('country_id', 101)->orderBy('name')->get(['state_id', 'name']);
+        $cities = DB::table('cities')->orderBy('name')->get(['city_id', 'name', 'state_id']);
+        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions', 'categories', 'states', 'cities'));
     }
 
     public function update(Request $request, $id)
@@ -278,7 +281,6 @@ class CampaignController extends Controller
         $campaign->city = $request->city;
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->coins ?? $campaign->coins;
-        $campaign->total_user_required = $request->total_user_required;
         $campaign->reward_per_user = $request->reward_per_user;
         $campaign->number_of_post = $request->number_of_post;
         $campaign->used_post = $request->used_post ?? $campaign->used_post;

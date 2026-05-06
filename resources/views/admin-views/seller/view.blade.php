@@ -383,7 +383,7 @@
                             <img class="rounded-circle brand-avatar-lg"
                                  src="{{ $seller->image }}"
                                  alt="Brand avatar"
-                                 onerror="this.onerror=null;this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}';">
+                                 onerror="this.onerror=null;this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}';" style="width: 60px; height: 60px;">
                             <div>
                                 <h4 class="mb-1 text-white">{{ $seller->username ?: '-' }}</h4>
                                 <div class="small text-white-50 mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>

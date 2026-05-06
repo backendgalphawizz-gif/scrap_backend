@@ -45,16 +45,14 @@ class VoucherController extends Controller
     public function create()
     {
         $voucherBrands = VoucherBrand::where('is_active', '=', 1, 'and')->orderBy('name', 'asc')->get();
-        $sales = Sale::where('status', '=', 'active', 'and')->orderBy('name', 'asc')->get(['id', 'name', 'balance']);
 
-        return view('admin-views.voucher.create', compact('voucherBrands', 'sales'));
+        return view('admin-views.voucher.create', compact('voucherBrands'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'voucher_brands_id' => 'required|integer|exists:voucher_brands,id',
-            'sale_id' => 'required|integer|exists:sales,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'coin_price' => 'required|numeric|min:0',
@@ -69,33 +67,22 @@ class VoucherController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $sale = Sale::where('id', '=', $request->sale_id, 'and')->lockForUpdate()->firstOrFail();
-            $this->ensureSaleHasBalance($sale, (float) $request->fiat_value);
-
-            Voucher::create([
-                'voucher_brands_id' => $request->voucher_brands_id,
-                'sale_id' => $request->sale_id,
-                'title' => $request->title,
-                'description' => $request->description,
-                'coin_price' => $request->coin_price,
-                'fiat_value' => $request->fiat_value,
-                'code' => $request->code,
-                'status' => $request->status,
-                'validity_days' => $request->validity_days,
-                'valid_from' => $request->valid_from,
-                'valid_to' => $request->valid_to,
-                'max_uses' => $request->max_uses,
-                'max_uses_per_user' => $request->max_uses_per_user,
-                'is_active' => $request->boolean('is_active'),
-            ]);
-
-            $this->debitSaleBalance(
-                $sale,
-                (float) $request->fiat_value,
-                'Voucher discount funded: ' . $request->title . ' (' . $request->code . ')'
-            );
-        });
+        Voucher::create([
+            'voucher_brands_id' => $request->voucher_brands_id,
+            'sale_id' => null,
+            'title' => $request->title,
+            'description' => $request->description,
+            'coin_price' => $request->coin_price,
+            'fiat_value' => $request->fiat_value,
+            'code' => $request->code,
+            'status' => $request->status,
+            'validity_days' => $request->validity_days,
+            'valid_from' => $request->valid_from,
+            'valid_to' => $request->valid_to,
+            'max_uses' => $request->max_uses,
+            'max_uses_per_user' => $request->max_uses_per_user,
+            'is_active' => $request->boolean('is_active'),
+        ]);
 
         return redirect()->route('admin.voucher.index')->with('success', 'Voucher created successfully.');
     }
