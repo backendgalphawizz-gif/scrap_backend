@@ -165,13 +165,6 @@
                             <div class="col-md-4">
 
                                 <div class="form-group">
-                                    <label for="total_user_required">{{ \App\CPU\translate('Total Users Required')}}</label>
-                                    <input type="number" name="total_user_required" id="total_user_required" class="form-control" value="{{ old('total_user_required') }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-
-                                <div class="form-group">
                                     <label for="number_of_post">{{ \App\CPU\translate('Number Of Posts')}}</label>
                                     <input type="number" name="number_of_post" id="number_of_post" class="form-control" value="{{ old('number_of_post') }}" required>
                                 </div>
@@ -200,7 +193,14 @@
 
                                 <div class="form-group">
                                     <label for="total_campaign_budget">{{ \App\CPU\translate('Total Campaign Budget')}}</label>
-                                    <input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control" step="0.01" value="{{ old('total_campaign_budget') }}" required>
+                                    <input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control" step="0.01" min="0" value="{{ old('total_campaign_budget') }}" required>
+                                    <div id="gst_summary" class="mt-2 p-2 rounded bg-light border d-none" style="font-size:0.85rem; line-height:1.8;">
+                                        <span class="text-secondary">Campaign Budget:</span> <strong id="gst_base">₹0</strong>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <span class="text-secondary">GST (<span id="gst_rate_label">{{ $campaign_gst_percentage }}</span>%):</span> <strong id="gst_amount" class="text-warning">₹0</strong>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <span class="text-secondary">Total Payable:</span> <strong id="gst_total" class="text-success">₹0</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -469,6 +469,34 @@
 
     $(document).ready(function() {
         syncCityOptions();
+    });
+</script>
+<script>
+    // GST auto-calculation
+    const GST_RATE = {{ $campaign_gst_percentage }};
+
+    function formatINR(amount) {
+        return '₹' + parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateGstSummary() {
+        const budget = parseFloat($('#total_campaign_budget').val());
+        if (!budget || budget <= 0) {
+            $('#gst_summary').addClass('d-none');
+            return;
+        }
+        const gstAmount = budget * GST_RATE / 100;
+        const totalPayable = budget + gstAmount;
+        $('#gst_base').text(formatINR(budget));
+        $('#gst_amount').text(formatINR(gstAmount));
+        $('#gst_total').text(formatINR(totalPayable));
+        $('#gst_summary').removeClass('d-none');
+    }
+
+    $('#total_campaign_budget').on('input change', updateGstSummary);
+
+    $(document).ready(function() {
+        updateGstSummary();
     });
 </script>
 @endpush

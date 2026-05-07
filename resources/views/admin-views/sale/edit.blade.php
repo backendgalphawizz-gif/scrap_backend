@@ -161,7 +161,10 @@
                             <div class="col-md-3">
                                 <label class="form-label">PAN Image Preview</label>
                                 <div>
-                                    <img id="panImagePreview" src="{{ $sale->pan_image }}" class="sale-avatar-preview" alt="pan image">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#panImageModal">
+                                        <img id="panImagePreview" src="{{ $sale->pan_image }}" class="sale-avatar-preview" alt="pan image"
+                                            onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -222,6 +225,25 @@
         </div>
     </div>
 </div>
+
+{{-- PAN Image Modal --}}
+<div class="modal fade" id="panImageModal" tabindex="-1" role="dialog" aria-labelledby="panImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="panImageModalLabel">{{ \App\CPU\translate('pan_image') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img class="img-fluid" style="min-width: 450px;"
+                    id="panImageModalImg"
+                    src="{{ $sale->pan_image }}"
+                    alt="PAN Image"
+                    onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('script')
@@ -232,6 +254,7 @@
 
         $('#panImageUploader').change(function () {
             readURL(this, '#panImagePreview');
+            readURL(this, '#panImageModalImg');
         });
 
         function readURL(input, targetId) {

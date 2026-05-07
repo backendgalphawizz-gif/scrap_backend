@@ -51,52 +51,52 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="name">{{\App\CPU\translate('Full Name')}} <span class="text-danger">*</span></label>
-                                   <input type="text" 
-       name="name" 
-       class="form-control" 
-       id="name"
-       placeholder="{{\App\CPU\translate('Ex')}} : John Doe"
-       value="{{ old('name') }}"
-       oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-       pattern="[A-Za-z\s]+"
-       title="Only letters and spaces allowed"
-       required maxlength="25" minlength="3"> 
+                                    <input type="text"
+                                        name="name"
+                                        class="form-control"
+                                        id="name"
+                                        placeholder="{{\App\CPU\translate('Ex')}} : John Doe"
+                                        value="{{ old('name') }}"
+                                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
+                                        pattern="[A-Za-z\s]+"
+                                        title="Only letters and spaces allowed"
+                                        required maxlength="25" minlength="3">
                                 </div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="phone">{{\App\CPU\translate('Phone')}} <span class="text-danger">*</span></label>
-                                    <input type="tel" 
-       name="phone" 
-       value="{{ old('phone') }}" 
-       class="form-control"
-       id="phone"
-       placeholder="Enter 10 digit mobile number"
-       maxlength="10"
-       pattern="[0-9]{10}"
-       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
-       title="Enter exactly 10 digits"
-       required>  </div>
+                                    <input type="tel" name="phone"
+                                        value="{{ old('phone') }}"
+                                        class="form-control"
+                                        id="phone"
+                                        placeholder="Enter 10 digit mobile number"
+                                        maxlength="10"
+                                        pattern="[0-9]{10}"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+                                        title="Enter exactly 10 digits"
+                                        required>
+                                </div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>{{\App\CPU\translate('Role')}} <span class="text-danger">*</span></label>
                                     <select class="form-control form-select" name="role_id" required>
-    <option value="" disabled selected>
-        ---{{\App\CPU\translate('select')}}---
-    </option>
+                                        <option value="" disabled selected>
+                                            ---{{\App\CPU\translate('select')}}---
+                                        </option>
 
-    @foreach($rls as $r)
-        @if($r->id != 3)
-            <option value="{{ $r->id }}"
-                {{ old('role_id') == $r->id ? 'selected' : '' }}>
-                {{ $r->name }}
-            </option>
-        @endif
-    @endforeach
-</select>
+                                        @foreach($rls as $r)
+                                        @if($r->id != 3)
+                                        <option value="{{ $r->id }}"
+                                            {{ old('role_id') == $r->id ? 'selected' : '' }}>
+                                            {{ $r->name }}
+                                        </option>
+                                        @endif
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 
@@ -143,32 +143,42 @@
                             </div>
 
                             <div class="col-md-4">
-    <div class="form-group">
-        <label>{{\App\CPU\translate('password')}} <span class="text-danger">*</span></label>
-        <input type="password" 
-               name="password" 
-               class="form-control" 
-               id="password"
-               placeholder="{{\App\CPU\translate('Password')}}"
-               minlength="6"
-               maxlength="20"
-               required>
-    </div>
-</div>
+                                <div class="form-group">
+                                    <label>{{\App\CPU\translate('password')}} <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password"
+                                            name="password"
+                                            class="form-control"
+                                            id="password"
+                                            placeholder="{{\App\CPU\translate('Password')}}"
+                                            minlength="6"
+                                            maxlength="20"
+                                            required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password">
+                                            <i class="mdi mdi-eye-off"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-<div class="col-md-4">
-    <div class="form-group">
-        <label>{{\App\CPU\translate('confirm_password')}} <span class="text-danger">*</span></label>
-        <input type="password" 
-               name="confirm_password" 
-               class="form-control"
-               id="confirm_password"
-               placeholder="{{\App\CPU\translate('Confirm Password')}}"
-               minlength="6"
-               maxlength="20"
-               required>
-    </div>
-</div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{\App\CPU\translate('confirm_password')}} <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password"
+                                            name="password_confirmation"
+                                            class="form-control"
+                                            id="confirm_password"
+                                            placeholder="{{\App\CPU\translate('Confirm Password')}}"
+                                            minlength="6"
+                                            maxlength="20"
+                                            required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="confirm_password">
+                                            <i class="mdi mdi-eye-off"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="col-md-12 d-flex justify-content-end gap-3">
                                 <button type="reset" id="reset" class="btn btn-secondary px-4">
@@ -192,3 +202,20 @@
 </div>
 
 @endsection
+
+@push('script')
+<script>
+    $(document).on('click', '.toggle-password', function() {
+        var targetId = $(this).data('target');
+        var input = $('#' + targetId);
+        var icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('mdi-eye-off').addClass('mdi-eye');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('mdi-eye').addClass('mdi-eye-off');
+        }
+    });
+</script>
+@endpush

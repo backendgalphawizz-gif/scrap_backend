@@ -23,44 +23,45 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'role_id' => 'required',
-            'image' => 'required',
-            'email' => 'required|email|unique:admins',
-            'password'=>'required',
-            'phone'=>'required'
-
+            'name'     => 'required|string|min:3|max:25|regex:/^[A-Za-z\s]+$/',
+            'phone'    => 'required|digits:10',
+            'role_id'  => 'required',
+            'image'    => 'required|image|mimes:jpeg,png,jpg,gif,bmp,tif,tiff|max:2048',
+            'email'    => 'required|email|max:40|unique:admins,email',
+            'password' => 'required|string|min:6|max:20|confirmed',
         ], [
-            'name.required' => 'Role name is required!',
-            'role_name.required' => 'Role id is Required',
-            'email.required' => 'Email id is Required',
-            'image.required' => 'Image is Required',
-
+            'name.required'             => 'Full name is required.',
+            'name.regex'                => 'Name must contain only letters and spaces.',
+            'phone.required'            => 'Phone number is required.',
+            'phone.digits'              => 'Phone number must be exactly 10 digits.',
+            'role_id.required'          => 'Please select a role.',
+            'image.required'            => 'Admin image is required.',
+            'image.image'               => 'Uploaded file must be an image.',
+            'email.required'            => 'Email address is required.',
+            'email.unique'              => 'This email is already registered.',
+            'password.required'         => 'Password is required.',
+            'password.min'              => 'Password must be at least 6 characters.',
+            'password.confirmed'        => 'Password and confirm password do not match.',
         ]);
 
         if ($request->role_id == 1) {
-            // Toastr::warning('Access Denied!');
+            session()->flash('error', 'Access Denied! You cannot assign the Super Admin role.');
             return back();
         }
 
-        if ($request->confirm_password != $request->password) {
-            // Toastr::error('Confirm password and password does not match');
-            return redirect()->back();
-        }
-
         DB::table('admins')->insert([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
+            'name'          => $request->name,
+            'phone'         => $request->phone,
+            'email'         => $request->email,
             'admin_role_id' => $request->role_id,
-            'password' => bcrypt($request->password),
-            'status'=>1,
-            'image' => ImageManager::upload('admin/', 'png', $request->file('image')),
-            'created_at' => now(),
-            'updated_at' => now(),
+            'password'      => bcrypt($request->password),
+            'status'        => 1,
+            'image'         => ImageManager::upload('profile/', 'png', $request->file('image')),
+            'created_at'    => now(),
+            'updated_at'    => now(),
         ]);
 
-        // Toastr::success('Employee added successfully!');
+        session()->flash('success', 'Admin added successfully!');
         return redirect()->route('admin.employee.list');
     }
 
@@ -102,45 +103,40 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required',
-            'role_id' => 'required',
-            'email' => 'required|email|unique:admins,email,'.$id,
+            'name'     => 'required|string|min:3|max:25|regex:/^[A-Za-z\s]+$/',
+            'role_id'  => 'required',
+            'password' => 'nullable|string|min:8|max:20',
         ], [
-            'name.required' => 'Role name is required!',
+            'name.required' => 'Full name is required.',
+            'name.regex'    => 'Name must contain only letters and spaces.',
+            'role_id.required' => 'Please select a role.',
+            'password.min'  => 'Password must be at least 8 characters.',
         ]);
 
         if ($request->role_id == 1) {
-            // Toastr::warning('Access Denied!');
+            session()->flash('error', 'Access Denied! You cannot assign the Super Admin role.');
             return back();
         }
 
         $e = Admin::find($id);
-        if ($request['password'] == null) {
-            $pass = $e['password'];
-        } else {
-            if (strlen($request['password']) < 7) {
-                // Toastr::warning('Password length must be 8 character.');
-                return back();
-            }
-            $pass = bcrypt($request['password']);
-        }
+        $pass = ($request->filled('password')) ? bcrypt($request->password) : $e->getRawOriginal('password');
 
-        if ($request->has('image')) {
-            $e['image'] = ImageManager::update('admin/', $e['image'], 'png', $request->file('image'));
+        $rawImage = $e->getRawOriginal('image'); // raw filename, bypass URL accessor
+        $image = $rawImage;
+        if ($request->hasFile('image')) {
+            $image = ImageManager::update('profile/', $rawImage, 'png', $request->file('image'));
         }
 
         DB::table('admins')->where(['id' => $id])->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
+            'name'          => $request->name,
             'admin_role_id' => $request->role_id,
-            'password' => $pass,
-            'image' => $e['image'],
-            'updated_at' => now(),
+            'password'      => $pass,
+            'image'         => $image,
+            'updated_at'    => now(),
         ]);
 
-        // Toastr::success('Employee updated successfully!');
-        return back();
+        session()->flash('success', 'Admin updated successfully!');
+        return redirect()->route('admin.employee.update', $id);
     }
 
 

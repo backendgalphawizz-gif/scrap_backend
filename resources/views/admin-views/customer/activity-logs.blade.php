@@ -77,9 +77,19 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
-                                    <img class="mb-3" src="{{ asset('public/assets/back-end/svg/illustrations/sorry.svg') }}" alt="No logs" width="120">
-                                    <div class="text-muted">No activity logs found for this user.</div>
+                                <td colspan="5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center py-5" style="min-height: 220px;">
+                                        <div style="width:72px;height:72px;border-radius:50%;background:#f0f4ff;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                                            <i class="mdi mdi-timeline-text-outline" style="font-size:36px;color:#7c91b0;"></i>
+                                        </div>
+                                        <h5 style="font-weight:700;color:#2a3b4d;margin-bottom:6px;">No Activity Logs Found</h5>
+                                        <p class="text-muted mb-0" style="font-size:13px;">There are no activity logs recorded for this user yet.</p>
+                                        @if(request('name') || request('campaigns_id'))
+                                            <a href="{{ route('admin.user.activity.logs', $user->id) }}" class="btn btn-outline-secondary btn-sm mt-3">
+                                                <i class="mdi mdi-close me-1"></i> Clear filters
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

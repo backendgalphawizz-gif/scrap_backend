@@ -99,7 +99,7 @@
         </li>
         @endif
 
-        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        @if(\App\CPU\Helpers::module_permission_check('feedback_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#feedback" aria-expanded="false" aria-controls="feedback">
                 <span class="menu-title">Feedback</span>
@@ -119,7 +119,7 @@
         @endif
 
         @php($voucherMenuOpen = request()->routeIs('admin.voucher-brand.*'))
-        @if(\App\CPU\Helpers::module_permission_check('brand_management'))
+        @if(\App\CPU\Helpers::module_permission_check('voucher_management'))
         <li class="nav-item">
             <a class="nav-link {{ $voucherMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands-voucher-manage" aria-expanded="{{ $voucherMenuOpen ? 'true' : 'false' }}" aria-controls="brands-voucher-manage">
                 <span class="menu-title">Voucher Manage</span>
@@ -165,14 +165,16 @@
         </li>
         @endif
 
+        @if(\App\CPU\Helpers::module_permission_check('activity_logs'))
         <li class="nav-item">
             <a class="nav-link" href="{{ route('admin.activity.logs') }}">
                 <span class="menu-title">Activity Logs</span>
                 <i class="mdi mdi-history menu-icon"></i>
             </a>
         </li>
+        @endif
 
-        @if(\App\CPU\Helpers::module_permission_check('banner_management'))
+        @if(\App\CPU\Helpers::module_permission_check('notification_management'))
         <li class="nav-item">
             <a class="nav-link" href="{{ route('admin.notification.add-new') }}">
                 <span class="menu-title">Notification</span>
@@ -181,27 +183,7 @@
         </li>
         @endif
 
-        {{-- <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
-                <span class="menu-title">Basic UI Elements</span>
-                <i class="menu-arrow"></i>
-                <i class="mdi mdi-crosshairs-gps menu-icon"></i>
-            </a>
-            <div class="collapse" id="ui-basic">
-                <ul class="nav flex-column sub-menu">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Buttons</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Dropdowns</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Typography</a>
-                </li>
-                </ul>
-            </div>
-        </li> --}}
-
+      
         @if(\App\CPU\Helpers::module_permission_check('report_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#reports" aria-expanded="false" aria-controls="reports">
@@ -224,7 +206,8 @@
         </li>
         @endif
 
-        <li class="nav-item ">
+        @if(\App\CPU\Helpers::module_permission_check('support_management'))
+        <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#support-ticket" aria-expanded="false" aria-controls="supportchat">
                 <span class="menu-title">Support Chat</span>
                 <i class="mdi mdi-chat menu-icon"></i>
@@ -238,7 +221,8 @@
                 </ul> 
             </div>
         </li>
-        
+        @endif
+
         @if(\App\CPU\Helpers::module_permission_check('business_settings'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#settings" aria-expanded="false" aria-controls="settings">

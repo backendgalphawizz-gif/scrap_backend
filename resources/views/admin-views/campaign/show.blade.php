@@ -183,25 +183,9 @@
                             </div>
                         </div>
 
-                        <div class="col-12">
-                            <hr class="my-0">
-                        </div>
+                       
 
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Other Details') }}</h5>
-                            <div class="row g-3">
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Category ID') }}</small><strong>{{ $campaign->category_id ?: 'N/A' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sub Category ID') }}</small><strong>{{ $campaign->sub_category_id ?: 'N/A' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sale ID') }}</small><strong>{{ $campaign->sale_id ?: 'N/A' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Post Type') }}</small><strong>{{ $campaign->post_type ?: 'N/A' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Admin Percentage') }}</small><strong>{{ $campaign->admin_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('User Percentage') }}</small><strong>{{ $campaign->user_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Sales Percentage') }}</small><strong>{{ $campaign->sales_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-3"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Percentage') }}</small><strong>{{ $campaign->feedback_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-6"><small class="text-muted d-block">{{ \App\CPU\translate('Created At') }}</small><strong>{{ $campaign->created_at ?: 'N/A' }}</strong></div>
-                                <div class="col-md-6"><small class="text-muted d-block">{{ \App\CPU\translate('Updated At') }}</small><strong>{{ $campaign->updated_at ?: 'N/A' }}</strong></div>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -215,14 +199,6 @@
                     <h5 class="mb-0">{{ \App\CPU\translate('Campaign Controls') }}</h5>
                 </div>
                 <div class="card-body">
-                    <div class="form-group">
-                        <label>{{ \App\CPU\translate('Status') }}</label>
-                        <select name="status" class="form-select form-control change-status" data-id="{{ $campaign->id }}">
-                            @foreach($statusLists as $status)
-                                <option value="{{$status}}" {{ $status == $campaign->status ? 'selected' : '' }}>{{ucwords($status)}}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <div class="form-group mb-2">
                         <small class="text-muted d-block">{{ \App\CPU\translate('Current Status') }}</small>
                         <span class="badge badge-soft-primary text-dark">{{ ucfirst($campaign->status) }}</span>
@@ -239,6 +215,24 @@
                         <small class="text-muted d-block">{{ \App\CPU\translate('Brand') }}</small>
                         <strong>{{ $campaign->brand->name ?? $campaign->brand->username ?? 'N/A' }}</strong>
                     </div>
+
+                     <div class="col-12 mt-3">
+                            <hr class="my-0">
+                        </div>
+
+                    <h5 class="text-primary mb-3 mt-3">{{ \App\CPU\translate('Other Details') }}</h5>
+                            <div class="row g-3">
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Category') }}</small><strong>{{ $campaign->category->name ?? 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Sub Category') }}</small><strong>{{ $campaign->subCategory->name ?? 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Sale') }}</small><strong>{{ $campaign->sale ? $campaign->sale->name . ' (' . $campaign->sale_id . ')' : 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Post Type') }}</small><strong>{{ $campaign->post_type ?: 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Admin Percentage (%)') }}</small><strong>{{ $campaign->admin_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('User Percentage (%)') }}</small><strong>{{ $campaign->user_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Sales Percentage (%)') }}</small><strong>{{ $campaign->sales_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Percentage (%)') }}</small><strong>{{ $campaign->feedback_percentage ?? '0' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Created Date') }}</small><strong>{{ $campaign->created_at ? $campaign->created_at->format('d M Y \a\t g:i A') : 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Updated Date') }}</small><strong>{{ $campaign->updated_at ? $campaign->updated_at->format('d M Y \a\t g:i A') : 'N/A' }}</strong></div>
+                            </div>
                 </div>
             </div>
         </div>

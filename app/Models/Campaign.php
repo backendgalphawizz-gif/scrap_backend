@@ -81,6 +81,16 @@ class Campaign extends Model
         return $this->belongsTo(Seller::class, 'brand_id', 'id')->select('id', 'username', DB::raw('CONCAT(f_name, " " ,l_name) as name'), 'image', 'instagram_username', 'facebook_username');
     }
 
+    public function category()
+    {
+        return $this->belongsTo(BrandCategory::class, 'category_id')->select('id', 'name');
+    }
+
+    public function subCategory()
+    {
+        return $this->belongsTo(BrandCategory::class, 'sub_category_id')->select('id', 'name');
+    }
+
     public function sale()
     {
         return $this->belongsTo(Sale::class, 'sale_id', 'id')->select('id', 'name', 'image');

@@ -75,9 +75,30 @@
 <script src="{{ asset('assets/js/todolist.js') }}"></script>
 <script src="{{ asset('assets/js/jquery.cookie.js') }}"></script>
 <!-- endinject -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('assets/vendors/sweetalert2/sweetalert2.all.min.js') }}"></script>
 @stack('script')
 
 @stack('script_2')
+
+@if(session('success'))
+<script>
+    Swal.fire({ icon: 'success', title: 'Success', text: @json(session('success')), timer: 3000, showConfirmButton: false });
+</script>
+@endif
+@if(session('error'))
+<script>
+    Swal.fire({ icon: 'error', title: 'Error', text: @json(session('error')) });
+</script>
+@endif
+@if(session('warning'))
+<script>
+    Swal.fire({ icon: 'warning', title: 'Warning', text: @json(session('warning')) });
+</script>
+@endif
+@if($errors->any())
+<script>
+    Swal.fire({ icon: 'error', title: 'Validation Error', html: @json(implode('<br>', $errors->all())) });
+</script>
+@endif
 </body>
 </html>
