@@ -42,13 +42,26 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'name'     => ['required', 'string', 'max:40', 'regex:/^[a-zA-Z ]+$/', 'regex:/^(?!.*(.)(\1{3,})).*/'],
+            'email'    => ['required', 'email', 'max:150', 'unique:sales,email'],
+            'mobile'   => ['required', 'digits:10'],
+            'password' => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
+            'image'    => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+        ], [
+            'name.regex'   => 'Name must contain only letters and spaces, with no repeated characters.',
+            'mobile.digits' => 'Mobile number must be exactly 10 digits.',
+            'email.unique' => 'This email is already registered.',
+        ]);
+
         $sale = new Sale;
-        if($request->hasFile('image')) {
+        if ($request->hasFile('image')) {
             $sale->image = ImageManager::upload('profile/', 'png', $request->file('image'));
         }
-        $sale->name = $request->name;
-        $sale->email = $request->email;
-        $sale->mobile = $request->mobile;
+        $sale->name     = $request->name;
+        $sale->email    = $request->email;
+        $sale->mobile   = $request->mobile;
+        $sale->password = bcrypt($request->password);
         $sale->save();
 
         // Set referral_code as RXS-{id} after save

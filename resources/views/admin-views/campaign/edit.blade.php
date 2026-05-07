@@ -250,13 +250,20 @@
                                 <div class="col-md-4"><div class="form-group"><label for="final_reward_for_user">{{ \App\CPU\translate('Final Reward For User')}}</label><input type="number" name="final_reward_for_user" id="final_reward_for_user" class="form-control @error('final_reward_for_user') is-invalid @enderror" step="0.01" value="{{ old('final_reward_for_user', $campaign->final_reward_for_user) }}">@error('final_reward_for_user') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
                                 <div class="col-md-4"><div class="form-group"><label for="feedback_coin">{{ \App\CPU\translate('Feedback Coin')}}</label><input type="number" name="feedback_coin" id="feedback_coin" class="form-control @error('feedback_coin') is-invalid @enderror" step="0.01" value="{{ old('feedback_coin', $campaign->feedback_coin) }}">@error('feedback_coin') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
                                 <div class="col-md-4"><div class="form-group"><label for="daily_budget_cap">{{ \App\CPU\translate('Daily Budget Cap')}}</label><input type="number" name="daily_budget_cap" id="daily_budget_cap" class="form-control @error('daily_budget_cap') is-invalid @enderror" step="0.01" value="{{ old('daily_budget_cap', $campaign->daily_budget_cap) }}">@error('daily_budget_cap') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="total_campaign_budget">{{ \App\CPU\translate('Total Campaign Budget')}}</label><input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control @error('total_campaign_budget') is-invalid @enderror" step="0.01" value="{{ old('total_campaign_budget', $campaign->total_campaign_budget) }}" required>@error('total_campaign_budget') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="campaign_user_budget">{{ \App\CPU\translate('Campaign User Budget')}}</label><input type="number" name="campaign_user_budget" id="campaign_user_budget" class="form-control @error('campaign_user_budget') is-invalid @enderror" step="0.01" value="{{ old('campaign_user_budget', $campaign->campaign_user_budget) }}">@error('campaign_user_budget') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="compign_budget_with_gst">{{ \App\CPU\translate('Campaign Budget With GST')}}</label><input type="number" name="compign_budget_with_gst" id="compign_budget_with_gst" class="form-control @error('compign_budget_with_gst') is-invalid @enderror" step="0.01" value="{{ old('compign_budget_with_gst', $campaign->compign_budget_with_gst) }}">@error('compign_budget_with_gst') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="admin_percentage">{{ \App\CPU\translate('Admin Percentage')}}</label><input type="number" name="admin_percentage" id="admin_percentage" class="form-control @error('admin_percentage') is-invalid @enderror" step="0.01" value="{{ old('admin_percentage', $campaign->admin_percentage) }}">@error('admin_percentage') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="user_percentage">{{ \App\CPU\translate('User Percentage')}}</label><input type="number" name="user_percentage" id="user_percentage" class="form-control @error('user_percentage') is-invalid @enderror" step="0.01" value="{{ old('user_percentage', $campaign->user_percentage) }}">@error('user_percentage') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="sales_percentage">{{ \App\CPU\translate('Sales Percentage')}}</label><input type="number" name="sales_percentage" id="sales_percentage" class="form-control @error('sales_percentage') is-invalid @enderror" step="0.01" value="{{ old('sales_percentage', $campaign->sales_percentage) }}">@error('sales_percentage') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
-                                <div class="col-md-4"><div class="form-group"><label for="feedback_percentage">{{ \App\CPU\translate('Feedback Percentage')}}</label><input type="number" name="feedback_percentage" id="feedback_percentage" class="form-control @error('feedback_percentage') is-invalid @enderror" step="0.01" value="{{ old('feedback_percentage', $campaign->feedback_percentage) }}">@error('feedback_percentage') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="total_campaign_budget">{{ \App\CPU\translate('Total Campaign Budget')}}</label><input type="number" name="total_campaign_budget" id="total_campaign_budget" class="form-control @error('total_campaign_budget') is-invalid @enderror" step="0.01" min="0" value="{{ old('total_campaign_budget', $campaign->total_campaign_budget) }}" required>@error('total_campaign_budget') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                    <div id="gst_summary" class="mt-2 p-2 rounded bg-light border d-none" style="font-size:0.85rem; line-height:1.8;">
+                                        <span class="text-secondary">Campaign Budget:</span> <strong id="gst_base">₹0</strong>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <span class="text-secondary">GST (<span id="gst_rate_label">{{ $campaign_gst_percentage }}</span>%):</span> <strong id="gst_amount" class="text-warning">₹0</strong>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <span class="text-secondary">Total Payable:</span> <strong id="gst_total" class="text-success">₹0</strong>
+                                    </div>
+                                </div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="campaign_user_budget">{{ \App\CPU\translate('Campaign User Budget')}} (₹)</label><input type="number" name="campaign_user_budget" id="campaign_user_budget" class="form-control @error('campaign_user_budget') is-invalid @enderror" step="0.01" value="{{ old('campaign_user_budget', $campaign->campaign_user_budget) }}">@error('campaign_user_budget') <span class="invalid-feedback">{{ $message }}</span> @enderror</div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="admin_percentage">{{ \App\CPU\translate('Admin Percentage')}} (%)</label><input type="number" name="admin_percentage" id="admin_percentage" class="form-control bg-light" step="0.01" value="{{ old('admin_percentage', $campaign->admin_percentage) }}" readonly></div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="user_percentage">{{ \App\CPU\translate('User Percentage')}} (%)</label><input type="number" name="user_percentage" id="user_percentage" class="form-control bg-light" step="0.01" value="{{ old('user_percentage', $campaign->user_percentage) }}" readonly></div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="sales_percentage">{{ \App\CPU\translate('Sales Percentage')}} (%)</label><input type="number" name="sales_percentage" id="sales_percentage" class="form-control bg-light" step="0.01" value="{{ old('sales_percentage', $campaign->sales_percentage) }}" readonly></div></div>
+                                <div class="col-md-4"><div class="form-group"><label for="feedback_percentage">{{ \App\CPU\translate('Feedback Percentage')}} (%)</label><input type="number" name="feedback_percentage" id="feedback_percentage" class="form-control bg-light" step="0.01" value="{{ old('feedback_percentage', $campaign->feedback_percentage) }}" readonly></div></div>
                             </div>
                         </div>
 
@@ -419,6 +426,34 @@
 
     $(document).ready(function() {
         syncCityOptions();
+    });
+</script>
+<script>
+    // GST auto-calculation
+    const GST_RATE = {{ $campaign_gst_percentage }};
+
+    function formatINR(amount) {
+        return '₹' + parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateGstSummary() {
+        const budget = parseFloat($('#total_campaign_budget').val());
+        if (!budget || budget <= 0) {
+            $('#gst_summary').addClass('d-none');
+            return;
+        }
+        const gstAmount = budget * GST_RATE / 100;
+        const totalPayable = budget + gstAmount;
+        $('#gst_base').text(formatINR(budget));
+        $('#gst_amount').text(formatINR(gstAmount));
+        $('#gst_total').text(formatINR(totalPayable));
+        $('#gst_summary').removeClass('d-none');
+    }
+
+    $('#total_campaign_budget').on('input change', updateGstSummary);
+
+    $(document).ready(function() {
+        updateGstSummary();
     });
 </script>
 @endpush

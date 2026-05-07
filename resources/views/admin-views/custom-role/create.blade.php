@@ -93,6 +93,41 @@
                             </div>
                             <div class="col-sm-6 col-lg-3">
                                 <div class="form-group d-flex gap-2">
+                                    <input type="checkbox" name="modules[]" value="feedback_management" class="module-permission" id="feedback_management">
+                                    <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
+                                        for="feedback_management">{{\App\CPU\translate('Feedback')}}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="form-group d-flex gap-2">
+                                    <input type="checkbox" name="modules[]" value="voucher_management" class="module-permission" id="voucher_management">
+                                    <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
+                                        for="voucher_management">{{\App\CPU\translate('Voucher Manage')}}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="form-group d-flex gap-2">
+                                    <input type="checkbox" name="modules[]" value="notification_management" class="module-permission" id="notification_management">
+                                    <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
+                                        for="notification_management">{{\App\CPU\translate('Notification')}}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="form-group d-flex gap-2">
+                                    <input type="checkbox" name="modules[]" value="activity_logs" class="module-permission" id="activity_logs">
+                                    <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
+                                        for="activity_logs">{{\App\CPU\translate('Activity Logs')}}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="form-group d-flex gap-2">
+                                    <input type="checkbox" name="modules[]" value="support_management" class="module-permission" id="support_management">
+                                    <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
+                                        for="support_management">{{\App\CPU\translate('Support Chat')}}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="form-group d-flex gap-2">
                                     <input type="checkbox" name="modules[]" value="report_management" class="module-permission" id="report_management">
                                     <label class="title-color mb-0" style="{{Session::get('direction') === "rtl" ? 'margin-right: 1.25rem;' : ''}};"
                                         for="report_management">{{\App\CPU\translate('report_management')}}</label>

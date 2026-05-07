@@ -610,4 +610,13 @@
   'Edit Brand Category' => 'Edit Brand Category',
   'View User' => 'View User',
   'Any' => 'Any',
+  'Admin Percentage (%)' => 'Admin Percentage (%)',
+  'User Percentage (%)' => 'User Percentage (%)',
+  'Sales Percentage (%)' => 'Sales Percentage (%)',
+  'Feedback Percentage (%)' => 'Feedback Percentage (%)',
+  'Created Date' => 'Created Date',
+  'Updated Date' => 'Updated Date',
+  'No activity logs found' => 'No activity logs found',
+  'Voucher Manage' => 'Voucher Manage',
+  'Support Chat' => 'Support Chat',
 );

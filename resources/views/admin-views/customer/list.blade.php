@@ -385,11 +385,11 @@
                                 </td>
                                 <td>
                                     @if($customer->coinWallet)
-                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
+                                        <label class=" text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
                                             {{$customer->coinWallet?->balance ?? '0.00'}} {{\App\CPU\translate('Coins')}}
                                         </label>
                                     @else
-                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
+                                        <label class=" text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
                                             {{'0.00'}} {{\App\CPU\translate('Coins')}}
                                         </label>
                                     @endif
@@ -406,7 +406,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
+                                    <label class="text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
                                         {{$customer->campaigns?->count()}}
                                     </label>
                                 </td>

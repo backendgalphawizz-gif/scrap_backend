@@ -287,8 +287,17 @@ class ReportController extends Controller
                 return $query->where(function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
                         ->orWhere('log_name', 'like', "%{$search}%")
-                        ->orWhereHas('causer', function ($userQuery) use ($search) {
-                            $userQuery->where('name', 'like', "%{$search}%");
+                        ->orWhereHasMorph('causer', [
+                            \App\Models\Admin::class,
+                            \App\Models\Sale::class,
+                            \App\Models\User::class,
+                        ], function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHasMorph('causer', [
+                            \App\Models\Seller::class,
+                        ], function ($uq) use ($search) {
+                            $uq->where('username', 'like', "%{$search}%");
                         });
                 });
             })

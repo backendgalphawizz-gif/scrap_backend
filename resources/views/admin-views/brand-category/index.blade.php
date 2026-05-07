@@ -61,34 +61,38 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.brand-category.index') }}" class="row g-2">
-                <div class="col-md-2">
+            <form method="GET" action="{{ route('admin.brand-category.index') }}" class="row g-2 align-items-center">
+                <div class="col-6 col-md-1">
                     <input type="text" name="id" value="{{ request('id') }}" class="form-control" placeholder="ID">
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-2">
                     <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Name">
                 </div>
                 <div class="col-md-3">
-                    <select name="parent_id" class="form-control">
+                    <select name="parent_id" class="form-select">
                         <option value="">All Types</option>
                         <option value="0" {{ request('parent_id') === '0' ? 'selected' : '' }}>Root Category</option>
                         @foreach($parents as $parent)
                             <option value="{{ $parent->id }}" {{ request('parent_id') == $parent->id ? 'selected' : '' }}>
-                                Sub Category of {{ $parent->name }}
+                                Sub of {{ $parent->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select name="status" class="form-control">
+                    <select name="status" class="form-select">
                         <option value="">All Status</option>
                         <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
                         <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                    <a href="{{ route('admin.brand-category.index') }}" class="btn btn-outline-secondary">Reset</a>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="mdi mdi-filter-variant me-1"></i> Filter
+                    </button>
+                    <a href="{{ route('admin.brand-category.index') }}" class="btn btn-outline-secondary flex-fill">
+                        <i class="mdi mdi-close me-1"></i> Reset
+                    </a>
                 </div>
             </form>
         </div>

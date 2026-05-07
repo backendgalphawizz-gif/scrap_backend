@@ -68,7 +68,8 @@ class CampaignController extends Controller
         $guidelineOptions = $this->getCampaignGuidelineOptions();
         $states = DB::table('states')->where('country_id', 101)->orderBy('name')->get(['state_id', 'name']);
         $cities = DB::table('cities')->orderBy('name')->get(['city_id', 'name', 'state_id']);
-        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions', 'categories', 'states', 'cities'));
+        $campaign_gst_percentage = (float) Helpers::get_business_settings('campaign_gst_percentage');
+        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions', 'categories', 'states', 'cities', 'campaign_gst_percentage'));
     }
 
     public function store(Request $request)
@@ -133,7 +134,7 @@ class CampaignController extends Controller
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->reward_per_user;
 
-        $campaign->total_user_required = $request->total_user_required;
+        $campaign->total_user_required = $request->number_of_post;
         $campaign->reward_per_user = $request->reward_per_user;
         // $campaign->reward_per_post = $request->reward_per_post;
         $campaign->number_of_post = $request->number_of_post;
@@ -224,7 +225,8 @@ class CampaignController extends Controller
         $guidelineOptions = $this->getCampaignGuidelineOptions();
         $states = DB::table('states')->where('country_id', 101)->orderBy('name')->get(['state_id', 'name']);
         $cities = DB::table('cities')->orderBy('name')->get(['city_id', 'name', 'state_id']);
-        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions', 'categories', 'states', 'cities'));
+        $campaign_gst_percentage = (float) Helpers::get_business_settings('campaign_gst_percentage');
+        return view('admin-views.campaign.edit', compact('campaign', 'sellers', 'guidelineOptions', 'categories', 'states', 'cities', 'campaign_gst_percentage'));
     }
 
     public function update(Request $request, $id)
@@ -294,6 +296,7 @@ class CampaignController extends Controller
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->coins ?? $campaign->coins;
         $campaign->reward_per_user = $request->reward_per_user;
+        $campaign->total_user_required = $request->number_of_post;
         $campaign->number_of_post = $request->number_of_post;
         $campaign->used_post = $request->used_post ?? $campaign->used_post;
         $campaign->daily_budget_cap = $request->filled('daily_budget_cap') ? $request->daily_budget_cap : null;
