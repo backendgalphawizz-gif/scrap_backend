@@ -215,6 +215,8 @@ Route::group(['prefix' => 'brand'], function () {
     Route::delete('support-tickets/{id}', [BrandSupportTicketController::class, 'destroy']);
     Route::post('support-tickets/{id}/messages', [BrandSupportTicketController::class, 'sendMessage']);
 
+    Route::get('campaign/has-campaign-last-100-days', [SellerDashboardController::class, 'hasCampaignInLast100Days']);
+
 });
 
 Route::group(['prefix' => 'sale'], function () {

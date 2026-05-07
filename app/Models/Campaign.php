@@ -77,7 +77,7 @@ class Campaign extends Model
 
     public function brand()
     {
-        return $this->belongsTo(Seller::class, 'brand_id', 'id')->select('id', 'username', DB::raw('CONCAT(f_name, " " ,l_name) as name'), 'image');
+        return $this->belongsTo(Seller::class, 'brand_id', 'id')->select('id', 'username', DB::raw('CONCAT(f_name, " " ,l_name) as name'), 'image', 'instagram_username', 'facebook_username');
     }
 
     public function sale()
