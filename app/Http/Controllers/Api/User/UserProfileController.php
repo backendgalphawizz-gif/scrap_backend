@@ -116,15 +116,19 @@ class UserProfileController extends Controller
             $user->upi_id = $request->upi_id;
             $user->upi_status = 'Submitted';
         }
-        if (($request->has('bank_name') || $request->has('ifsc_code')) && $user->bank_status !== 'Verified') {
-            $user->bank_detail = json_encode([
-                'bank_name' => $request->bank_name,
-                'ifsc_code' => $request->ifsc_code,
-                'account_number' => $request->account_number,
-                'branch_name' => $request->branch_name
-            ]);
-
-            $user->bank_status = $request->bank_name != '' ? 'Submitted' : 'Not Submitted';
+        $bankFields = ['bank_name', 'ifsc_code', 'account_number', 'branch_name'];
+        $hasBankField = collect($bankFields)->some(fn ($f) => $request->has($f));
+        if ($hasBankField && $user->bank_status !== 'Verified') {
+            $existing = is_array(json_decode($user->bank_detail ?? '{}', true))
+                ? json_decode($user->bank_detail, true)
+                : [];
+            $merged = array_merge($existing, array_filter(
+                $request->only($bankFields),
+                fn ($v) => $v !== null && $v !== ''
+            ));
+            $user->bank_detail = json_encode($merged);
+            $hasAnyValue = collect($merged)->some(fn ($v) => trim((string) $v) !== '');
+            $user->bank_status = $hasAnyValue ? 'Submitted' : 'Not Submitted';
         }
 
         $kycDirty = $user->isDirty();
