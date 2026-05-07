@@ -288,6 +288,16 @@ class DashboardController extends Controller
                 $campaign->feedback_coin = 0;
             }
 
+            if ($paymentSplit->user_referral_percentage) {
+                $campaign->user_referral_percentage = $paymentSplit->user_referral_percentage;
+                $referral_reward = ($request->reward_per_user * $paymentSplit->user_referral_percentage) / 100;
+                $campaign->referral_coin = $referral_reward / $upi_value;
+            } else {
+                $campaign->user_referral_percentage = 0;
+                $campaign->referral_coin = 0;
+            }
+            $campaign->repeat_brand_percentage = $paymentSplit->repeat_brand_percentage ?? 0;
+
             if($paymentSplit->user_percentage){
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
                 $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
@@ -319,6 +329,30 @@ class DashboardController extends Controller
                 'commission_amount' => $commissionAmount,
                 'reference_type' => 'campaign_budget'
             ]);
+
+            // Repeat brand bonus: extra commission if same salesperson brought same brand within 100 days
+            $repeatBrandRate = $paymentSplit->repeat_brand_percentage ?? 0;
+            if ($repeatBrandRate > 0) {
+                $saleAgent = Sale::find($salesId);
+                $isRepeatBrand = $saleAgent && Campaign::where('brand_id', $request->brand_id)
+                    ->where('sales_referal_code', $saleAgent->referral_code)
+                    ->where('id', '!=', $campaign->id)
+                    ->where('created_at', '>=', now()->subDays(100))
+                    ->exists();
+
+                if ($isRepeatBrand) {
+                    $repeatAmount = ($campaign->total_campaign_budget * $repeatBrandRate) / 100;
+                    SaleCommissionLedger::create([
+                        'sale_id'           => $salesId,
+                        'brand_id'          => $request->brand_id,
+                        'campaign_id'       => $campaign->id,
+                        'amount'            => $campaign->total_campaign_budget,
+                        'commission_rate'   => $repeatBrandRate,
+                        'commission_amount' => $repeatAmount,
+                        'reference_type'    => 'repeat_brand',
+                    ]);
+                }
+            }
         } else {
             return response()->json([
                 'status' => false,

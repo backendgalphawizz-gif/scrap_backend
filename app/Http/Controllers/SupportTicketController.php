@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use Illuminate\Http\Request;
 use App\Models\SupportTicketMessage;
+use App\CPU\Helpers;
 class SupportTicketController extends Controller
 {
 public function index(Request $request)
@@ -64,6 +65,19 @@ public function reply(Request $request, $id)
         'sender_type' => 'admin',
         'body' => $request->replay,
     ]);
+
+    // Send Firebase notification to ticket owner
+    $ticket = SupportTicket::with(['user', 'seller'])->find($id);
+    if ($ticket) {
+        $title = 'Support Ticket Reply';
+        $body  = 'Admin has replied to your support ticket: ' . $ticket->subject;
+
+        if ($ticket->user && $ticket->user->fcm_id) {
+            Helpers::send_push_notif_to_topic($ticket->user->fcm_id, $title, $body);
+        } elseif ($ticket->seller && $ticket->seller->cm_firebase_token) {
+            Helpers::send_push_notif_to_topic($ticket->seller->cm_firebase_token, $title, $body);
+        }
+    }
 
     return back()->with('success', 'Reply sent successfully');
 }

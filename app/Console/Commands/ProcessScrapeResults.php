@@ -276,6 +276,37 @@ class ProcessScrapeResults extends Command
         $rewardTransaction->description = 'Campaign reward released for ' . ($transaction->campaign->title ?? 'campaign');
         $rewardTransaction->save();
 
+        // Referral bonus: reward the user who referred this user when their post is approved
+        $referralCoin = $transaction->campaign->referral_coin ?? 0;
+        if ($referralCoin > 0) {
+            $postOwner = \App\Models\User::find($transaction->user_id);
+            if ($postOwner && !empty($postOwner->friends_code)) {
+                $referrer = \App\Models\User::where('referral_code', $postOwner->friends_code)->first();
+                if ($referrer) {
+                    $referrerWallet = CoinWallet::firstOrCreate(
+                        ['user_id' => $referrer->id],
+                        ['balance' => 0]
+                    );
+                    $referrerWallet->balance += $referralCoin;
+                    $referrerWallet->save();
+
+                    CoinTransaction::create([
+                        'coin_wallet_id'   => $referrerWallet->id,
+                        'transaction_id'   => 'REF-' . $transaction->id,
+                        'campaign_id'      => $transaction->campaign_id,
+                        'coin'             => $referralCoin,
+                        'amount'           => 0,
+                        'tds'              => 0,
+                        'convertion_rate'  => 0,
+                        'type'             => 'credit',
+                        'status'           => 'completed',
+                        'transaction_type' => 'referral_reward',
+                        'description'      => 'Referral bonus for campaign: ' . ($transaction->campaign->title ?? ''),
+                    ]);
+                }
+            }
+        }
+
         $transaction->status = CampaignTransaction::STATUS_COMPLETED;
         $transaction->save();
     }

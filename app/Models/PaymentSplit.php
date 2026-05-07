@@ -10,6 +10,8 @@ class PaymentSplit extends Model
         'sales_percentage',
         'admin_percentage',
         'feedback_percentage',
+        'repeat_brand_percentage',
+        'user_referral_percentage',
     ];
 }
 // Updated

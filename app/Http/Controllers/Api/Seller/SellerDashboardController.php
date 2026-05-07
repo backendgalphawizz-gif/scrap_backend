@@ -455,6 +455,10 @@ class SellerDashboardController extends Controller
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
             $campaign->sales_referal_code = $request->sales_referal_code;
+            if ($request->filled('sales_referal_code')) {
+                $saleRecord = Sale::where('referral_code', trim((string) $request->sales_referal_code))->first();
+                $campaign->sale_id = $saleRecord?->id;
+            }
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
@@ -466,6 +470,16 @@ class SellerDashboardController extends Controller
                 $campaign->feedback_percentage = 0;
                 $campaign->feedback_coin = 0;
             }
+
+            if ($paymentSplit->user_referral_percentage) {
+                $campaign->user_referral_percentage = $paymentSplit->user_referral_percentage;
+                $referral_reward = ($request->reward_per_user * $paymentSplit->user_referral_percentage) / 100;
+                $campaign->referral_coin = $referral_reward / $upi_value;
+            } else {
+                $campaign->user_referral_percentage = 0;
+                $campaign->referral_coin = 0;
+            }
+            $campaign->repeat_brand_percentage = $paymentSplit->repeat_brand_percentage ?? 0;
 
             if($paymentSplit->user_percentage){
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
