@@ -849,4 +849,56 @@ class SellerDashboardController extends Controller
         ]);
     }
 
+    public function hasCampaignInLast100Days(Request $request)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => []
+            ], 401);
+        }
+
+        $seller = $data['data'];
+        $brand = Seller::find($seller['id']);
+
+        if (!$brand) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Brand not found',
+                'data' => false
+            ], 404);
+        }
+
+        // Find sale person using brand's friends_code matching sale's referral_code
+        $salePerson = Sale::where('referral_code', $brand->friends_code)->first();
+
+        if (!$salePerson) {
+            return response()->json([
+                'status' => true,
+                'message' => 'No associated sale person found',
+                'data' => false
+            ]);
+        }
+
+        $total = Campaign::where('brand_id', $brand->id)
+            ->where('sale_id', $salePerson->id);
+
+        
+        $exists = $total
+            ->where('created_at', '>=', now()->subDays(100))
+            ->exists();
+
+        $count = $total->count();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Campaign check completed',
+            'data' => $exists,
+            'total' => $count
+        ]);
+    }
+
 }

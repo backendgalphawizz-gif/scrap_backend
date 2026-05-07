@@ -535,7 +535,7 @@ class DashboardController extends Controller
                     'phone' => $request->mobile,
                     'email' => $request->email,
                     'referral_code' => Helpers::generate_referral_code(),
-                    'friends_code' => $request->referral_code ?? '',
+                    'friends_code' => $data['referral_code'] ?? null,
                     'city' => $request->city,
                     'sale_id' => $sale['id'],
                     'state' => $request->state,
