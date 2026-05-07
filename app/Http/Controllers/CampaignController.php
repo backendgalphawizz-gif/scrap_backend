@@ -66,7 +66,9 @@ class CampaignController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
         $guidelineOptions = $this->getCampaignGuidelineOptions();
-        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions', 'categories'));
+        $states = DB::table('states')->where('country_id', 101)->orderBy('name')->get(['state_id', 'name']);
+        $cities = DB::table('cities')->orderBy('name')->get(['city_id', 'name', 'state_id']);
+        return view('admin-views.campaign.add', compact('sellers', 'guidelineOptions', 'categories', 'states', 'cities'));
     }
 
     public function store(Request $request)
@@ -135,7 +137,7 @@ class CampaignController extends Controller
         $campaign->reward_per_user = $request->reward_per_user;
         // $campaign->reward_per_post = $request->reward_per_post;
         $campaign->number_of_post = $request->number_of_post;
-        $campaign->daily_budget_cap = $request->daily_budget_cap;
+        $campaign->daily_budget_cap = $request->filled('daily_budget_cap') ? $request->daily_budget_cap : null;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
         $campaign->age_range = $ageRange;
         $campaign->admin_percentage = $paymentSplit->admin_percentage;
@@ -284,7 +286,7 @@ class CampaignController extends Controller
         $campaign->reward_per_user = $request->reward_per_user;
         $campaign->number_of_post = $request->number_of_post;
         $campaign->used_post = $request->used_post ?? $campaign->used_post;
-        $campaign->daily_budget_cap = $request->daily_budget_cap;
+        $campaign->daily_budget_cap = $request->filled('daily_budget_cap') ? $request->daily_budget_cap : null;
         $campaign->total_campaign_budget = $request->total_campaign_budget;
         $campaign->age_range = $ageRange;
         $campaign->sales_referal_code = $request->sales_referal_code;
