@@ -619,4 +619,6 @@
   'No activity logs found' => 'No activity logs found',
   'Voucher Manage' => 'Voucher Manage',
   'Support Chat' => 'Support Chat',
+  'Landing Page' => 'Landing Page',
+  'Landing Page Management' => 'Landing Page Management',
 );
