@@ -58,6 +58,13 @@ Route::post('/optimize-clear', function () {
 
 Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+
+// Landing Page (public — no auth required)
+Route::prefix('landing-page')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\LandingPageController::class, 'index']);
+    Route::get('/{section}', [\App\Http\Controllers\Api\LandingPageController::class, 'section']);
+});
+
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 

@@ -178,6 +178,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/business-settings/popup-banner', [DashboardController::class, 'popupBanner'])->name('admin.business-settings.popup-banner');
     Route::post('/business-settings/popup-banner-update', [DashboardController::class, 'popupBannerUpdate'])->name('admin.business-settings.popup-banner-update');
 
+    // Landing Page Management
+    Route::get('/landing-page', [\App\Http\Controllers\LandingPageController::class, 'index'])->name('admin.landing-page.index');
+    Route::post('/landing-page/{section}', [\App\Http\Controllers\LandingPageController::class, 'update'])->name('admin.landing-page.update');
+
     // Notification & task system
     Route::get('/dashboard/notification-counts', [DashboardController::class, 'notificationCounts'])->name('admin.dashboard.notification-counts');
     Route::get('/notifications/feed', [DashboardController::class, 'notificationFeed'])->name('admin.notifications.feed');

@@ -3,28 +3,28 @@
 @section('title', \App\CPU\translate('Sale Edit'))
 
 @push('css_or_js')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        .sale-edit-header {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: #fff;
-            border-radius: 14px;
-            padding: 1rem 1.25rem;
-        }
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .sale-edit-header {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: #fff;
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+    }
 
-        .sale-edit-section .card-header {
-            background: #f8fafc;
-            border-bottom: 1px solid #edf2f7;
-        }
+    .sale-edit-section .card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+    }
 
-        .sale-avatar-preview {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid #dbe4f0;
-        }
-    </style>
+    .sale-avatar-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #dbe4f0;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -89,7 +89,7 @@
                                 <input type="file" name="image" id="saleImage" class="form-control @error('image') is-invalid @enderror" accept="image/*">
                                 @error('image') <span class="invalid-feedback">{{ $message }}</span> @enderror
                             </div>
-                           
+
                             <div class="col-md-4">
                                 <label for="status" class="form-label">{{ \App\CPU\translate('status') }}</label>
                                 <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
@@ -247,24 +247,24 @@
 @endsection
 
 @push('script')
-    <script>
-        $('#saleImage').change(function () {
-            readURL(this, '#saleImagePreview');
-        });
+<script>
+    $('#saleImage').change(function() {
+        readURL(this, '#saleImagePreview');
+    });
 
-        $('#panImageUploader').change(function () {
-            readURL(this, '#panImagePreview');
-            readURL(this, '#panImageModalImg');
-        });
+    $('#panImageUploader').change(function() {
+        readURL(this, '#panImagePreview');
+        readURL(this, '#panImageModalImg');
+    });
 
-        function readURL(input, targetId) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $(targetId).attr('src', e.target.result);
-                }
-                reader.readAsDataURL(input.files[0]);
+    function readURL(input, targetId) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $(targetId).attr('src', e.target.result);
             }
+            reader.readAsDataURL(input.files[0]);
         }
-    </script>
+    }
+</script>
 @endpush
