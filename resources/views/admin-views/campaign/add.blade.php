@@ -10,6 +10,14 @@
 @php
     $selectedCategoryId = old('category_id');
     $selectedSubCategoryId = old('sub_category_id');
+    $stateIdToName = $states->pluck('name', 'state_id');
+    $cityDataByState = [];
+    foreach ($cities as $city) {
+        $stateName = $stateIdToName[$city->state_id] ?? null;
+        if ($stateName) {
+            $cityDataByState[$stateName][] = $city->name;
+        }
+    }
 @endphp
 <div class="content-wrapper">
     <div class="page-header">
@@ -185,7 +193,7 @@
 
                                 <div class="form-group">
                                     <label for="daily_budget_cap">{{ \App\CPU\translate('Daily Budget Cap')}}</label>
-                                    <input type="number" name="daily_budget_cap" id="daily_budget_cap" class="form-control" step="0.01" value="{{ old('daily_budget_cap') }}" required>
+                                    <input type="number" name="daily_budget_cap" id="daily_budget_cap" class="form-control" step="0.01" value="{{ old('daily_budget_cap') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -201,6 +209,7 @@
                                     <label for="gender">{{ \App\CPU\translate('Gender')}}</label>
                                     <select name="gender" id="gender" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        <option value="both" {{ old('gender') === 'both' ? 'selected' : '' }}>{{ \App\CPU\translate('All')}}</option>
                                         <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>{{ \App\CPU\translate('Male')}}</option>
                                         <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>{{ \App\CPU\translate('Female')}}</option>
                                     </select>
@@ -232,43 +241,21 @@
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
                                     <select name="state" id="state" class="form-select form-control" required>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                        <option value="Andhra Pradesh" {{ old('state') === 'Andhra Pradesh' ? 'selected' : '' }}>Andhra Pradesh</option>
-                                        <option value="Arunachal Pradesh" {{ old('state') === 'Arunachal Pradesh' ? 'selected' : '' }}>Arunachal Pradesh</option>
-                                        <option value="Assam" {{ old('state') === 'Assam' ? 'selected' : '' }}>Assam</option>
-                                        <option value="Bihar" {{ old('state') === 'Bihar' ? 'selected' : '' }}>Bihar</option>
-                                        <option value="Chhattisgarh" {{ old('state') === 'Chhattisgarh' ? 'selected' : '' }}>Chhattisgarh</option>
-                                        <option value="Goa" {{ old('state') === 'Goa' ? 'selected' : '' }}>Goa</option>
-                                        <option value="Gujarat" {{ old('state') === 'Gujarat' ? 'selected' : '' }}>Gujarat</option>
-                                        <option value="Haryana" {{ old('state') === 'Haryana' ? 'selected' : '' }}>Haryana</option>
-                                        <option value="Himachal Pradesh" {{ old('state') === 'Himachal Pradesh' ? 'selected' : '' }}>Himachal Pradesh</option>
-                                        <option value="Jharkhand" {{ old('state') === 'Jharkhand' ? 'selected' : '' }}>Jharkhand</option>
-                                        <option value="Karnataka" {{ old('state') === 'Karnataka' ? 'selected' : '' }}>Karnataka</option>
-                                        <option value="Kerala" {{ old('state') === 'Kerala' ? 'selected' : '' }}>Kerala</option>
-                                        <option value="Madhya Pradesh" {{ old('state') === 'Madhya Pradesh' ? 'selected' : '' }}>Madhya Pradesh</option>
-                                        <option value="Maharashtra" {{ old('state') === 'Maharashtra' ? 'selected' : '' }}>Maharashtra</option>
-                                        <option value="Manipur" {{ old('state') === 'Manipur' ? 'selected' : '' }}>Manipur</option>
-                                        <option value="Meghalaya" {{ old('state') === 'Meghalaya' ? 'selected' : '' }}>Meghalaya</option>
-                                        <option value="Mizoram" {{ old('state') === 'Mizoram' ? 'selected' : '' }}>Mizoram</option>
-                                        <option value="Nagaland" {{ old('state') === 'Nagaland' ? 'selected' : '' }}>Nagaland</option>
-                                        <option value="Odisha" {{ old('state') === 'Odisha' ? 'selected' : '' }}>Odisha</option>
-                                        <option value="Punjab" {{ old('state') === 'Punjab' ? 'selected' : '' }}>Punjab</option>
-                                        <option value="Rajasthan" {{ old('state') === 'Rajasthan' ? 'selected' : '' }}>Rajasthan</option>
-                                        <option value="Sikkim" {{ old('state') === 'Sikkim' ? 'selected' : '' }}>Sikkim</option>
-                                        <option value="Tamil Nadu" {{ old('state') === 'Tamil Nadu' ? 'selected' : '' }}>Tamil Nadu</option>
-                                        <option value="Telangana" {{ old('state') === 'Telangana' ? 'selected' : '' }}>Telangana</option>
-                                        <option value="Tripura" {{ old('state') === 'Tripura' ? 'selected' : '' }}>Tripura</option>
-                                        <option value="Uttar Pradesh" {{ old('state') === 'Uttar Pradesh' ? 'selected' : '' }}>Uttar Pradesh</option>
-                                        <option value="Uttarakhand" {{ old('state') === 'Uttarakhand' ? 'selected' : '' }}>Uttarakhand</option>
-                                        <option value="West Bengal" {{ old('state') === 'West Bengal' ? 'selected' : '' }}>West Bengal</option>
+                                        <option value="Any" {{ old('state') === 'Any' ? 'selected' : '' }}>Any</option>
+                                        @foreach($states as $state)
+                                            <option value="{{ $state->name }}" {{ old('state') === $state->name ? 'selected' : '' }}>{{ $state->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="city">{{ \App\CPU\translate('City')}}</label>
-                                    <div id="city">
-                                        <input type="text" name="city" class="form-control" value="{{ old('city') }}" required>
-                                    </div>
+                                    <select name="city" id="city" class="form-select form-control" required>
+                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
+                                        <option value="Any" {{ old('city') === 'Any' ? 'selected' : '' }}>Any</option>
+                                    </select>
+                                    <input type="hidden" id="preselected_city" value="{{ old('city') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -345,16 +332,17 @@
 
 @push('script')
 <script>
-    const categoryData = @json(
-        $categories->map(function ($category) {
+    @php
+        $categoryDataForJs = $categories->map(function ($category) {
             return [
                 'id' => $category->id,
                 'children' => $category->childes->map(function ($child) {
                     return ['id' => $child->id, 'name' => $child->name];
                 })->values(),
             ];
-        })->values()
-    );
+        })->values();
+    @endphp
+    const categoryData = @json($categoryDataForJs);
     let selectedSubCategoryId = @json((string) $selectedSubCategoryId);
 
     function syncSubCategoryOptions() {
@@ -455,51 +443,32 @@
         }
     }
 </script>
-<!-- Comment to track state selection for city dropdown -->
 <script>
-    const cityData = {
-        'Andhra Pradesh': ['Hyderabad', 'Visakhapatnam', 'Vijayawada', 'Nellore'],
-        'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Papumpare'],
-        'Assam': ['Guwahati', 'Silchar', 'Dibruganj'],
-        'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur'],
-        'Chhattisgarh': ['Raipur', 'Bilaspur', 'Durg'],
-        'Goa': ['Panaji', 'Margao', 'Vasco da Gama'],
-        'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot'],
-        'Haryana': ['Faridabad', 'Gurgaon', 'Hisar', 'Rohtak'],
-        'Himachal Pradesh': ['Shimla', 'Solan', 'Mandi'],
-        'Jharkhand': ['Ranchi', 'Dhanbad', 'Giridih'],
-        'Karnataka': ['Bangalore', 'Mysore', 'Mangalore', 'Belgaum'],
-        'Kerala': ['Kochi', 'Thiruvananthapuram', 'Kozhikode'],
-        'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur'],
-        'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Aurangabad'],
-        'Manipur': ['Imphal', 'Bishnupur'],
-        'Meghalaya': ['Shillong', 'Tura'],
-        'Mizoram': ['Aizawl', 'Lunglei'],
-        'Nagaland': ['Kohima', 'Dimapur'],
-        'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela'],
-        'Punjab': ['Chandigarh', 'Amritsar', 'Ludhiana', 'Jalandhar'],
-        'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota'],
-        'Sikkim': ['Gangtok', 'Pelling'],
-        'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem'],
-        'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad'],
-        'Tripura': ['Agartala', 'Udaipur'],
-        'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra'],
-        'Uttarakhand': ['Dehradun', 'Haridwar', 'Nainital'],
-        'West Bengal': ['Kolkata', 'Darjeeling', 'Asansol']
-    };
+    const cityData = @json($cityDataByState);
 
-    $('#state').change(function() {
-        let state = $(this).val();
-        let citySelect = $('#city');
+    function syncCityOptions() {
+        const state = $('#state').val();
+        const selectedCity = $('#preselected_city').val();
+        const citySelect = $('#city');
+        citySelect.empty();
+        citySelect.append(`<option value="">{{ \App\CPU\translate('Select')}}</option>`);
+        citySelect.append(`<option value="Any" ${selectedCity === 'Any' ? 'selected' : ''}>Any</option>`);
 
         if (state && cityData[state]) {
-            citySelect.replaceWith(`
-                    <select name="city" id="city" class="form-control" required>
-                        <option value="">{{ \App\CPU\translate('Select')}}</option>
-                        ${cityData[state].map(city => `<option value="${city}">${city}</option>`).join('')}
-                    </select>
-                `);
+            cityData[state].forEach(function(city) {
+                const selectedAttr = city === selectedCity ? 'selected' : '';
+                citySelect.append(`<option value="${city}" ${selectedAttr}>${city}</option>`);
+            });
         }
+    }
+
+    $('#state').on('change', function() {
+        $('#preselected_city').val('');
+        syncCityOptions();
+    });
+
+    $(document).ready(function() {
+        syncCityOptions();
     });
 </script>
 @endpush

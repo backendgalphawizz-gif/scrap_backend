@@ -207,11 +207,13 @@
                         </div>
                         <div class="col-lg-4">
                             <label class="d-block mb-2">{{ \App\CPU\translate('pan_image') }}</label>
-                            <img class="img-fluid img-thumbnail"
-                                style="max-width: 240px;"
-                                src="{{ $sale->pan_image }}"
-                                alt="PAN Image"
-                                onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#panImageModal">
+                                <img class="img-fluid img-thumbnail"
+                                    style="max-width: 240px; cursor: pointer;"
+                                    src="{{ $sale->pan_image }}"
+                                    alt="PAN Image"
+                                    onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -221,6 +223,24 @@
                 <a href="{{ route('admin.sale.list') }}" class="btn btn-primary px-4">
                     {{ \App\CPU\translate('back') }}
                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- PAN Image Modal --}}
+<div class="modal fade" id="panImageModal" tabindex="-1" role="dialog" aria-labelledby="panImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="panImageModalLabel">{{ \App\CPU\translate('pan_image') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img class="img-fluid" style="min-width: 450px;"
+                    src="{{ $sale->pan_image }}"
+                    alt="PAN Image"
+                    onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
             </div>
         </div>
     </div>
