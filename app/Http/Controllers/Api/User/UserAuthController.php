@@ -196,10 +196,6 @@ class UserAuthController extends Controller
             $user->device_type = $request->device_type;
             $user->save();
 
-            if(User::where('referral_code', $request->referral_code)->first()) {
-
-            }
-
             return response()->json([
                 'status' => true,
                 'message' => 'Registration successful. Please login to continue.',
