@@ -162,7 +162,7 @@
                             <td>{{\App\CPU\BackEndHelper::set_symbol(\App\CPU\BackEndHelper::usd_to_currency($transaction['delivery_charge']))}}</td>
                             <td>{{str_replace('_',' ',$transaction['payment_method'])}}</td>
                             <td>{{\App\CPU\BackEndHelper::set_symbol(\App\CPU\BackEndHelper::usd_to_currency($transaction['tax']))}}</td>
-                            <td>{{ date('d M Y',strtotime($transaction['created_at'])) }}</td>
+                            <td>{{ date('d/m/Y',strtotime($transaction['created_at'])) }}</td>
                             <td>
                                 @if($transaction['status'] == 'disburse')
                                     <span class="badge badge-soft-success">

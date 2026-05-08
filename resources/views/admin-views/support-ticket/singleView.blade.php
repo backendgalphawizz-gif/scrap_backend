@@ -81,7 +81,7 @@
                             {{ $ticket->subject }}
                         </p>
                         <small class="text-muted">
-                            {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
+                            {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/m/Y h:i A') }}
                         </small>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                             {{ $message->body }}
                         </p>
                         <small class="text-muted">
-                            {{ $message->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
+                            {{ $message->created_at->timezone('Asia/Kolkata')->format('d/m/Y h:i A') }}
                         </small>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
                             {{ $message->body }}
                         </p>
                         <small style="opacity: 0.8;">
-                            {{ $message->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
+                            {{ $message->created_at->timezone('Asia/Kolkata')->format('d/m/Y h:i A') }}
                         </small>
                     </div>
                 </div>

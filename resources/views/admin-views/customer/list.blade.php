@@ -396,13 +396,16 @@
                                 </td>
                                 <td>
                                     @if($customer->coinWallet)
-                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
-                                            <span class="update-wallet-status" data-id="{{ $customer->id }}">{!! $customer->coinWallet?->status==1?'<label class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</label>':'<label class="badge badge-danger">'.\App\CPU\translate('In-Active').'</label>' !!}</span>
-                                        </label>
+                                        <button type="button" class="btn btn-sm border-0 update-wallet-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
+                                            {!! $customer->coinWallet?->status==1
+                                                ? '<span class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</span>'
+                                                : '<span class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</span>'
+                                            !!}
+                                        </button>
                                     @else
-                                        <label class="btn text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
-                                            <span class="update-wallet-status" data-id="{{ $customer->id }}"><label class="badge badge-gradient-danger">In-Active</label></span>
-                                        </label>
+                                        <button type="button" class="btn btn-sm border-0 update-wallet-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
+                                            <span class="badge badge-gradient-danger">In-Active</span>
+                                        </button>
                                     @endif
                                 </td>
                                 <td>
@@ -412,7 +415,12 @@
                                 </td>
 
                                 <td>
-                                    <span class="update-account-status" data-id="{{ $customer->id }}">{!! $customer->status==1?'<label class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</label>':'<label class="badge badge-danger">'.\App\CPU\translate('In-Active').'</label>' !!}</span>
+                                    <button type="button" class="btn btn-sm border-0 update-account-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
+                                        {!! $customer->status==1
+                                            ? '<span class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</span>'
+                                            : '<span class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</span>'
+                                        !!}
+                                    </button>
                                 </td>
 
                                 <td>

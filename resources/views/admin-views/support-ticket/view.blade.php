@@ -127,7 +127,7 @@
                                         <h6 class="mb-0">{{\App\CPU\translate(str_replace('_',' ',$ticket->type))}}</h6>
                                         <div class="text-nowrap {{Session::get('direction') === "rtl" ? 'pr-9' : 'pl-9'}}">
                                             <!-- {{date('d/M/Y H:i a',strtotime($ticket->created_at))}} -->
-                                            {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/M/Y h:i A') }}
+                                            {{ $ticket->created_at->timezone('Asia/Kolkata')->format('d/m/Y h:i A') }}
                                         </div>
                                     </div>
                                 </div>

@@ -622,4 +622,6 @@
   'Landing Page' => 'Landing Page',
   'Landing Page Management' => 'Landing Page Management',
   'You wont be able to revert this!' => 'You wont be able to revert this!',
+  'Special characters are not allowed' => 'Special characters are not allowed',
+  'More than 3 consecutive same characters are not allowed' => 'More than 3 consecutive same characters are not allowed',
 );

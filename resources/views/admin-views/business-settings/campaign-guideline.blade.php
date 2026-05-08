@@ -54,6 +54,7 @@
                                 <input type="text" class="form-control" id="guideline-input" placeholder="{{ \App\CPU\translate('Enter a guideline line') }}">
                                 <button type="button" class="btn btn--primary" id="add-guideline-btn">{{ \App\CPU\translate('add') }}</button>
                             </div>
+                            <div id="guideline-error" class="text-danger fz-12 mt-1" style="display:none;"></div>
                             <small class="text-muted d-block mt-2">{{ \App\CPU\translate('Each line will be saved as a comma separated value') }}</small>
                             <input type="hidden" id="guideline-value" name="value" value="{{ $campaign_guideline->value ?? '' }}">
                         </div>
@@ -78,6 +79,47 @@
             const addGuidelineBtn = document.getElementById('add-guideline-btn');
             const guidelineList = document.getElementById('guideline-list');
             const guidelineValueField = document.getElementById('guideline-value');
+            const guidelineError = document.getElementById('guideline-error');
+
+            function showError(msg) {
+                guidelineError.textContent = msg;
+                guidelineError.style.display = 'block';
+                guidelineInput.classList.add('is-invalid');
+            }
+
+            function clearError() {
+                guidelineError.style.display = 'none';
+                guidelineError.textContent = '';
+                guidelineInput.classList.remove('is-invalid');
+            }
+
+            // Real-time: strip special chars AND trim 4+ consecutive same chars (same as saleName pattern)
+            guidelineInput.addEventListener('input', function () {
+                var val = this.value;
+                var err = '';
+
+                // Strip special characters (allow letters, numbers, space, . , - ' ( ) )
+                var cleaned = val.replace(/[^a-zA-Z0-9 .,\-'()]/g, '');
+                if (cleaned !== val) {
+                    err = 'Special characters are not allowed.';
+                    val = cleaned;
+                }
+
+                // Trim 4+ consecutive same characters down to 3
+                var trimmed = val.replace(/(.)(\1{3,})/g, function(m, ch) { return ch + ch + ch; });
+                if (trimmed !== val) {
+                    err = 'More than 3 consecutive same characters are not allowed.';
+                    val = trimmed;
+                }
+
+                this.value = val;
+
+                if (err) {
+                    showError(err);
+                } else {
+                    clearError();
+                }
+            });
 
             let guidelines = (guidelineValueField.value || '')
                 .split(',')
@@ -124,9 +166,13 @@
                         const updated = prompt("{{ \App\CPU\translate('Update guideline line') }}", line);
                         if (updated === null) return;
 
-                        const nextValue = updated.trim();
+                        const nextValue = updated.replace(/[^a-zA-Z0-9 .,\-'()]/g, '').replace(/(.)(\1{3,})/g, function(m, ch) { return ch + ch + ch; }).trim();
                         if (!nextValue.length) {
-                            toastr.error("{{ \App\CPU\translate('Guideline line cannot be empty') }}");
+                            alert("Guideline line cannot be empty.");
+                            return;
+                        }
+                        if (/(.)\1{3,}/.test(nextValue)) {
+                            alert("More than 3 consecutive same characters are not allowed.");
                             return;
                         }
 
@@ -153,13 +199,24 @@
                 syncHiddenValue();
             }
 
+            function validateGuideline(line) {
+                if (/(.)\1{3,}/.test(line)) {
+                    showError("More than 3 consecutive same characters are not allowed.");
+                    return false;
+                }
+                return true;
+            }
+
             function addGuideline() {
                 const line = guidelineInput.value.trim();
                 if (!line.length) {
-                    toastr.error("{{ \App\CPU\translate('Please enter a guideline line') }}");
+                    showError("Please enter a guideline line.");
                     return;
                 }
 
+                if (!validateGuideline(line)) return;
+
+                clearError();
                 guidelines.push(line);
                 guidelineInput.value = '';
                 renderGuidelines();

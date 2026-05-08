@@ -4,22 +4,6 @@
 
 @push('css_or_js')
     <style>
-        .brand-filter-scroll {
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding-bottom: 4px;
-            width: 100%;
-        }
-
-        .brand-filter-form {
-            flex-wrap: nowrap !important;
-            min-width: max-content;
-        }
-
-        .brand-filter-form .btn {
-            white-space: nowrap;
-        }
-
         .premium-pagination-wrap {
             border-top: 1px solid #e8ebef;
             margin-top: 22px;
@@ -79,24 +63,38 @@
         </div>
         <div class="row">
             <div class="col-lg-12">
-                <div class="d-flex justify-content-end mb-3">
-                    <div class="brand-filter-scroll">
-                        <form method="GET" action="{{ route('admin.brand') }}" class="brand-filter-form d-flex align-items-center justify-content-end gap-2">
-                            <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="width: 110px;">
-                            <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="width: 180px;">
-                            <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="width: 160px;">
-                            <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="width: 200px;">
-                            <input type="date" class="form-control" name="registration_date" value="{{ request('registration_date') }}" style="width: 170px;">
-                            <select class="form-select" name="status" style="width: 150px;">
-                                <option value="">All Status</option>
-                                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Active</option>
-                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ route('admin.brand') }}" class="btn btn-outline-secondary">Reset</a>
-                        </form>
-                    </div>
+                <div class="mb-3">
+                    <form method="GET" action="{{ route('admin.brand') }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID">
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name">
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile">
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email">
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <input type="date" class="form-control" name="registration_date" value="{{ request('registration_date') }}">
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-2">
+                                <select class="form-select" name="status" style="padding:11px;">
+                                    <option value="">All Status</option>
+                                    <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Active</option>
+                                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-12 d-flex gap-2 justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4">Filter</button>
+                                <a href="{{ route('admin.brand') }}" class="btn btn-outline-secondary px-4">Reset</a>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="table-responsive">
@@ -148,7 +146,7 @@
                                     <a class="title-color hover-c1" href="tel:{{$seller->phone}}">{{$seller->phone}}</a>
                                 </td>
                                 <td>
-                                    <a href="javascript:void(0)" class="title-color hover-c1">{{date('d M, Y', strtotime($seller->created_at))}}</a>
+                                    <a href="javascript:void(0)" class="title-color hover-c1">{{date('d/m/Y', strtotime($seller->created_at))}}</a>
                                 </td>
                                 <td>
                                     <span class="update-account-status" data-id="{{ $seller->id }}">{!! $seller->status=='approved'?'<label class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</label>':'<label class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</label>' !!}</span>
