@@ -6,6 +6,7 @@ use App\CPU\Helpers;
 use App\CPU\ImageManager;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
+use App\Models\CampaignRefund;
 use App\Models\CampaignTransaction;
 use App\Models\BrandCategory;
 use App\Models\Seller;
@@ -346,65 +347,90 @@ class CampaignController extends Controller
      */
     public function refundPreview(int $id)
     {
-        $campaign = Campaign::with('brand')->findOrFail($id);
-        $sellerWallet = SellerWallet::firstOrCreate(
-            ['seller_id' => $campaign->brand_id],
-            ['wallet_amount' => 0, 'hold_for_campaign' => 0]
-        );
+        $campaign    = Campaign::with('brand')->findOrFail($id);
+        $refundData  = $this->calculateRefund($campaign);
+        $refundEntry = CampaignRefund::where('campaign_id', $id)->latest()->first();
 
-        $refundData = $this->calculateRefund($campaign);
-
-        return view('admin-views.campaign.refund-preview', compact('campaign', 'sellerWallet', 'refundData'));
+        return view('admin-views.campaign.refund-preview',
+            compact('campaign', 'refundData', 'refundEntry'));
     }
 
     /**
-     * Process and credit the refund for a stopped campaign.
+     * Initiate a refund entry (status = pending) with a bank detail snapshot.
+     * Admin transfers the money externally, then marks it complete via completeRefund.
      */
     public function processRefund(Request $request, int $id)
     {
-        $campaign = Campaign::findOrFail($id);
+        $campaign = Campaign::with('brand')->findOrFail($id);
 
         if ($campaign->status !== 'stopped') {
-            return back()->with('error', 'Refund can only be processed for stopped campaigns.');
+            return back()->with('error', 'Refund can only be initiated for stopped campaigns.');
         }
 
-        if ($campaign->refund_status === 'processed') {
-            return back()->with('error', 'Refund has already been processed for this campaign.');
+        if (CampaignRefund::where('campaign_id', $id)->exists()) {
+            return back()->with('error', 'A refund entry already exists for this campaign.');
         }
 
         $refundData = $this->calculateRefund($campaign);
-        $refundableAmount = $refundData['refundable_amount'];
+        $brand      = $campaign->brand;
 
-        DB::transaction(function () use ($campaign, $refundableAmount, $request) {
-            // Credit wallet
-            $wallet = SellerWallet::firstOrCreate(
-                ['seller_id' => $campaign->brand_id],
-                ['wallet_amount' => 0, 'hold_for_campaign' => 0]
-            );
-            $wallet->wallet_amount = $wallet->wallet_amount + $refundableAmount;
-            $wallet->save();
-
-            // Log wallet credit
-            SellerWalletHistory::create([
-                'seller_id'         => $campaign->brand_id,
-                'amount'            => $refundableAmount,
-                'remarks'           => 'Refund for stopped campaign: ' . $campaign->title,
-                'type'              => 'credit',
-                'available_balance' => $wallet->wallet_amount,
+        DB::transaction(function () use ($campaign, $refundData, $request, $brand) {
+            CampaignRefund::create([
+                'campaign_id'              => $campaign->id,
+                'brand_id'                 => $campaign->brand_id,
+                'calculated_amount'        => $refundData['refundable_amount'],
+                'refunded_amount'          => null,
+                'bank_account_number'      => $brand->bank_account_number,
+                'bank_ifsc_code'           => $brand->bank_ifsc_code,
+                'bank_account_holder_name' => $brand->bank_account_holder_name,
+                'bank_account_type'        => $brand->bank_account_type,
+                'status'                   => CampaignRefund::STATUS_PENDING,
+                'admin_note'               => $request->input('admin_note'),
             ]);
 
-            // Mark campaign refund as processed
-            $campaign->refund_status    = 'processed';
-            $campaign->refunded_amount  = $refundableAmount;
-            $campaign->refund_note      = $request->input('refund_note');
+            $campaign->refund_status = 'pending';
+            $campaign->refund_note   = $request->input('admin_note');
             $campaign->save();
 
-            Helpers::systemActivity('campaign_refund', auth()->user(), 'processed',
-                "Refund of ₹{$refundableAmount} processed for campaign: {$campaign->title}", $campaign);
+            Helpers::systemActivity('campaign_refund', auth()->user(), 'initiated',
+                "Refund initiated (₹{$refundData['refundable_amount']}) for campaign: {$campaign->title}", $campaign);
+        });
+
+        return redirect()->route('admin.campaign.refund-preview', $id)
+            ->with('success', 'Refund entry created. Transfer ₹' . number_format($refundData['refundable_amount'], 2) . ' to the brand bank account, then mark it complete.');
+    }
+
+    /**
+     * Mark an existing pending refund entry as completed (money has been transferred).
+     */
+    public function completeRefund(Request $request, int $id)
+    {
+        $campaign    = Campaign::findOrFail($id);
+        $refundEntry = CampaignRefund::where('campaign_id', $id)
+                        ->where('status', CampaignRefund::STATUS_PENDING)
+                        ->firstOrFail();
+
+        DB::transaction(function () use ($campaign, $refundEntry, $request) {
+            $confirmedAmount = $request->filled('confirmed_amount')
+                ? (float) $request->confirmed_amount
+                : $refundEntry->calculated_amount;
+
+            $refundEntry->status          = CampaignRefund::STATUS_COMPLETED;
+            $refundEntry->refunded_amount  = $confirmedAmount;
+            $refundEntry->admin_note       = $request->input('admin_note', $refundEntry->admin_note);
+            $refundEntry->completed_at    = now();
+            $refundEntry->save();
+
+            $campaign->refund_status   = 'processed';
+            $campaign->refunded_amount = $confirmedAmount;
+            $campaign->save();
+
+            Helpers::systemActivity('campaign_refund', auth()->user(), 'completed',
+                "Refund of ₹{$confirmedAmount} marked complete for campaign: {$campaign->title}", $campaign);
         });
 
         return redirect()->route('admin.campaign.show', $id)
-            ->with('success', 'Refund of ₹' . number_format($refundableAmount, 2) . ' processed and credited to brand wallet.');
+            ->with('success', 'Refund marked as completed successfully.');
     }
 
     /**
