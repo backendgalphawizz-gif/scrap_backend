@@ -51,12 +51,45 @@ class LandingPageController extends Controller
     {
         switch ($section) {
             case 'landing_hero':
-                return [
-                    'headline'     => $request->input('headline', ''),
-                    'sub_headline' => $request->input('sub_headline', ''),
-                    'cta_text'     => $request->input('cta_text', ''),
-                    'cta_link'     => $request->input('cta_link', ''),
-                ];
+                $removeSlides = array_map('intval', (array) $request->input('remove_slides', []));
+                $slides = [];
+
+                // Keep existing slides not flagged for removal
+                foreach ((array) $request->input('slides', []) as $si => $s) {
+                    if (in_array((int) $si, $removeSlides, true)) {
+                        ImageManager::delete('landing/hero/' . $s['image']);
+                        continue;
+                    }
+                    if (!empty($s['image'])) {
+                        $slides[] = [
+                            'image' => $s['image'],
+                            'title' => $s['title'] ?? '',
+                            'link'  => $s['link']  ?? '',
+                        ];
+                    }
+                }
+
+                // Upload new slides
+                if ($request->hasFile('new_slides')) {
+                    $newTitles = (array) $request->input('new_slide_titles', []);
+                    $newLinks  = (array) $request->input('new_slide_links', []);
+                    foreach ($request->file('new_slides') as $idx => $file) {
+                        if ($file && $file->isValid()) {
+                            $filename = ImageManager::upload(
+                                'landing/hero/',
+                                $file->getClientOriginalExtension() ?: 'jpg',
+                                $file
+                            );
+                            $slides[] = [
+                                'image' => $filename,
+                                'title' => $newTitles[$idx] ?? '',
+                                'link'  => $newLinks[$idx]  ?? '',
+                            ];
+                        }
+                    }
+                }
+
+                return ['slides' => $slides];
 
             case 'landing_tagline':
                 return [
@@ -87,11 +120,49 @@ class LandingPageController extends Controller
                         ];
                     }
                 }
+
+                // --- Banners ---
+                $removeBanners = array_map('intval', (array) $request->input('remove_banners', []));
+                $banners = [];
+
+                // Keep existing banners that are not flagged for removal
+                foreach ((array) $request->input('banners', []) as $bi => $b) {
+                    if (in_array((int)$bi, $removeBanners, true)) {
+                        // Delete the file from storage
+                        ImageManager::delete('landing/banners/' . $b['image']);
+                        continue;
+                    }
+                    if (!empty($b['image'])) {
+                        $banners[] = [
+                            'image' => $b['image'],
+                            'title' => $b['title'] ?? '',
+                            'link'  => $b['link'] ?? '',
+                        ];
+                    }
+                }
+
+                // Upload new banners
+                if ($request->hasFile('new_banners')) {
+                    $newTitles = (array) $request->input('new_banner_titles', []);
+                    $newLinks  = (array) $request->input('new_banner_links', []);
+                    foreach ($request->file('new_banners') as $idx => $file) {
+                        if ($file && $file->isValid()) {
+                            $filename = ImageManager::upload('landing/banners/', $file->getClientOriginalExtension() ?: 'png', $file);
+                            $banners[] = [
+                                'image' => $filename,
+                                'title' => $newTitles[$idx] ?? '',
+                                'link'  => $newLinks[$idx] ?? '',
+                            ];
+                        }
+                    }
+                }
+
                 return [
                     'headline' => $request->input('headline', ''),
                     'subtitle' => $request->input('subtitle', ''),
                     'features' => $features,
                     'stats'    => $stats,
+                    'banners'  => $banners,
                 ];
 
             case 'landing_services':

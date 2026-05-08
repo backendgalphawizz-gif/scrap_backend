@@ -39,31 +39,55 @@
 
             {{-- ============== HERO ============== --}}
             @if($activeTab === 'landing_hero')
-            @php $d = $data['landing_hero'] ?? [] @endphp
-            <h5 class="card-title mb-4"><i class="mdi mdi-home-variant me-2 text-primary"></i>Hero Section</h5>
-            <form action="{{ route('admin.landing-page.update', 'landing_hero') }}" method="POST">
+            @php
+                $d = $data['landing_hero'] ?? [];
+                $slides = $d['slides'] ?? [];
+            @endphp
+            <h5 class="card-title mb-4"><i class="mdi mdi-home-variant me-2 text-primary"></i>Hero Slider</h5>
+            <form action="{{ route('admin.landing-page.update', 'landing_hero') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="title-color">Headline <span class="text-danger">*</span></label>
-                        <input type="text" name="headline" class="form-control" value="{{ $d['headline'] ?? '' }}" placeholder="Run Smarter Ads. Grow Faster." required>
-                        <small class="text-muted">Use <code>**word**</code> to highlight a word in a different color.</small>
+
+                {{-- Existing slides --}}
+                @if(count($slides))
+                <h6 class="fw-bold mb-3">Current Slides</h6>
+                <div class="row g-3 mb-3" id="existingSlidesContainer">
+                    @foreach($slides as $si => $slide)
+                    <div class="col-md-4" id="existing-slide-{{ $si }}">
+                        <div class="card border h-100">
+                            <div class="text-center" style="height:140px;overflow:hidden;background:#f1f3f5;">
+                            <img src="{{ asset('storage/landing/hero/' . $slide['image']) }}"
+                                     alt="Slide {{ $si + 1 }}"
+                                     style="max-height:140px;max-width:100%;object-fit:cover;width:100%;">
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="slides[{{ $si }}][image]" value="{{ $slide['image'] }}">
+                                <label class="title-color small">Title <small class="text-muted">(optional)</small></label>
+                                <input type="text" name="slides[{{ $si }}][title]" class="form-control form-control-sm mb-2"
+                                       value="{{ $slide['title'] ?? '' }}" placeholder="Slide title">
+                                <label class="title-color small">Link <small class="text-muted">(optional)</small></label>
+                                <input type="text" name="slides[{{ $si }}][link]" class="form-control form-control-sm mb-2"
+                                       value="{{ $slide['link'] ?? '' }}" placeholder="https://...">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="remove_slides[]" value="{{ $si }}" id="rm-slide-{{ $si }}">
+                                    <label class="form-check-label text-danger small" for="rm-slide-{{ $si }}">Remove this slide</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="title-color">Sub Headline</label>
-                        <input type="text" name="sub_headline" class="form-control" value="{{ $d['sub_headline'] ?? '' }}" placeholder="Manage and launch your social media campaigns…">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="title-color">CTA Button Text</label>
-                        <input type="text" name="cta_text" class="form-control" value="{{ $d['cta_text'] ?? '' }}" placeholder="Start Advertising">
-                    </div>
-                    <div class="col-md-8">
-                        <label class="title-color">CTA Button Link</label>
-                        <input type="text" name="cta_link" class="form-control" value="{{ $d['cta_link'] ?? '' }}" placeholder="https://...">
-                    </div>
+                    @endforeach
                 </div>
-                <div class="text-end mt-4">
-                    <button type="submit" class="btn btn-primary px-5">Save Hero Section</button>
+                @else
+                <p class="text-muted small mb-3" id="noSlidesMsg">No slides added yet.</p>
+                @endif
+
+                {{-- New slides --}}
+                <div id="newSlidesContainer" class="row g-3 mb-3"></div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-4" id="addSlideBtn">
+                    <i class="mdi mdi-plus me-1"></i>Add Slide
+                </button>
+
+                <div class="text-end mt-2">
+                    <button type="submit" class="btn btn-primary px-5">Save Hero Slider</button>
                 </div>
             </form>
             @endif
@@ -104,9 +128,14 @@
 
             {{-- ============== ADVERTISE ============== --}}
             @if($activeTab === 'landing_advertise')
-            @php $d = $data['landing_advertise'] ?? []; $features = $d['features'] ?? [['icon'=>'','title'=>'','desc'=>''],['icon'=>'','title'=>'','desc'=>''],['icon'=>'','title'=>'','desc'=>'']]; $stats = $d['stats'] ?? [['value'=>'','label'=>''],['value'=>'','label'=>''],['value'=>'','label'=>''],['value'=>'','label'=>'']] @endphp
+            @php
+                $d = $data['landing_advertise'] ?? [];
+                $features = $d['features'] ?? [['icon'=>'','title'=>'','desc'=>''],['icon'=>'','title'=>'','desc'=>''],['icon'=>'','title'=>'','desc'=>'']];
+                $stats = $d['stats'] ?? [['value'=>'','label'=>''],['value'=>'','label'=>''],['value'=>'','label'=>''],['value'=>'','label'=>'']];
+                $banners = $d['banners'] ?? [];
+            @endphp
             <h5 class="card-title mb-4"><i class="mdi mdi-bullhorn me-2 text-primary"></i>Advertise Section</h5>
-            <form action="{{ route('admin.landing-page.update', 'landing_advertise') }}" method="POST">
+            <form action="{{ route('admin.landing-page.update', 'landing_advertise') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
@@ -152,6 +181,44 @@
                     </div>
                     @endforeach
                 </div>
+
+                {{-- Banners --}}
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3">Banners</h6>
+
+                {{-- Existing banners --}}
+                <div id="existingBannersContainer" class="row g-3 mb-3">
+                    @forelse($banners as $bi => $banner)
+                    <div class="col-md-4 existing-banner-item" id="existing-banner-{{ $bi }}">
+                        <div class="card border h-100">
+                            <div class="card-body">
+                                <div class="mb-2 text-center" style="height:120px;overflow:hidden;background:#f8f9fa;border-radius:4px;">
+                                    <img src="{{ asset('storage/landing/banners/' . $banner['image']) }}" alt="Banner" style="max-height:120px;max-width:100%;object-fit:contain;">
+                                </div>
+                                <input type="hidden" name="banners[{{ $bi }}][image]" value="{{ $banner['image'] }}">
+                                <label class="title-color small">Title <small class="text-muted">(optional)</small></label>
+                                <input type="text" name="banners[{{ $bi }}][title]" class="form-control form-control-sm mb-2" value="{{ $banner['title'] ?? '' }}" placeholder="Banner title">
+                                <label class="title-color small">Link <small class="text-muted">(optional)</small></label>
+                                <input type="text" name="banners[{{ $bi }}][link]" class="form-control form-control-sm mb-2" value="{{ $banner['link'] ?? '' }}" placeholder="https://...">
+                                <div class="form-check">
+                                    <input class="form-check-input banner-remove-check" type="checkbox" name="remove_banners[]" value="{{ $bi }}" id="rm-banner-{{ $bi }}">
+                                    <label class="form-check-label text-danger small" for="rm-banner-{{ $bi }}">Remove this banner</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="col-12" id="noBannersMsg">
+                        <p class="text-muted small">No banners added yet.</p>
+                    </div>
+                    @endforelse
+                </div>
+
+                {{-- Add new banners --}}
+                <div id="newBannersContainer" class="row g-3 mb-3"></div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="addBannerBtn">
+                    <i class="mdi mdi-plus me-1"></i>Add Banner
+                </button>
 
                 <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary px-5">Save Advertise Section</button>
@@ -316,6 +383,89 @@
 
 @push('script')
 <script>
+    // Hero slider: dynamic add slide
+    let slideIndex = 0;
+
+    $('#addSlideBtn').on('click', function () {
+        const html = `
+            <div class="col-md-4 new-slide-item" id="new-slide-${slideIndex}">
+                <div class="card border h-100">
+                    <div class="new-slide-preview text-center" style="height:140px;background:#f1f3f5;display:flex;align-items:center;justify-content:center;">
+                        <span class="text-muted small">Preview</span>
+                    </div>
+                    <div class="card-body">
+                        <label class="title-color small">Slide Image <span class="text-danger">*</span></label>
+                        <input type="file" name="new_slides[]" class="form-control form-control-sm mb-2 slide-file-input" accept="image/*">
+                        <label class="title-color small">Title <small class="text-muted">(optional)</small></label>
+                        <input type="text" name="new_slide_titles[]" class="form-control form-control-sm mb-2" placeholder="Slide title">
+                        <label class="title-color small">Link <small class="text-muted">(optional)</small></label>
+                        <input type="text" name="new_slide_links[]" class="form-control form-control-sm mb-2" placeholder="https://...">
+                        <button type="button" class="btn btn-sm btn-outline-danger w-100 remove-new-slide" data-target="new-slide-${slideIndex}">Remove</button>
+                    </div>
+                </div>
+            </div>`;
+        $('#newSlidesContainer').append(html);
+        $('#noSlidesMsg').hide();
+        slideIndex++;
+    });
+
+    $(document).on('change', '.slide-file-input', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        const preview = $(this).closest('.card').find('.new-slide-preview');
+        reader.onload = e => {
+            preview.html(`<img src="${e.target.result}" style="max-height:140px;max-width:100%;object-fit:cover;width:100%;">`);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $(document).on('click', '.remove-new-slide', function () {
+        $(`#${$(this).data('target')}`).remove();
+    });
+
+    // Banner dynamic add
+    let bannerIndex = 0;
+
+    $('#addBannerBtn').on('click', function () {
+        const html = `
+            <div class="col-md-4 new-banner-item" id="new-banner-${bannerIndex}">
+                <div class="card border h-100">
+                    <div class="card-body">
+                        <div class="mb-2 text-center new-banner-preview" style="height:120px;background:#f8f9fa;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+                            <span class="text-muted small">Preview</span>
+                        </div>
+                        <label class="title-color small">Banner Image <span class="text-danger">*</span></label>
+                        <input type="file" name="new_banners[]" class="form-control form-control-sm mb-2 banner-file-input" accept="image/*" data-preview="${bannerIndex}">
+                        <label class="title-color small">Title <small class="text-muted">(optional)</small></label>
+                        <input type="text" name="new_banner_titles[]" class="form-control form-control-sm mb-2" placeholder="Banner title">
+                        <label class="title-color small">Link <small class="text-muted">(optional)</small></label>
+                        <input type="text" name="new_banner_links[]" class="form-control form-control-sm mb-2" placeholder="https://...">
+                        <button type="button" class="btn btn-sm btn-outline-danger w-100 remove-new-banner" data-target="new-banner-${bannerIndex}">Remove</button>
+                    </div>
+                </div>
+            </div>`;
+        $('#newBannersContainer').append(html);
+        $('#noBannersMsg').hide();
+        bannerIndex++;
+    });
+
+    $(document).on('change', '.banner-file-input', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        const preview = $(this).closest('.card-body').find('.new-banner-preview');
+        reader.onload = e => {
+            preview.html(`<img src="${e.target.result}" style="max-height:120px;max-width:100%;object-fit:contain;">`);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $(document).on('click', '.remove-new-banner', function () {
+        const target = $(this).data('target');
+        $(`#${target}`).remove();
+    });
+
     // FAQ dynamic add/remove
     let faqIndex = {{ isset($faqItems) ? count($faqItems) : 4 }};
 

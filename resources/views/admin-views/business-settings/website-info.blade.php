@@ -249,6 +249,63 @@
                             </div>
                         </div>
 
+                        {{-- Social Media Links --}}
+                        <hr class="mt-2 mb-4">
+                        <h6 class="fw-bold mb-3"><i class="mdi mdi-share-variant me-1 text-primary"></i>Social Media Links <small class="text-muted fw-normal">(leave blank to hide from landing page)</small></h6>
+                        @php
+                            $sm_facebook  = \App\CPU\Helpers::get_business_settings('social_facebook')  ?? '';
+                            $sm_twitter   = \App\CPU\Helpers::get_business_settings('social_twitter')   ?? '';
+                            $sm_instagram = \App\CPU\Helpers::get_business_settings('social_instagram') ?? '';
+                            $sm_youtube   = \App\CPU\Helpers::get_business_settings('social_youtube')   ?? '';
+                            $sm_linkedin  = \App\CPU\Helpers::get_business_settings('social_linkedin')  ?? '';
+                            $footer_short_desc  = \App\CPU\Helpers::get_business_settings('footer_short_desc')  ?? '';
+                            $footer_copyright   = \App\CPU\Helpers::get_business_settings('footer_copyright')   ?? '';
+                        @endphp
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Short Description <small class="text-muted ms-1">(shown in footer)</small></label>
+                                    <textarea name="footer_short_desc" class="form-control" rows="2" placeholder="A short description about your company…">{{ $footer_short_desc }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Copyright Text</label>
+                                    <input class="form-control" type="text" name="footer_copyright" value="{{ $footer_copyright }}" placeholder="© 2025 Company Name. All rights reserved.">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex"><i class="mdi mdi-facebook me-1 text-primary"></i>Facebook URL</label>
+                                    <input class="form-control" type="url" name="social_facebook" value="{{ $sm_facebook }}" placeholder="https://facebook.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex"><i class="mdi mdi-twitter me-1" style="color:#1da1f2"></i>X (Twitter) URL</label>
+                                    <input class="form-control" type="url" name="social_twitter" value="{{ $sm_twitter }}" placeholder="https://x.com/yourhandle">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex"><i class="mdi mdi-instagram me-1" style="color:#e1306c"></i>Instagram URL</label>
+                                    <input class="form-control" type="url" name="social_instagram" value="{{ $sm_instagram }}" placeholder="https://instagram.com/yourhandle">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex"><i class="mdi mdi-youtube me-1" style="color:#ff0000"></i>YouTube URL</label>
+                                    <input class="form-control" type="url" name="social_youtube" value="{{ $sm_youtube }}" placeholder="https://youtube.com/@yourchannel">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="title-color d-flex"><i class="mdi mdi-linkedin me-1" style="color:#0077b5"></i>LinkedIn URL</label>
+                                    <input class="form-control" type="url" name="social_linkedin" value="{{ $sm_linkedin }}" placeholder="https://linkedin.com/company/yourcompany">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="">
                             <button type="submit" class="btn btn-primary">Save</button>
                         </div>

@@ -537,6 +537,21 @@ class DashboardController extends Controller
             'value' => $request['platform_commission']
         ]);
 
+        // Social media links
+        foreach (['social_facebook', 'social_twitter', 'social_instagram', 'social_youtube', 'social_linkedin'] as $key) {
+            DB::table('business_settings')->updateOrInsert(['type' => $key], [
+                'value' => $request->input($key, '')
+            ]);
+        }
+
+        // Footer extras
+        DB::table('business_settings')->updateOrInsert(['type' => 'footer_short_desc'], [
+            'value' => $request->input('footer_short_desc', '')
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'footer_copyright'], [
+            'value' => $request->input('footer_copyright', '')
+        ]);
+
         // web logo
         $webLogo = BusinessSetting::where(['type' => 'company_web_logo'])->first();
         if ($request->has('company_web_logo')) {
