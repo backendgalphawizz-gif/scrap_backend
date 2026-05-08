@@ -336,6 +336,7 @@ class CampaignController extends Controller
     public function campaignTransctions(Request $request)
     {
         $transactions = CampaignTransaction::with(['campaign.brand', 'user'])
+            ->when($request->filled('user_id'), fn($q) => $q->where('user_id', $request->user_id))
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->withQueryString();

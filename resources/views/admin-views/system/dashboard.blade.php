@@ -106,9 +106,9 @@
                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute" alt="circle-image" />
                     <h4 class="font-weight-normal mb-3 small cardText">
                         <span>Total Campaign Budget</span>
-                        <i class="mdi mdi-currency-usd mdi-24px float-end"></i>
+                        <i class="mdi mdi-currency-inr mdi-24px float-end"></i>
                     </h4>
-                    <h2 class="small">{{ $totalCampaignBudget ?? 0 }}</h2>
+                    <h2 class="small">₹{{ $totalCampaignBudget ?? 0 }}</h2>
                 </div>
             </div>
         </div>

@@ -44,13 +44,14 @@ class SaleController extends Controller
     {
         $request->validate([
             'name'     => ['required', 'string', 'max:40', 'regex:/^[a-zA-Z ]+$/', 'regex:/^(?!.*(.)(\1{3,})).*/'],
-            'email'    => ['required', 'email', 'max:150', 'unique:sales,email'],
+            'email'    => ['required', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:150', 'unique:sales,email'],
             'mobile'   => ['required', 'digits:10'],
             'password' => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
             'image'    => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ], [
             'name.regex'   => 'Name must contain only letters and spaces, with no repeated characters.',
             'mobile.digits' => 'Mobile number must be exactly 10 digits.',
+            'email.regex'  => 'Please enter a valid email address with a proper domain (e.g. user@example.com).',
             'email.unique' => 'This email is already registered.',
         ]);
 
