@@ -193,11 +193,29 @@ class LandingPageController extends Controller
                 ];
 
             case 'landing_mobile':
+                // Handle banner image
+                $existing = $request->input('existing_banner_image', '');
+                $remove   = (bool) $request->input('remove_banner_image', false);
+
+                if ($remove && $existing) {
+                    ImageManager::delete('landing/mobile/' . $existing);
+                    $existing = '';
+                }
+
+                if ($request->hasFile('banner_image') && $request->file('banner_image')->isValid()) {
+                    // Replace old file if present
+                    if ($existing) {
+                        ImageManager::delete('landing/mobile/' . $existing);
+                    }
+                    $existing = ImageManager::upload('landing/mobile/', $request->file('banner_image')->getClientOriginalExtension() ?: 'png', $request->file('banner_image'));
+                }
+
                 return [
-                    'headline' => $request->input('headline', ''),
-                    'subtitle' => $request->input('subtitle', ''),
+                    'headline'        => $request->input('headline', ''),
+                    'subtitle'        => $request->input('subtitle', ''),
                     'app_store_link'  => $request->input('app_store_link', ''),
                     'play_store_link' => $request->input('play_store_link', ''),
+                    'banner_image'    => $existing,
                 ];
 
             case 'landing_faq':
@@ -210,10 +228,28 @@ class LandingPageController extends Controller
                         ];
                     }
                 }
+
+                // Handle banner image
+                $faqExisting = $request->input('existing_banner_image', '');
+                $faqRemove   = (bool) $request->input('remove_banner_image', false);
+
+                if ($faqRemove && $faqExisting) {
+                    ImageManager::delete('landing/faq/' . $faqExisting);
+                    $faqExisting = '';
+                }
+
+                if ($request->hasFile('banner_image') && $request->file('banner_image')->isValid()) {
+                    if ($faqExisting) {
+                        ImageManager::delete('landing/faq/' . $faqExisting);
+                    }
+                    $faqExisting = ImageManager::upload('landing/faq/', $request->file('banner_image')->getClientOriginalExtension() ?: 'png', $request->file('banner_image'));
+                }
+
                 return [
-                    'headline' => $request->input('headline', ''),
-                    'subtitle' => $request->input('subtitle', ''),
-                    'items'    => $items,
+                    'headline'     => $request->input('headline', ''),
+                    'subtitle'     => $request->input('subtitle', ''),
+                    'items'        => $items,
+                    'banner_image' => $faqExisting,
                 ];
 
             default:
