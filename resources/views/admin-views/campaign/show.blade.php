@@ -85,19 +85,24 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Thumbnail') }}</small>
-                                    <img
-                                        class="img-fluid rounded border w-100"
-                                        src="{{ $campaign->thumbnail }}"
-                                        onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'
-                                        alt="Campaign Thumbnail"
-                                    />
+                                    <a href="#" class="campaign-zoom-trigger" data-src="{{ $campaign->thumbnail }}" data-fallback="{{ asset('assets/logo/logo-3.png') }}">
+                                        <img
+                                            class="img-fluid rounded border w-100"
+                                            src="{{ $campaign->thumbnail }}"
+                                            onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'
+                                            alt="Campaign Thumbnail"
+                                            style="cursor:zoom-in;"
+                                        />
+                                    </a>
                                 </div>
                                 <div class="col-md-8">
                                     <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Gallery Images') }}</small>
                                     <div class="row g-2">
                                         @forelse($images as $image)
                                             <div class="col-md-4 col-sm-6">
-                                                <img src="{{ $image }}" class="img-thumbnail w-100 campaign-gallery-image" alt="Campaign Image">
+                                                <a href="#" class="campaign-zoom-trigger" data-src="{{ $image }}">
+                                                    <img src="{{ $image }}" class="img-thumbnail campaign-gallery-image" alt="Campaign Image" style="cursor:zoom-in;width:200px;height:130px;" onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+                                                </a>
                                             </div>
                                         @empty
                                             <div class="col-12 text-muted">No additional images.</div>
@@ -240,8 +245,38 @@
 </div>
 @endsection
 
+{{-- Lightbox Modal --}}
+<div class="modal fade" id="campaignLightbox" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0" style="position:absolute;top:8px;right:8px;z-index:10;">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img id="lightboxImg" src="" alt="Zoomed Image" style="width:100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('script')
 <script>
+    // Lightbox
+    $(document).on('click', '.campaign-zoom-trigger', function(e) {
+        e.preventDefault();
+        var src = $(this).data('src') || $(this).find('img').attr('src');
+        var fallback = $(this).data('fallback') || '';
+        var img = document.getElementById('lightboxImg');
+        img.src = src;
+        if (fallback) {
+            img.onerror = function() { this.src = fallback; this.onerror = null; };
+        } else {
+            img.onerror = null;
+        }
+        var modal = new bootstrap.Modal(document.getElementById('campaignLightbox'));
+        modal.show();
+    });
+
     $(document).on('change', '.change-status', function() {
         var id = $(this).attr('data-id');
         var status = $(this).val();
@@ -276,6 +311,39 @@
     .campaign-gallery-image {
         height: 120px;
         object-fit: cover;
+    }
+
+    /* Prevent text from overflowing its container */
+    .card-body strong,
+    .card-body p {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        display: block;
+    }
+
+    /* Lightbox */
+    #campaignLightbox .modal-dialog {
+        max-width: 95vw;
+        width: 95vw;
+    }
+
+    #campaignLightbox .modal-body {
+        padding: 0;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+    }
+
+    #campaignLightbox .modal-body img {
+        width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+    }
+
+    .campaign-zoom-trigger {
+        display: block;
     }
 </style>
 @endpush

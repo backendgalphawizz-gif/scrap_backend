@@ -739,16 +739,13 @@ button.option-remove-btn.remove-option {
     });
 
     document.addEventListener('click', function(e) {
-        if (!e.target.classList.contains('remove-option')) {
-            return;
-        }
+        const btn = e.target.closest('.remove-option');
+        if (!btn) return;
+        if (btn.disabled) return;
 
-        const wrap = e.target.closest('.option-row')?.parentElement;
-        e.target.closest('.option-row').remove();
-
-        if (wrap && wrap.children.length < 2) {
-            wrap.insertAdjacentHTML('beforeend', optionRowHtml(''));
-        }
+        const row = btn.closest('.option-row');
+        const wrap = row ? row.parentElement : null;
+        if (row) row.remove();
 
         if (wrap && wrap.id) {
             syncOptionRowNumbers(wrap.id);

@@ -43,11 +43,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // ✅ Validation errors
         $exceptions->render(function (ValidationException $e, $request) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Validation error',
-                'errors'  => $e->errors(),
-            ], 422);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Validation error',
+                    'errors'  => $e->errors(),
+                ], 422);
+            }
+            // Let Laravel handle the redirect back with errors for web routes
+            return null;
         });
 
     })

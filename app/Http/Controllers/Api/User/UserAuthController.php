@@ -379,4 +379,21 @@ class UserAuthController extends Controller
         ]);
     }
 
+    public function mainCategories()
+    {
+        $categories = BrandCategory::where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('parent_id')->orWhere('parent_id', 0);
+            })
+            ->latest()
+            ->get(['id', 'name'])
+            ->values();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Main categories retrieved successfully',
+            'data' => $categories
+        ]);
+    }
+
 }

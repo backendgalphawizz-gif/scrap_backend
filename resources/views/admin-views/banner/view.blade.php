@@ -52,12 +52,17 @@
                                         <input required type="file" name="image" class="form-control"
                                             id="mbimageFileUploader"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-
+                                         <small class="text-muted d-block mt-1">
+                                            <i class="tio-info-outined"></i>
+                                            Accepted types: JPG, JPEG, PNG, GIF, BMP, TIF &nbsp;|&nbsp; Max size: 2MB
+                                        </small>
                                         <img id="mbImageviewer"
-                                            src="{{asset('public/assets/front-end/img/placeholder.png')}}"
+                                            src="{{asset('assets/front-end/img/placeholder.png')}}"
+                                            onerror="this.src='{{asset('assets/logo/logo-icon.png')}}'"
                                             alt="Image Preview"
                                             class="img-thumbnail mt-2"
                                             style="max-width: 200px;">
+                                       
                                     </div>
 
                                 </div>
@@ -230,7 +235,7 @@
         Swal.fire({
             title: '{{ \App\CPU\translate('
             Are you sure ? ')}}',
-            text : "{{ \App\CPU\translate('You won\'t be able to revert this!')}}",
+            text : "{{ \App\CPU\translate('You wont be able to revert this!')}}",
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
