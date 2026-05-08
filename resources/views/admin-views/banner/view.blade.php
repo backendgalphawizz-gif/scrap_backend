@@ -54,7 +54,7 @@
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                          <small class="text-muted d-block mt-1">
                                             <i class="tio-info-outined"></i>
-                                            Accepted types: JPG, JPEG, PNG, GIF, BMP, TIF &nbsp;|&nbsp; Max size: 2MB
+                                            Accepted types: JPG, JPEG, PNG, GIF, BMP, TIF &nbsp;|&nbsp; Max size: 2MB &nbsp;|&nbsp; Recommended size: 600×300 px
                                         </small>
                                         <img id="mbImageviewer"
                                             src="{{asset('assets/front-end/img/placeholder.png')}}"

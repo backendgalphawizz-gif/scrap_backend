@@ -289,12 +289,56 @@ class DashboardController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'required|digits:10|unique:users,mobile,'.$user->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'instagram_status' => 'nullable|in:not_submitted,pending,verified,not_verified',
-            'facebook_status' => 'nullable|in:not_submitted,pending,verified,not_verified',
-            'upi_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
-            'bank_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
-            'pan_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
-            'aadhar_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'instagram_status' => [
+                'nullable',
+                'in:not_submitted,pending,verified,not_verified',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value === 'verified' && empty(trim($request->instagram_username ?? ''))) {
+                        $fail('Cannot set Instagram status to Verified without an Instagram username.');
+                    }
+                },
+            ],
+            'facebook_status' => [
+                'nullable',
+                'in:not_submitted,pending,verified,not_verified',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value === 'verified' && empty(trim($request->facebook_username ?? ''))) {
+                        $fail('Cannot set Facebook status to Verified without a Facebook username.');
+                    }
+                },
+            ],
+            'upi_status' => [
+                'nullable', 'string', 'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value === 'Verified' && empty($user->upi_id)) {
+                        $fail('Cannot set UPI status to Verified without a UPI ID.');
+                    }
+                },
+            ],
+            'bank_status' => [
+                'nullable', 'string', 'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value === 'Verified' && empty($user->bank_detail)) {
+                        $fail('Cannot set Bank status to Verified without bank details.');
+                    }
+                },
+            ],
+            'pan_status' => [
+                'nullable', 'string', 'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value === 'Verified' && empty($user->pan_number)) {
+                        $fail('Cannot set PAN status to Verified without a PAN number.');
+                    }
+                },
+            ],
+            'aadhar_status' => [
+                'nullable', 'string', 'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value === 'Verified' && empty($user->aadhar_number)) {
+                        $fail('Cannot set Aadhar status to Verified without an Aadhar number.');
+                    }
+                },
+            ],
             'upi_reason' => 'nullable|string|max:255',
             'bank_reason' => 'nullable|string|max:255',
             'pan_reason' => 'nullable|string|max:255',

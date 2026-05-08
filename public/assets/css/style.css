@@ -31171,3 +31171,8 @@ a:hover {
 .submitbtn{
   width: fit-content;
 }
+
+select.form-select {
+    color: #000 !important;
+    padding: 11px 16px !important;
+}

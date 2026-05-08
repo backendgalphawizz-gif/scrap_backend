@@ -221,14 +221,14 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <select name="age_range_min" id="age_range_min" class="form-select form-control" required>
                                             <option value="">{{ \App\CPU\translate('Min')}}</option>
-                                            @for($age = 18; $age <= 65; $age++)
+                                            @for($age = 18; $age <= 85; $age++)
                                                 <option value="{{ $age }}" {{ (string)old('age_range_min') === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                             @endfor
                                         </select>
                                         <span>-</span>
                                         <select name="age_range_max" id="age_range_max" class="form-select form-control" required>
                                             <option value="">{{ \App\CPU\translate('Max')}}</option>
-                                            @for($age = 18; $age <= 65; $age++)
+                                            @for($age = 18; $age <= 85; $age++)
                                                 <option value="{{ $age }}" {{ (string)old('age_range_max') === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                             @endfor
                                         </select>
@@ -237,9 +237,19 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                <div class="form-check mt-4 pt-2">
+                                    <input class="form-check-input" type="checkbox" id="panIndiaCheck"
+                                        {{ old('state') === 'Any' ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="panIndiaCheck">
+                                        Pan India <small class="text-muted fw-normal">(targets all states &amp; cities)</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="state">{{ \App\CPU\translate('State')}}</label>
-                                    <select name="state" id="state" class="form-select form-control" required>
+                                    <select name="state" id="state" class="form-select form-control" required
+                                        {{ old('state') === 'Any' ? 'disabled' : '' }}>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="Any" {{ old('state') === 'Any' ? 'selected' : '' }}>Any</option>
                                         @foreach($states as $state)
@@ -251,7 +261,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="city">{{ \App\CPU\translate('City')}}</label>
-                                    <select name="city" id="city" class="form-select form-control" required>
+                                    <select name="city" id="city" class="form-select form-control" required
+                                        {{ old('state') === 'Any' ? 'disabled' : '' }}>
                                         <option value="">{{ \App\CPU\translate('Select')}}</option>
                                         <option value="Any" {{ old('city') === 'Any' ? 'selected' : '' }}>Any</option>
                                     </select>
@@ -463,12 +474,47 @@
     }
 
     $('#state').on('change', function() {
-        $('#preselected_city').val('');
-        syncCityOptions();
+        if (!$('#panIndiaCheck').is(':checked')) {
+            $('#preselected_city').val('');
+            syncCityOptions();
+        }
+    });
+
+    function setPanIndia(enabled) {
+        const stateSelect = $('#state');
+        const citySelect  = $('#city');
+        if (enabled) {
+            stateSelect.val('Any').prop('disabled', true);
+            citySelect.empty()
+                .append('<option value="Any" selected>Any</option>')
+                .prop('disabled', true);
+        } else {
+            stateSelect.val('').prop('disabled', false);
+            citySelect.empty()
+                .append('<option value="">{{ \App\CPU\translate("Select")}}</option>')
+                .append('<option value="Any">Any</option>')
+                .prop('disabled', false);
+        }
+    }
+
+    $('#panIndiaCheck').on('change', function() {
+        setPanIndia($(this).is(':checked'));
+    });
+
+    // Re-enable disabled selects before submit so values are included in POST
+    $('form').on('submit', function() {
+        if ($('#panIndiaCheck').is(':checked')) {
+            $('#state').prop('disabled', false);
+            $('#city').prop('disabled', false);
+        }
     });
 
     $(document).ready(function() {
-        syncCityOptions();
+        if ($('#panIndiaCheck').is(':checked')) {
+            setPanIndia(true);
+        } else {
+            syncCityOptions();
+        }
     });
 </script>
 <script>
