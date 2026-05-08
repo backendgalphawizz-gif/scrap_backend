@@ -67,6 +67,7 @@ class AdminNotification extends Model
         return match (true) {
             str_starts_with($this->type, 'brand.registered')          => 'mdi-store-plus',
             str_starts_with($this->type, 'brand.campaign_submitted')   => 'mdi-bullhorn',
+            str_starts_with($this->type, 'brand.campaign_stopped')     => 'mdi-stop-circle',
             str_starts_with($this->type, 'brand.gst_submitted')        => 'mdi-file-certificate',
             str_starts_with($this->type, 'brand.pending_review')       => 'mdi-account-clock',
             str_starts_with($this->type, 'user.pan_submitted')         => 'mdi-card-account-details',
@@ -82,9 +83,10 @@ class AdminNotification extends Model
     public function getColorAttribute(): string
     {
         return match (true) {
-            str_starts_with($this->type, 'brand.')  => 'primary',
-            str_starts_with($this->type, 'user.')   => 'warning',
-            default                                  => 'secondary',
+            str_starts_with($this->type, 'brand.campaign_stopped') => 'danger',
+            str_starts_with($this->type, 'brand.')                => 'primary',
+            str_starts_with($this->type, 'user.')                 => 'warning',
+            default                                               => 'secondary',
         };
     }
 }

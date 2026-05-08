@@ -30,6 +30,10 @@ class Campaign extends Model
         'sub_category_id',
         'unique_code','used_post','total_user_required','sale_id','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst',
         'repeat_brand_percentage','user_referral_percentage','referral_coin',
+        'refund_status',
+        'refunded_amount',
+        'refund_note',
+        'stopped_at',
     ];
 
     protected $appends = [

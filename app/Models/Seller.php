@@ -56,7 +56,13 @@ class Seller extends Authenticatable
         'alternate_contact',
         'full_address',
         'google_map_link',
-        'website_link'
+        'website_link',
+        'bank_account_number',
+        'bank_ifsc_code',
+        'bank_account_holder_name',
+        'bank_account_type',
+        'bank_status',
+        'bank_rejection_reason',
     ];
 
     protected $appends = [

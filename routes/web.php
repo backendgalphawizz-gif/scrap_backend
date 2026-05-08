@@ -90,6 +90,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/update/{id}', [CampaignController::class, 'update'])->name('admin.campaign.update');
         Route::post('/status', [CampaignController::class, 'status'])->name('admin.campaign.status');
         Route::post('/delete', [CampaignController::class, 'delete'])->name('admin.campaign.delete');
+        Route::get('/{id}/refund-preview', [CampaignController::class, 'refundPreview'])->name('admin.campaign.refund-preview');
+        Route::post('/{id}/process-refund', [CampaignController::class, 'processRefund'])->name('admin.campaign.process-refund');
     });
     
     // CampaignController
