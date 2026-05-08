@@ -301,7 +301,7 @@
             @if($activeTab === 'landing_mobile')
             @php $d = $data['landing_mobile'] ?? [] @endphp
             <h5 class="card-title mb-4"><i class="mdi mdi-cellphone me-2 text-primary"></i>Mobile App Section</h5>
-            <form action="{{ route('admin.landing-page.update', 'landing_mobile') }}" method="POST">
+            <form action="{{ route('admin.landing-page.update', 'landing_mobile') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -320,11 +320,43 @@
                         <label class="title-color">Google Play Link</label>
                         <input type="text" name="play_store_link" class="form-control" value="{{ $d['play_store_link'] ?? '' }}" placeholder="https://play.google.com/...">
                     </div>
+
+                    {{-- Banner Image --}}
+                    <div class="col-md-12"><hr class="my-2"><h6 class="fw-bold">Banner Image</h6></div>
+                    @if(!empty($d['banner_image']))
+                    <div class="col-md-12">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <img src="{{ asset('storage/landing/mobile/' . $d['banner_image']) }}" alt="Mobile Banner" style="max-height:120px;border-radius:4px;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remove_banner_image" value="1" id="removeMobileBanner">
+                                <label class="form-check-label text-danger" for="removeMobileBanner">Remove image</label>
+                            </div>
+                        </div>
+                        <input type="hidden" name="existing_banner_image" value="{{ $d['banner_image'] }}">
+                    </div>
+                    @endif
+                    <div class="col-md-6">
+                        <label class="title-color">{{ !empty($d['banner_image']) ? 'Replace Banner Image' : 'Upload Banner Image' }}</label>
+                        <input type="file" name="banner_image" class="form-control" accept="image/*" id="mobileBannerInput">
+                        <div id="mobileBannerPreview" class="mt-2"></div>
+                    </div>
                 </div>
                 <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary px-5">Save Mobile App Section</button>
                 </div>
             </form>
+            <script>
+            document.getElementById('mobileBannerInput')?.addEventListener('change', function() {
+                const preview = document.getElementById('mobileBannerPreview');
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => { preview.innerHTML = '<img src="' + e.target.result + '" style="max-height:120px;border-radius:4px;">'; };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    preview.innerHTML = '';
+                }
+            });
+            </script>
             @endif
 
             {{-- ============== FAQ ============== --}}
@@ -335,7 +367,7 @@
                 while(count($faqItems) < 4) { $faqItems[] = ['question'=>'','answer'=>'']; }
             @endphp
             <h5 class="card-title mb-4"><i class="mdi mdi-help-circle me-2 text-primary"></i>FAQ Section</h5>
-            <form action="{{ route('admin.landing-page.update', 'landing_faq') }}" method="POST">
+            <form action="{{ route('admin.landing-page.update', 'landing_faq') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
@@ -370,10 +402,45 @@
                     <i class="mdi mdi-plus me-1"></i>Add FAQ
                 </button>
 
+                {{-- Banner Image --}}
+                <hr class="my-3">
+                <h6 class="fw-bold mb-3">Banner Image</h6>
+                <div class="row g-3">
+                    @if(!empty($d['banner_image']))
+                    <div class="col-md-12">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <img src="{{ asset('storage/landing/faq/' . $d['banner_image']) }}" alt="FAQ Banner" style="max-height:120px;border-radius:4px;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remove_banner_image" value="1" id="removeFaqBanner">
+                                <label class="form-check-label text-danger" for="removeFaqBanner">Remove image</label>
+                            </div>
+                        </div>
+                        <input type="hidden" name="existing_banner_image" value="{{ $d['banner_image'] }}">
+                    </div>
+                    @endif
+                    <div class="col-md-6">
+                        <label class="title-color">{{ !empty($d['banner_image']) ? 'Replace Banner Image' : 'Upload Banner Image' }}</label>
+                        <input type="file" name="banner_image" class="form-control" accept="image/*" id="faqBannerInput">
+                        <div id="faqBannerPreview" class="mt-2"></div>
+                    </div>
+                </div>
+
                 <div class="text-end mt-2">
                     <button type="submit" class="btn btn-primary px-5">Save FAQ Section</button>
                 </div>
             </form>
+            <script>
+            document.getElementById('faqBannerInput')?.addEventListener('change', function() {
+                const preview = document.getElementById('faqBannerPreview');
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => { preview.innerHTML = '<img src="' + e.target.result + '" style="max-height:120px;border-radius:4px;">'; };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    preview.innerHTML = '';
+                }
+            });
+            </script>
             @endif
 
         </div>

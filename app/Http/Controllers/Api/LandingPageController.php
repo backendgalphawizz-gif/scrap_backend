@@ -134,6 +134,18 @@ class LandingPageController extends Controller
             }, $data['banners']);
         }
 
+        if ($section === 'landing_mobile' && !empty($data['banner_image'])) {
+            if (!str_starts_with($data['banner_image'], 'http')) {
+                $data['banner_image_url'] = asset('storage/landing/mobile/' . $data['banner_image']);
+            }
+        }
+
+        if ($section === 'landing_faq' && !empty($data['banner_image'])) {
+            if (!str_starts_with($data['banner_image'], 'http')) {
+                $data['banner_image_url'] = asset('storage/landing/faq/' . $data['banner_image']);
+            }
+        }
+
         return $data;
     }
 }
