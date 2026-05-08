@@ -181,14 +181,14 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <select name="age_range_min" id="age_range_min" class="form-select form-control" required>
                                                 <option value="">{{ \App\CPU\translate('Min')}}</option>
-                                                @for($age = 18; $age <= 65; $age++)
+                                                @for($age = 18; $age <= 85; $age++)
                                                     <option value="{{ $age }}" {{ (string)$selectedMinAge === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                                 @endfor
                                             </select>
                                             <span>-</span>
                                             <select name="age_range_max" id="age_range_max" class="form-select form-control" required>
                                                 <option value="">{{ \App\CPU\translate('Max')}}</option>
-                                                @for($age = 18; $age <= 65; $age++)
+                                                @for($age = 18; $age <= 85; $age++)
                                                     <option value="{{ $age }}" {{ (string)$selectedMaxAge === (string)$age ? 'selected' : '' }}>{{ $age }}</option>
                                                 @endfor
                                             </select>
@@ -198,11 +198,21 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4">
+                                    <div class="form-check mt-4 pt-2">
+                                        <input class="form-check-input" type="checkbox" id="panIndiaCheck"
+                                            {{ old('state', $campaign->state) === 'any' ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-semibold" for="panIndiaCheck">
+                                            Pan India <small class="text-muted fw-normal">(targets all states &amp; cities)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="state">{{ \App\CPU\translate('State')}}</label>
-                                        <select name="state" id="state" class="form-select form-control @error('state') is-invalid @enderror" required>
+                                        <select name="state" id="state" class="form-select form-control @error('state') is-invalid @enderror" required
+                                            {{ old('state', $campaign->state) === 'any' ? 'disabled' : '' }}>
                                             <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                            <option value="Any" {{ old('state', $campaign->state) === 'Any' ? 'selected' : '' }}>Any</option>
+                                            <option value="any" {{ old('state', $campaign->state) === 'any' ? 'selected' : '' }}>Any</option>
                                             @foreach($states as $state)
                                                 <option value="{{ $state->name }}" {{ old('state', $campaign->state) === $state->name ? 'selected' : '' }}>{{ $state->name }}</option>
                                             @endforeach
@@ -210,12 +220,13 @@
                                         @error('state') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="city">{{ \App\CPU\translate('City')}}</label>
-                                        <select name="city" id="city" class="form-select form-control @error('city') is-invalid @enderror" required>
+                                        <select name="city" id="city" class="form-select form-control @error('city') is-invalid @enderror" required
+                                            {{ old('state', $campaign->state) === 'any' ? 'disabled' : '' }}>
                                             <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                            <option value="Any" {{ old('city', $campaign->city) === 'Any' ? 'selected' : '' }}>Any</option>
+                                            <option value="any" {{ old('state', $campaign->state) === 'any' ? 'selected' : '' }}>Any</option>
                                         </select>
                                         @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                         <input type="hidden" id="preselected_city" value="{{ old('city', $campaign->city) }}">
@@ -275,7 +286,9 @@
                                         <label>{{ \App\CPU\translate('Image')}}</label>
                                         <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 4:1 )</span>
                                         <input type="file" name="thumbnail" id="mbimageFileUploader" class="form-control" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                        <img id="mbImageviewer" src="{{ $campaign->thumbnail }}" onerror='this.src="{{asset('assets/logo/logo-3.png')}}"' class="img-thumbnail mt-2" style="width:150px;height:auto;object-fit:cover;">
+                                        <a href="#" class="campaign-zoom-trigger d-inline-block mt-2" data-src="{{ $campaign->thumbnail }}" data-fallback="{{ asset('assets/logo/logo-3.png') }}">
+                                            <img id="mbImageviewer" src="{{ $campaign->thumbnail }}" onerror='this.src="{{asset('assets/logo/logo-3.png')}}"' class="img-thumbnail" style="width:150px;height:auto;object-fit:cover;cursor:zoom-in;">
+                                        </a>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -284,7 +297,9 @@
                                         <input type="file" name="images[]" id="multipleImageUploader" class="form-control" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" multiple>
                                         <div id="imagePreview" class="mt-2 d-flex flex-wrap gap-2">
                                             @forelse($campaign->images ?? [] as $image)
-                                                <img src="{{ $image }}" class="img-thumbnail" style="width:100px;height:100px;object-fit:cover;">
+                                                <a href="#" class="campaign-zoom-trigger" data-src="{{ $image }}" data-fallback="{{ asset('assets/logo/logo-3.png') }}">
+                                                    <img src="{{ $image }}" class="img-thumbnail" style="width:100px;height:100px;object-fit:cover;cursor:zoom-in;" onerror='this.src="{{ asset("assets/logo/logo-3.png") }}"'>
+                                                </a>
                                             @empty
                                             @endforelse
                                         </div>
@@ -299,6 +314,20 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Lightbox Modal --}}
+<div class="modal fade" id="editCampaignLightbox" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0" style="position:absolute;top:8px;right:8px;z-index:10;">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img id="editLightboxImg" src="" alt="Zoomed Image" style="width:100%;">
             </div>
         </div>
     </div>
@@ -375,11 +404,25 @@
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                $('#mbImageviewer').attr('src', e.target.result);
+                var src = e.target.result;
+                $('#mbImageviewer').attr('src', src);
+                $('#mbImageviewer').closest('.campaign-zoom-trigger').data('src', src).attr('data-src', src);
             }
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    // Lightbox
+    $(document).on('click', '.campaign-zoom-trigger', function(e) {
+        e.preventDefault();
+        var src = $(this).data('src') || $(this).find('img').attr('src');
+        var fallback = $(this).data('fallback') || '';
+        var img = document.getElementById('editLightboxImg');
+        img.src = src;
+        img.onerror = fallback ? function() { this.src = fallback; this.onerror = null; } : null;
+        var modal = new bootstrap.Modal(document.getElementById('editCampaignLightbox'));
+        modal.show();
+    });
 </script>
 <script>
     $('#multipleImageUploader').change(function() {
@@ -392,11 +435,12 @@
             $.each(input.files, function(index, file) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    $('<img>').attr('src', e.target.result).addClass('img-thumbnail').css({
-                        'width': '100px',
-                        'height': '100px',
-                        'object-fit': 'cover'
-                    }).appendTo('#imagePreview');
+                    var src = e.target.result;
+                    var $a = $('<a>').attr({'href': '#', 'data-src': src}).addClass('campaign-zoom-trigger');
+                    $('<img>').attr('src', src).addClass('img-thumbnail').css({
+                        'width': '100px', 'height': '100px', 'object-fit': 'cover', 'cursor': 'zoom-in'
+                    }).appendTo($a);
+                    $a.appendTo('#imagePreview');
                 }
                 reader.readAsDataURL(file);
             });
@@ -422,10 +466,47 @@
         }
     }
 
-    $('#state').on('change', syncCityOptions);
+    $('#state').on('change', function() {
+        if (!$('#panIndiaCheck').is(':checked')) {
+            syncCityOptions();
+        }
+    });
+
+    function setPanIndia(enabled) {
+        const stateSelect = $('#state');
+        const citySelect  = $('#city');
+        if (enabled) {
+            stateSelect.val('any').prop('disabled', true);
+            citySelect.empty()
+                .append('<option value="any" selected>Any</option>')
+                .prop('disabled', true);
+        } else {
+            stateSelect.val('').prop('disabled', false);
+            citySelect.empty()
+                .append('<option value="">{{ \App\CPU\translate("Select")}}</option>')
+                .append('<option value="Any">Any</option>')
+                .prop('disabled', false);
+        }
+    }
+
+    $('#panIndiaCheck').on('change', function() {
+        setPanIndia($(this).is(':checked'));
+    });
+
+    // Re-enable disabled selects before submit so values are included in POST
+    $('.banner_form').on('submit', function() {
+        if ($('#panIndiaCheck').is(':checked')) {
+            $('#state').prop('disabled', false);
+            $('#city').prop('disabled', false);
+        }
+    });
 
     $(document).ready(function() {
-        syncCityOptions();
+        if ($('#panIndiaCheck').is(':checked')) {
+            setPanIndia(true);
+        } else {
+            syncCityOptions();
+        }
     });
 </script>
 <script>
