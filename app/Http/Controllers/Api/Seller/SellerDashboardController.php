@@ -939,20 +939,23 @@ class SellerDashboardController extends Controller
 
         $seller = $data['data'];
 
-        $refunds = Campaign::where('brand_id', $seller['id'])
-            ->whereNotNull('refund_status')
-            ->orderBy('stopped_at', 'desc')
+        $refunds = \App\Models\CampaignRefund::where('brand_id', $seller['id'])
+            ->with(['campaign:id,title,status,stopped_at'])
+            ->orderBy('created_at', 'desc')
             ->get([
                 'id',
-                'title',
-                'status',
-                'total_campaign_budget',
-                'compign_budget_with_gst',
-                'refund_status',
+                'campaign_id',
+                'brand_id',
+                'calculated_amount',
                 'refunded_amount',
-                'refund_note',
-                'stopped_at',
-                'updated_at',
+                'bank_account_number',
+                'bank_ifsc_code',
+                'bank_account_holder_name',
+                'bank_account_type',
+                'status',
+                'admin_note',
+                'completed_at',
+                'created_at',
             ]);
 
         return response()->json([

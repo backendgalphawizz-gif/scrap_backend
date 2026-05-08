@@ -92,6 +92,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/delete', [CampaignController::class, 'delete'])->name('admin.campaign.delete');
         Route::get('/{id}/refund-preview', [CampaignController::class, 'refundPreview'])->name('admin.campaign.refund-preview');
         Route::post('/{id}/process-refund', [CampaignController::class, 'processRefund'])->name('admin.campaign.process-refund');
+        Route::post('/{id}/complete-refund', [CampaignController::class, 'completeRefund'])->name('admin.campaign.complete-refund');
     });
     
     // CampaignController

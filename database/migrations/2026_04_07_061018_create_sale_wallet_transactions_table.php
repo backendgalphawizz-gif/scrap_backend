@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('sale_id');
             $table->decimal('amount', 10, 2)->default(0);
             $table->enum('type', ['credit', 'debit'])->default('credit');
-            $table->mediumText('remarks')->nullable();
+            $table->longText('remarks')->nullable();
             $table->enum('status', ['pending', 'success', 'failed'])->default('pending');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
