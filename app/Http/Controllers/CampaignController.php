@@ -9,6 +9,8 @@ use App\Models\Campaign;
 use App\Models\CampaignTransaction;
 use App\Models\BrandCategory;
 use App\Models\Seller;
+use App\Models\SellerWallet;
+use App\Models\SellerWalletHistory;
 use App\Models\PaymentSplit;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -337,6 +339,108 @@ class CampaignController extends Controller
             ->paginate(10)
             ->withQueryString();
         return view('admin-views.campaign.transactions', compact('transactions'));
+    }
+
+    /**
+     * Show the refund calculation preview for a stopped campaign.
+     */
+    public function refundPreview(int $id)
+    {
+        $campaign = Campaign::with('brand')->findOrFail($id);
+        $sellerWallet = SellerWallet::firstOrCreate(
+            ['seller_id' => $campaign->brand_id],
+            ['wallet_amount' => 0, 'hold_for_campaign' => 0]
+        );
+
+        $refundData = $this->calculateRefund($campaign);
+
+        return view('admin-views.campaign.refund-preview', compact('campaign', 'sellerWallet', 'refundData'));
+    }
+
+    /**
+     * Process and credit the refund for a stopped campaign.
+     */
+    public function processRefund(Request $request, int $id)
+    {
+        $campaign = Campaign::findOrFail($id);
+
+        if ($campaign->status !== 'stopped') {
+            return back()->with('error', 'Refund can only be processed for stopped campaigns.');
+        }
+
+        if ($campaign->refund_status === 'processed') {
+            return back()->with('error', 'Refund has already been processed for this campaign.');
+        }
+
+        $refundData = $this->calculateRefund($campaign);
+        $refundableAmount = $refundData['refundable_amount'];
+
+        DB::transaction(function () use ($campaign, $refundableAmount, $request) {
+            // Credit wallet
+            $wallet = SellerWallet::firstOrCreate(
+                ['seller_id' => $campaign->brand_id],
+                ['wallet_amount' => 0, 'hold_for_campaign' => 0]
+            );
+            $wallet->wallet_amount = $wallet->wallet_amount + $refundableAmount;
+            $wallet->save();
+
+            // Log wallet credit
+            SellerWalletHistory::create([
+                'seller_id'         => $campaign->brand_id,
+                'amount'            => $refundableAmount,
+                'remarks'           => 'Refund for stopped campaign: ' . $campaign->title,
+                'type'              => 'credit',
+                'available_balance' => $wallet->wallet_amount,
+            ]);
+
+            // Mark campaign refund as processed
+            $campaign->refund_status    = 'processed';
+            $campaign->refunded_amount  = $refundableAmount;
+            $campaign->refund_note      = $request->input('refund_note');
+            $campaign->save();
+
+            Helpers::systemActivity('campaign_refund', auth()->user(), 'processed',
+                "Refund of ₹{$refundableAmount} processed for campaign: {$campaign->title}", $campaign);
+        });
+
+        return redirect()->route('admin.campaign.show', $id)
+            ->with('success', 'Refund of ₹' . number_format($refundableAmount, 2) . ' processed and credited to brand wallet.');
+    }
+
+    /**
+     * Calculate the refundable amount for a campaign.
+     *
+     * Utilized budget = slots in (pending|active|approved|completed) × reward_per_user × (1 + gst%)
+     * Refundable      = max(0, total_budget_with_gst − utilized_with_gst)
+     */
+    private function calculateRefund(Campaign $campaign): array
+    {
+        $utilizedSlots = CampaignTransaction::where('campaign_id', $campaign->id)
+            ->whereIn('status', [
+                CampaignTransaction::STATUS_PENDING,
+                CampaignTransaction::STATUS_ACTIVE,
+                CampaignTransaction::STATUS_APPROVED,
+                CampaignTransaction::STATUS_COMPLETED,
+            ])
+            ->count();
+
+        $gstPercentage    = (float) Helpers::get_business_settings('campaign_gst_percentage');
+        $rewardPerUser    = (float) ($campaign->reward_per_user ?? 0);
+        $totalBudgetGst   = (float) ($campaign->compign_budget_with_gst ?? 0);
+
+        $utilizedRaw      = $utilizedSlots * $rewardPerUser;
+        $utilizedWithGst  = $utilizedRaw * (1 + $gstPercentage / 100);
+        $refundableAmount = max(0, $totalBudgetGst - $utilizedWithGst);
+
+        return [
+            'utilized_slots'    => $utilizedSlots,
+            'reward_per_user'   => $rewardPerUser,
+            'gst_percentage'    => $gstPercentage,
+            'utilized_raw'      => round($utilizedRaw, 2),
+            'utilized_with_gst' => round($utilizedWithGst, 2),
+            'total_budget_gst'  => round($totalBudgetGst, 2),
+            'refundable_amount' => round($refundableAmount, 2),
+        ];
     }
 
     private function getCampaignGuidelineOptions(): array

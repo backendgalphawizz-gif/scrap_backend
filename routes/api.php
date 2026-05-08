@@ -229,6 +229,7 @@ Route::group(['prefix' => 'brand'], function () {
         Route::post('support-tickets/{id}/messages', [BrandSupportTicketController::class, 'sendMessage']);
 
         Route::get('campaign/has-campaign-last-100-days', [SellerDashboardController::class, 'hasCampaignInLast100Days']);
+        Route::get('refunds', [SellerDashboardController::class, 'listRefunds']);
     });
 });
 

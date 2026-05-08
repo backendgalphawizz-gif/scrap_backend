@@ -14,6 +14,18 @@
     $images = is_array($campaign->images) ? $campaign->images : [];
 @endphp
 <div class="content-wrapper">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-check-circle me-1"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-alert me-1"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
     <div class="page-header">
         <h3 class="page-title">
             <span class="page-title-icon bg-gradient-primary text-white me-2">
@@ -194,7 +206,21 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-3 d-flex justify-content-end">
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+                <div>
+                    @if($campaign->status === 'stopped')
+                        @if($campaign->refund_status === 'processed')
+                            <span class="badge bg-success fs-6">
+                                <i class="mdi mdi-check-circle me-1"></i>
+                                {{ \App\CPU\translate('Refund Processed') }}: ₹{{ number_format($campaign->refunded_amount, 2) }}
+                            </span>
+                        @else
+                            <a href="{{ route('admin.campaign.refund-preview', $campaign->id) }}" class="btn btn-danger">
+                                <i class="mdi mdi-cash-refund me-1"></i>{{ \App\CPU\translate('Process Refund') }}
+                            </a>
+                        @endif
+                    @endif
+                </div>
                 <a href="{{ route('admin.campaign.list') }}" class="btn btn-secondary">{{ \App\CPU\translate('back') }}</a>
             </div>
         </div>

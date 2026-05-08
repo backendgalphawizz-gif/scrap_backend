@@ -286,6 +286,16 @@ class SellerDashboardController extends Controller
             $shop->billing_phone = $request->billing_phone;
         }
 
+        if ($shop->bank_status !== 'Verified' &&
+            ($request->filled('bank_account_number') || $request->filled('bank_ifsc_code') ||
+             $request->filled('bank_account_holder_name') || $request->filled('bank_account_type'))) {
+            $shop->bank_account_number       = $request->bank_account_number ?? $shop->bank_account_number;
+            $shop->bank_ifsc_code            = $request->bank_ifsc_code ?? $shop->bank_ifsc_code;
+            $shop->bank_account_holder_name  = $request->bank_account_holder_name ?? $shop->bank_account_holder_name;
+            $shop->bank_account_type         = $request->bank_account_type ?? $shop->bank_account_type;
+            $shop->bank_status               = 'Submitted';
+        }
+
         $kycDirty = $shop->isDirty();
         if ($kycDirty) {
             $shop->save();
@@ -913,6 +923,43 @@ class SellerDashboardController extends Controller
             'data' => $exists,
             'total' => $count
         ]);
+    }
+
+    public function listRefunds(Request $request)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => [],
+            ], 401);
+        }
+
+        $seller = $data['data'];
+
+        $refunds = Campaign::where('brand_id', $seller['id'])
+            ->whereNotNull('refund_status')
+            ->orderBy('stopped_at', 'desc')
+            ->get([
+                'id',
+                'title',
+                'status',
+                'total_campaign_budget',
+                'compign_budget_with_gst',
+                'refund_status',
+                'refunded_amount',
+                'refund_note',
+                'stopped_at',
+                'updated_at',
+            ]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Refund list retrieved successfully',
+            'data'    => CommonResource::collection($refunds),
+        ], 200);
     }
 
 }

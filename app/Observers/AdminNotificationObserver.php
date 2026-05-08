@@ -103,8 +103,13 @@ class AdminNotificationObserver
 
     private function campaignUpdated(Campaign $campaign): void
     {
-        if ($campaign->isDirty('status') && $campaign->status === 'pending') {
-            $brandName = optional($campaign->brand)->username ?? 'Unknown Brand';
+        if (! $campaign->isDirty('status')) {
+            return;
+        }
+
+        $brandName = optional($campaign->brand)->username ?? 'Unknown Brand';
+
+        if ($campaign->status === 'pending') {
             AdminNotification::fire(
                 type:        'brand.campaign_submitted',
                 title:       'Campaign Resubmitted for Approval',
@@ -113,6 +118,19 @@ class AdminNotificationObserver
                 relatedId:   $campaign->id,
                 relatedType: 'Campaign'
             );
+        }
+
+        if ($campaign->status === 'stopped') {
+            AdminNotification::fire(
+                type:        'brand.campaign_stopped',
+                title:       'Campaign Stopped by Brand',
+                message:     "{$brandName} stopped the campaign \"{$campaign->title}\". Review and process refund if applicable.",
+                link:        route('admin.campaign.show', $campaign->id),
+                relatedId:   $campaign->id,
+                relatedType: 'Campaign'
+            );
+            // Stamp the stopped time without re-triggering this observer
+            $campaign->saveQuietly(['stopped_at' => now()]);
         }
     }
 
