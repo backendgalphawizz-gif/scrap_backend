@@ -55,7 +55,7 @@ class FeedbackQuestionController extends Controller
         $search = trim((string) $request->input('search', ''));
 
         $questions = BrandFeedbackQuestion::query()
-            ->where('brand_id', 0)
+            ->where('brand_id', $data['data']->id)
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', (int) $request->status);
             })
@@ -115,7 +115,7 @@ class FeedbackQuestionController extends Controller
         }
 
         $question = BrandFeedbackQuestion::create([
-            'brand_id' => 0,
+            'brand_id' => $data['data']->id,
             'question' => trim($request->question),
             'question_type' => $questionType,
             'options' => $questionType === 'multiple_choice' ? $options : [],
@@ -137,7 +137,7 @@ class FeedbackQuestionController extends Controller
         }
 
         $question = BrandFeedbackQuestion::query()
-            ->where('brand_id', 0)
+            ->where('brand_id', $data['data']->id)
             ->find($id);
 
         if (!$question) {
@@ -173,7 +173,7 @@ class FeedbackQuestionController extends Controller
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $question = BrandFeedbackQuestion::where('brand_id', 0)->find($id);
+        $question = BrandFeedbackQuestion::where('brand_id', $data['data']->id)->find($id);
         if (!$question) {
             return response()->json(['status' => false, 'message' => 'Not found'], 404);
         }
@@ -209,7 +209,7 @@ class FeedbackQuestionController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $question = BrandFeedbackQuestion::where('brand_id', 0)->find($id);
+        $question = BrandFeedbackQuestion::where('brand_id', $data['data']->id)->find($id);
         if (!$question) {
             return response()->json(['status' => false, 'message' => 'Not found'], 404);
         }

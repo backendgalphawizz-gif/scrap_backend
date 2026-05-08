@@ -81,7 +81,7 @@
                             <div class="col-md-1">
                                 <label class="form-label"></label>
                                 <div>
-                                    <img id="saleImagePreview" src="{{ $sale->image }}" class="sale-avatar-preview" alt="sale image">
+                                    <img id="saleImagePreview" src="{{ $sale->image }}" class="sale-avatar-preview w-100" alt="sale image">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -235,7 +235,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <img class="img-fluid" style="min-width: 450px;"
+                <img class="img-fluid" style="max-width: 450px;"
                     id="panImageModalImg"
                     src="{{ $sale->pan_image }}"
                     alt="PAN Image"

@@ -621,4 +621,5 @@
   'Support Chat' => 'Support Chat',
   'Landing Page' => 'Landing Page',
   'Landing Page Management' => 'Landing Page Management',
+  'You wont be able to revert this!' => 'You wont be able to revert this!',
 );

@@ -68,13 +68,9 @@ Route::prefix('landing-page')->group(function () {
 // Auth 
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
-Route::prefix('admin')
-    ->middleware(['auth:api'])
-    ->group(function () {
-        // Dashboard
+Route::prefix('admin')->middleware(['auth:api'])->group(function () {
+        
         Route::get('/dashboard-count', [DashboardController::class, 'index']);
-
-        // Roles api's
         Route::post('/roles', [RoleController::class, 'store']);
         Route::get('/roles', [RoleController::class, 'index']);
         Route::get('/roles/{id}', [RoleController::class, 'show']);
@@ -157,10 +153,14 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
     Route::post('support-tickets/{id}/messages', [UserSupportTicketController::class, 'sendMessage']);
 
     // get user level and benefits
+
+    // Update user interests
+    Route::post('update-interest', [UserProfileController::class, 'updateInterest']);
     
 });
 
 Route::get('categories', [UserAuthController::class, 'categories']);
+Route::get('main-categories', [UserAuthController::class, 'mainCategories']);
 Route::get('professions', [UserAuthController::class, 'professions']);
 Route::get('banners', [UserAuthController::class, 'banners']);
 Route::get('popup-banner', [UserAuthController::class, 'popupBanner']);

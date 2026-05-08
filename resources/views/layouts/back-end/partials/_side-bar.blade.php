@@ -99,7 +99,7 @@
         </li>
         @endif
 
-        @if(\App\CPU\Helpers::module_permission_check('feedback_management'))
+        <!-- @if(\App\CPU\Helpers::module_permission_check('feedback_management'))
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#feedback" aria-expanded="false" aria-controls="feedback">
                 <span class="menu-title">Feedback</span>
@@ -116,7 +116,7 @@
                 </ul>
             </div>
         </li>
-        @endif
+        @endif -->
 
         @php($voucherMenuOpen = request()->routeIs('admin.voucher-brand.*'))
         @if(\App\CPU\Helpers::module_permission_check('voucher_management'))

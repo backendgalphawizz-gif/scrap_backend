@@ -642,4 +642,31 @@ class UserProfileController extends Controller
         ]);
     }
 
+    public function updateInterest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'interests'   => 'required|array|min:1',
+            'interests.*' => 'required|integer|exists:brand_categories,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $user = $request->user();
+        $user->my_interest = implode(',', $request->interests);
+        $user->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Interests updated successfully',
+            'data'    => [
+                'my_interest' => $user->my_interest,
+            ],
+        ]);
+    }
+
     }
