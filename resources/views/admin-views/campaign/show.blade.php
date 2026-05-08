@@ -121,11 +121,11 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('Start Date') }}</small>
-                                    <strong>{{ $campaign->start_date ?: 'N/A' }}</strong>
+                                    <strong>{{ $campaign->start_date ? \Carbon\Carbon::parse($campaign->start_date)->format('d/m/Y') : 'N/A' }}</strong>
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('End Date') }}</small>
-                                    <strong>{{ $campaign->end_date ?: 'N/A' }}</strong>
+                                    <strong>{{ $campaign->end_date ? \Carbon\Carbon::parse($campaign->end_date)->format('d/m/Y') : 'N/A' }}</strong>
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('Left Days') }}</small>
@@ -235,8 +235,8 @@
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('User Percentage (%)') }}</small><strong>{{ $campaign->user_percentage ?? '0' }}</strong></div>
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Sales Percentage (%)') }}</small><strong>{{ $campaign->sales_percentage ?? '0' }}</strong></div>
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Percentage (%)') }}</small><strong>{{ $campaign->feedback_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Created Date') }}</small><strong>{{ $campaign->created_at ? $campaign->created_at->format('d M Y \a\t g:i A') : 'N/A' }}</strong></div>
-                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Updated Date') }}</small><strong>{{ $campaign->updated_at ? $campaign->updated_at->format('d M Y \a\t g:i A') : 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Created Date') }}</small><strong>{{ $campaign->created_at ? $campaign->created_at->format('d/m/Y \a\t g:i A') : 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Updated Date') }}</small><strong>{{ $campaign->updated_at ? $campaign->updated_at->format('d/m/Y \a\t g:i A') : 'N/A' }}</strong></div>
                             </div>
                 </div>
             </div>

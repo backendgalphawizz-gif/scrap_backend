@@ -165,9 +165,9 @@
                                 <span class="badge {{ $voucher->status === 'purchased' ? 'badge-warning' : 'badge-info' }}">{{ ucfirst($voucher->status) }}</span>
                             </td>
                             <td>
-                                {{ optional($voucher->valid_from)->format('Y-m-d') ?? 'N/A' }}
+                                {{ optional($voucher->valid_from)->format('d/m/Y') ?? 'N/A' }}
                                 to
-                                {{ optional($voucher->valid_to)->format('Y-m-d') ?? 'N/A' }}
+                                {{ optional($voucher->valid_to)->format('d/m/Y') ?? 'N/A' }}
                             </td>
                             <td>
                                 {{ (int) $voucher->used_count }} / {{ $voucher->max_uses ?: 'Unlimited' }}

@@ -389,7 +389,7 @@
                                 <div class="small text-white-50 mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>
                                 <div class="small text-white-50">{{ $seller->email ?: '-' }} | {{ $seller->phone ?: '-' }}</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
-                                    <span class="brand-mini-chip"><i class="mdi mdi-clock-outline"></i> Joined {{ optional($seller->created_at)->format('d M Y') ?: '-' }}</span>
+                                    <span class="brand-mini-chip"><i class="mdi mdi-clock-outline"></i> Joined {{ optional($seller->created_at)->format('d/m/Y') ?: '-' }}</span>
                                     <span class="brand-mini-chip"><i class="mdi mdi-bullseye-arrow"></i> Campaigns {{ $seller->campaigns_count ?? 0 }}</span>
                                 </div>
                             </div>

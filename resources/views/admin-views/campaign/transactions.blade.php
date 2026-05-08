@@ -99,7 +99,7 @@
                                             {{ ucwords($txn->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ date('d M, Y', strtotime($txn->created_at)) }}</td>
+                                    <td>{{ date('d/m/Y', strtotime($txn->created_at)) }}</td>
                                 </tr>
                                 @empty
                                 <tr>

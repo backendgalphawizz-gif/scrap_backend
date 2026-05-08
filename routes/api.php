@@ -103,7 +103,7 @@ Route::prefix('admin')->middleware(['auth:api'])->group(function () {
         //     ->post('/roles', [RoleController::class, 'store']);
     });
     Route::get('user/user-levels', [UserLevelController::class, 'index']);   
-Route::prefix('user')->middleware('auth:api')->group(function () {
+Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->group(function () {
 
     // User profile related routes
     Route::get('profile', [UserProfileController::class, 'index']);
@@ -156,6 +156,9 @@ Route::prefix('user')->middleware('auth:api')->group(function () {
 
     // Update user interests
     Route::post('update-interest', [UserProfileController::class, 'updateInterest']);
+
+    // Personalised campaigns based on user interests + demographics
+    Route::get('interest-campaigns', [UserProfileController::class, 'interestCampaigns']);
     
 });
 
@@ -175,6 +178,7 @@ Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
 Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
 
 Route::group(['prefix' => 'brand'], function () {
+    // Public brand routes (no auth required)
     Route::get('brand-category-list', [SellerAuthController::class, 'brandCategoryList']);
     Route::get('campaign-guideline', [SellerAuthController::class, 'campaignGuideline']);
     Route::post('auth/send-otp', [SellerAuthController::class, 'sendOtp']);
@@ -183,78 +187,81 @@ Route::group(['prefix' => 'brand'], function () {
     Route::post('auth/register', [SellerAuthController::class, 'register']);
     Route::post('auth/notification', [SellerAuthController::class, 'sendNotification']);
 
-    Route::get('profile', [SellerDashboardController::class, 'index']);
-    Route::get('statistics', [SellerDashboardController::class, 'statistics']);
-    Route::get('campaign-wise-report/{campaignId}', [SellerDashboardController::class, 'getCampaignWiseChartData']);
-    Route::post('update-profile', [SellerDashboardController::class, 'update']);
-    Route::post('update-socials', [SellerDashboardController::class, 'updateSocials']);
-    Route::post('update-kyc', [SellerDashboardController::class, 'updateKyc']);
-    Route::post('campaign/create', [SellerDashboardController::class, 'createCampaign']);
-    Route::post('campaign/update/{id}', [SellerDashboardController::class, 'updateCampaign']);
-    Route::post('campaign/update-status/{id}', [SellerDashboardController::class, 'updateCampaignStatus']);
-    Route::get('campaign/detail/{id}', [SellerDashboardController::class, 'detailCampaign']);
-    Route::get('campaign/list', [SellerDashboardController::class, 'listCampaign']);
-    Route::get('campaign/delete/{id}', [SellerDashboardController::class, 'deleteCampaign']);
-    Route::post('campaign-transaction/{id}/report-violation', [SellerDashboardController::class, 'reportViolation']);
+    // Protected brand routes (requires active account)
+    Route::middleware('check.account.status:seller')->group(function () {
+        Route::get('profile', [SellerDashboardController::class, 'index']);
+        Route::get('statistics', [SellerDashboardController::class, 'statistics']);
+        Route::get('campaign-wise-report/{campaignId}', [SellerDashboardController::class, 'getCampaignWiseChartData']);
+        Route::post('update-profile', [SellerDashboardController::class, 'update']);
+        Route::post('update-socials', [SellerDashboardController::class, 'updateSocials']);
+        Route::post('update-kyc', [SellerDashboardController::class, 'updateKyc']);
+        Route::post('campaign/create', [SellerDashboardController::class, 'createCampaign']);
+        Route::post('campaign/update/{id}', [SellerDashboardController::class, 'updateCampaign']);
+        Route::post('campaign/update-status/{id}', [SellerDashboardController::class, 'updateCampaignStatus']);
+        Route::get('campaign/detail/{id}', [SellerDashboardController::class, 'detailCampaign']);
+        Route::get('campaign/list', [SellerDashboardController::class, 'listCampaign']);
+        Route::get('campaign/delete/{id}', [SellerDashboardController::class, 'deleteCampaign']);
+        Route::post('campaign-transaction/{id}/report-violation', [SellerDashboardController::class, 'reportViolation']);
 
-    // Seller Wallet
-    Route::get('/wallet', [SellerWalletController::class, 'index']);
-    Route::post('/wallet/create', [SellerWalletController::class, 'createWalletTransaction']);
-    Route::get('/wallet/transactions', [SellerWalletController::class, 'walletTransactionList']);
+        // Seller Wallet
+        Route::get('/wallet', [SellerWalletController::class, 'index']);
+        Route::post('/wallet/create', [SellerWalletController::class, 'createWalletTransaction']);
+        Route::get('/wallet/transactions', [SellerWalletController::class, 'walletTransactionList']);
 
-    // Feedback Question Crud
-    Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store']);
-    Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index']);
-    Route::get('/feedback-questions/{id}', [FeedbackQuestionController::class, 'show']);
-    Route::put('/feedback-questions/{id}', [FeedbackQuestionController::class, 'update']);
-    Route::delete('/feedback-questions/{id}', [FeedbackQuestionController::class, 'destroy']);
+        // Feedback Question Crud
+        Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store']);
+        Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index']);
+        Route::get('/feedback-questions/{id}', [FeedbackQuestionController::class, 'show']);
+        Route::put('/feedback-questions/{id}', [FeedbackQuestionController::class, 'update']);
+        Route::delete('/feedback-questions/{id}', [FeedbackQuestionController::class, 'destroy']);
 
-    Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
+        Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
 
-    Route::get('notifications', [SellerDashboardController::class, 'notifications']);
+        Route::get('notifications', [SellerDashboardController::class, 'notifications']);
 
-    Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
-    Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
+        Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
+        Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
 
-    Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
-    Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
-    Route::get('support-tickets/{id}', [BrandSupportTicketController::class, 'show']);
-    Route::delete('support-tickets/{id}', [BrandSupportTicketController::class, 'destroy']);
-    Route::post('support-tickets/{id}/messages', [BrandSupportTicketController::class, 'sendMessage']);
+        Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
+        Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);
+        Route::get('support-tickets/{id}', [BrandSupportTicketController::class, 'show']);
+        Route::delete('support-tickets/{id}', [BrandSupportTicketController::class, 'destroy']);
+        Route::post('support-tickets/{id}/messages', [BrandSupportTicketController::class, 'sendMessage']);
 
-    Route::get('campaign/has-campaign-last-100-days', [SellerDashboardController::class, 'hasCampaignInLast100Days']);
-
+        Route::get('campaign/has-campaign-last-100-days', [SellerDashboardController::class, 'hasCampaignInLast100Days']);
+    });
 });
 
 Route::group(['prefix' => 'sale'], function () {
+    // Public sale routes (no auth required)
     Route::post('auth/send-otp', [SaleAuthController::class, 'sendOtp']);
     Route::post('auth/login', [SaleAuthController::class, 'login']);
     Route::post('auth/forgot-password', [SaleAuthController::class, 'forgotPassword']);
     Route::post('auth/reset-password', [SaleAuthController::class, 'resetPassword']);
 
-    Route::get('profile', [SaleDashboardController::class, 'index']);
-    Route::post('update-profile', [SaleDashboardController::class, 'update']);
-    Route::post('update-kyc', [SaleDashboardController::class, 'updatekyc']);
-    Route::post('create-withdrawl-request', [SaleDashboardController::class, 'createWithdrawl']);
+    // Protected sale routes (requires active account)
+    Route::middleware('check.account.status:sale')->group(function () {
+        Route::get('profile', [SaleDashboardController::class, 'index']);
+        Route::post('update-profile', [SaleDashboardController::class, 'update']);
+        Route::post('update-kyc', [SaleDashboardController::class, 'updatekyc']);
+        Route::post('create-withdrawl-request', [SaleDashboardController::class, 'createWithdrawl']);
 
-    Route::post('campaign/create', [SaleDashboardController::class, 'createCampaign']);
-    Route::post('campaign/update/{id}', [SaleDashboardController::class, 'updateCampaign']);
-    Route::get('campaign/detail/{id}', [SaleDashboardController::class, 'detailCampaign']);
-    Route::get('campaign/list', [SaleDashboardController::class, 'listCampaign']);
-    Route::get('campaign/delete/{id}', [SaleDashboardController::class, 'deleteCampaign']);
+        Route::post('campaign/create', [SaleDashboardController::class, 'createCampaign']);
+        Route::post('campaign/update/{id}', [SaleDashboardController::class, 'updateCampaign']);
+        Route::get('campaign/detail/{id}', [SaleDashboardController::class, 'detailCampaign']);
+        Route::get('campaign/list', [SaleDashboardController::class, 'listCampaign']);
+        Route::get('campaign/delete/{id}', [SaleDashboardController::class, 'deleteCampaign']);
 
-    Route::post('brand/create', [SaleDashboardController::class, 'registerBrand']);
-    Route::get('brand/list', [SaleDashboardController::class, 'listBrand']);
-    Route::get('brand/detail/{id}', [SaleDashboardController::class, 'detailBrand']);
+        Route::post('brand/create', [SaleDashboardController::class, 'registerBrand']);
+        Route::get('brand/list', [SaleDashboardController::class, 'listBrand']);
+        Route::get('brand/detail/{id}', [SaleDashboardController::class, 'detailBrand']);
 
-    Route::get('wallet/transactions', [SaleDashboardController::class, 'walletTransactions']);
+        Route::get('wallet/transactions', [SaleDashboardController::class, 'walletTransactions']);
 
-    Route::get('notifications', [SaleDashboardController::class, 'notifications']);
-    Route::get('ledger-commission-transactions', [SaleDashboardController::class, 'ledgerTransactions']);
-    
-    Route::get('sales-terms-and-conditions', [SaleDashboardController::class, 'salesTermsAndConditions']);
-    Route::get('sales-privacy-policy', [SaleDashboardController::class, 'salesPrivacyPolicy']);
+        Route::get('notifications', [SaleDashboardController::class, 'notifications']);
+        Route::get('ledger-commission-transactions', [SaleDashboardController::class, 'ledgerTransactions']);
 
-
-
+        Route::get('sales-terms-and-conditions', [SaleDashboardController::class, 'salesTermsAndConditions']);
+        Route::get('sales-privacy-policy', [SaleDashboardController::class, 'salesPrivacyPolicy']);
+    });
 });

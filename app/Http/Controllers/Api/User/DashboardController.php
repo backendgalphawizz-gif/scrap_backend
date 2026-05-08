@@ -27,6 +27,9 @@ class DashboardController extends Controller
         $campaigns = Campaign::with(['brand'])
             ->withCount('campaign_transactions')
             ->withCount(['occupiedTransactions as occupied_slots'])
+            ->whereHas('brand', function ($q) {
+                $q->where('visibility_status', 'true');
+            })
             ->when($city !== '', function ($q) use ($city) {
                 $q->where('city', $city);
             })
@@ -62,7 +65,12 @@ class DashboardController extends Controller
         $userAge = $this->calculateAgeFromDob($user->dob ?? null);
     
         $isLocalForVocal = filter_var($request->input('local_for_vocal', false), FILTER_VALIDATE_BOOLEAN);
-   
+
+        $interestIds = [];
+        if (!empty($user->my_interest)) {
+            $interestIds = array_values(array_filter(array_map('intval', explode(',', $user->my_interest))));
+        }
+
         $filters = [];
         $query = Campaign::with(['brand'])
             ->withCount(['occupiedTransactions as occupied_slots']);
@@ -84,6 +92,10 @@ class DashboardController extends Controller
                 $query->orderBy('created_at', 'DESC');
                 break;
 
+            case 'my_interests':
+                $query->orderBy('id', 'DESC');
+                break;
+
             default:
                 $query->orderBy('id', 'DESC');
                 break;
@@ -94,6 +106,12 @@ class DashboardController extends Controller
         $state = $user->state ?? '';
 
         $campaigns = $query
+            ->when($request->sort === 'my_interests' && !empty($interestIds), function ($q) use ($interestIds) {
+                $q->whereIn('category_id', $interestIds);
+            })
+            ->whereHas('brand', function ($q) {
+                $q->where('visibility_status', 'true');
+            })
             ->when($gender != '' && $gender != 'both', function ($q) use ($gender) {
                 $q->where(function ($sub) use ($gender) {
                     $sub->where('gender', $gender)

@@ -63,7 +63,7 @@
               <div class="brand-logo d-flex justify-content-center">
                 <img src="{{ asset('assets/logo/logo-3.png') }}">
               </div>
-              <h4>{{ 'Admin Login' }}</h4>
+              <h4>{{ 'Admin Signin' }}</h4>
               <h6 class="font-weight-light mb-0">Sign in to continue.</h6>
               <form class="pt-3" action="{{ route('admin.auth.login') }}" method="POST" id="submit-login-form">
                 {{ csrf_field() }}

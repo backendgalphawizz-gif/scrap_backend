@@ -17,6 +17,7 @@ use App\Models\Seller;
 use App\Models\Notification;
 use App\Models\SocialVerificationTransaction;
 use App\Models\UserLevel;
+use App\Models\BrandCategory;
 use App\Models\CampaignTransaction;
 use Illuminate\Support\Str;
 
@@ -666,6 +667,93 @@ class UserProfileController extends Controller
             'data'    => [
                 'my_interest' => $user->my_interest,
             ],
+        ]);
+    }
+
+    public function interestCampaigns(Request $request)
+    {
+        $user = $request->user();
+
+        // Parse user's saved interest category IDs
+        $interestIds = [];
+        if (!empty($user->my_interest)) {
+            $interestIds = array_values(array_filter(array_map('intval', explode(',', $user->my_interest))));
+        }
+
+        if (empty($interestIds)) {
+            return response()->json([
+                'status'       => true,
+                'message'      => 'No interests set. Please update your interests to see personalised campaigns.',
+                'my_interests' => [],
+                'data'         => [],
+            ]);
+        }
+
+        $myInterests = BrandCategory::whereIn('id', $interestIds)->get(['id', 'name']);
+
+        // Calculate user age from dob
+        $userAge = null;
+        if (!empty($user->dob)) {
+            try {
+                $birthDate = \Carbon\Carbon::parse($user->dob);
+                $userAge = $birthDate->isFuture() ? null : $birthDate->age;
+            } catch (\Throwable $e) {
+                $userAge = null;
+            }
+        }
+
+        $gender = trim((string) ($user->gender ?? ''));
+        $city   = trim((string) ($user->city   ?? ''));
+        $state  = trim((string) ($user->state  ?? ''));
+
+        $campaigns = Campaign::with(['brand'])
+            ->withCount(['occupiedTransactions as occupied_slots'])
+            // Interest match: campaign category must be in user's interests
+            ->whereIn('category_id', $interestIds)
+            // Only active campaigns
+            ->where('status', 'active')
+            // Only campaigns from visible brands
+            ->whereHas('brand', function ($q) {
+                $q->where('visibility_status', 'true');
+            })
+            // Gender: campaign targets user's gender or 'both'
+            ->when($gender !== '', function ($q) use ($gender) {
+                $q->where(function ($sub) use ($gender) {
+                    $sub->where('gender', $gender)
+                        ->orWhere('gender', 'both');
+                });
+            })
+            // City: no restriction (null/empty) OR matches user city
+            ->when($city !== '', function ($q) use ($city) {
+                $q->where(function ($sub) use ($city) {
+                    $sub->whereNull('city')
+                        ->orWhere('city', '')
+                        ->orWhere('city', $city);
+                });
+            })
+            // State: no restriction (null/empty) OR matches user state
+            ->when($state !== '', function ($q) use ($state) {
+                $q->where(function ($sub) use ($state) {
+                    $sub->whereNull('state')
+                        ->orWhere('state', '')
+                        ->orWhere('state', $state);
+                });
+            })
+            // Age: user age must fall within the campaign's age_range (e.g. "18-35")
+            ->when($userAge !== null, function ($q) use ($userAge) {
+                $q->whereRaw(
+                    'CAST(SUBSTRING_INDEX(REPLACE(age_range, " ", ""), "-", 1) AS UNSIGNED) <= ?
+                     AND CAST(SUBSTRING_INDEX(REPLACE(age_range, " ", ""), "-", -1) AS UNSIGNED) >= ?',
+                    [$userAge, $userAge]
+                );
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate($request->input('limit', 10));
+
+        return response()->json([
+            'status'       => true,
+            'message'      => 'Interest-based campaigns retrieved successfully',
+            'data'         => CommonResource::collection($campaigns),
         ]);
     }
 

@@ -19,8 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         // ✅ Register alias
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'admin'                => \App\Http\Middleware\AdminMiddleware::class,
+            'role'                 => \App\Http\Middleware\RoleMiddleware::class,
+            'check.account.status' => \App\Http\Middleware\CheckAccountStatus::class,
         ]);
 
 
