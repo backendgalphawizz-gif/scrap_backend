@@ -161,9 +161,9 @@
                                 </div>
                                 <div class="col-md-8">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('Guidelines') }}</small>
-                                    <div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
                                         @forelse($guidelines as $guideline)
-                                            <span class="badge badge-soft-success text-dark me-1 mb-1">{{ $guideline }}</span>
+                                            <span class="badge badge-soft-success text-dark me-1 mb-1" style="white-space:normal;word-break:break-word;max-width:100%;">{{ $guideline }}</span>
                                         @empty
                                             <span class="text-muted">N/A</span>
                                         @endforelse
