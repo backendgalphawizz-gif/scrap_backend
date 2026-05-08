@@ -252,15 +252,13 @@
                         {{-- Social Media Links --}}
                         <hr class="mt-2 mb-4">
                         <h6 class="fw-bold mb-3"><i class="mdi mdi-share-variant me-1 text-primary"></i>Social Media Links <small class="text-muted fw-normal">(leave blank to hide from landing page)</small></h6>
-                        @php
-                            $sm_facebook  = \App\CPU\Helpers::get_business_settings('social_facebook')  ?? '';
-                            $sm_twitter   = \App\CPU\Helpers::get_business_settings('social_twitter')   ?? '';
-                            $sm_instagram = \App\CPU\Helpers::get_business_settings('social_instagram') ?? '';
-                            $sm_youtube   = \App\CPU\Helpers::get_business_settings('social_youtube')   ?? '';
-                            $sm_linkedin  = \App\CPU\Helpers::get_business_settings('social_linkedin')  ?? '';
-                            $footer_short_desc  = \App\CPU\Helpers::get_business_settings('footer_short_desc')  ?? '';
-                            $footer_copyright   = \App\CPU\Helpers::get_business_settings('footer_copyright')   ?? '';
-                        @endphp
+                        @php($sm_facebook  = \App\CPU\Helpers::get_business_settings('social_facebook')  ?? '')
+                        @php($sm_twitter   = \App\CPU\Helpers::get_business_settings('social_twitter')   ?? '')
+                        @php($sm_instagram = \App\CPU\Helpers::get_business_settings('social_instagram') ?? '')
+                        @php($sm_youtube   = \App\CPU\Helpers::get_business_settings('social_youtube')   ?? '')
+                        @php($sm_linkedin  = \App\CPU\Helpers::get_business_settings('social_linkedin')  ?? '')
+                        @php($footer_short_desc  = \App\CPU\Helpers::get_business_settings('footer_short_desc')  ?? '')
+                        @php($footer_copyright   = \App\CPU\Helpers::get_business_settings('footer_copyright')   ?? '')
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
