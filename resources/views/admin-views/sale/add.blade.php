@@ -49,10 +49,13 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">{{\App\CPU\translate('email')}} <span class="text-danger">*</span></label>
-                                    <input type="email" name="email"
+                                    <input type="email" name="email" id="saleEmail"
                                         class="form-control @error('email') is-invalid @enderror"
                                         value="{{ old('email') }}"
+                                        pattern="^[^@\s]+@[^@\s]+\.[^@\s]{2,}$"
+                                        title="Enter a valid email address (e.g. user@example.com)"
                                         required>
+                                    <span class="text-danger d-none small" id="emailError">Please enter a valid email (e.g. user@example.com).</span>
                                     @error('email') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -134,6 +137,15 @@
         }
     });
 
+    // Email validation: must have a TLD (at least one dot after @)
+    var emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+    $('#saleEmail').on('input blur', function() {
+        var val = $(this).val();
+        var valid = emailRegex.test(val);
+        $('#emailError').toggleClass('d-none', valid || val === '');
+        $(this).toggleClass('is-invalid', !valid && val !== '');
+    });
+
     // Block non-numeric input on mobile
     $('#saleMobile').on('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
@@ -181,11 +193,17 @@
     // Form submit guard
     $('#saleAddForm').on('submit', function(e) {
         var name = $('#saleName').val();
+        var email = $('#saleEmail').val();
         var mobile = $('#saleMobile').val();
         var pass = $('#salePassword').val();
         var passConf = $('#salePasswordConfirm').val();
         var valid = true;
 
+        if (!emailRegex.test(email)) {
+            $('#emailError').removeClass('d-none');
+            $('#saleEmail').addClass('is-invalid');
+            valid = false;
+        }
         if (/[^a-zA-Z ]/.test(name) || /(.)(\1{3,})/.test(name) || name.trim().length === 0) {
             $('#nameError').text('Please enter a valid name (letters/spaces only, no repeating characters).').show();
             $('#saleName').addClass('is-invalid');

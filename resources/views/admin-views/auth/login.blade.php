@@ -95,7 +95,7 @@
                 <div class="mt-3 d-flex justify-content-between align-items-center">
                   <div class="form-check m-0">
                     <label class="form-check-label text-muted">
-                      <input type="checkbox" class="form-check-input"> Keep me signed in </label>
+                      <input type="checkbox" name="remember" value="1" class="form-check-input"> Keep me signed in </label>
                   </div>
                 </div>
               </form>

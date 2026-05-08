@@ -409,9 +409,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <label class="text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12">
-                                        {{$customer->campaigns?->count()}}
-                                    </label>
+                                    <a href="{{ route('admin.campaigns-transactions.list', ['user_id' => $customer->id]) }}"
+                                       class="text-info bg-soft-info font-weight-bold px-3 py-1 mb-0 fz-12"
+                                       style="display:inline-block;border-radius:4px;text-decoration:none;"
+                                       title="View campaigns for {{ $customer->name }}">
+                                        {{ $customer->campaigns?->count() }}
+                                    </a>
                                 </td>
 
                                 <td>

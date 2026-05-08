@@ -42,6 +42,9 @@ class LoginController extends Controller
 
     public function login()
     {
+        if (auth('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
         return view('admin-views.auth.login');
     }
 

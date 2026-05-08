@@ -65,6 +65,16 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
+            @if(request()->filled('user_id'))
+            @php($filteredUser = \App\Models\User::find(request('user_id')))
+            <div class="alert alert-info d-flex align-items-center justify-content-between mb-3 py-2 px-3" role="alert">
+                <span>
+                    <i class="mdi mdi-filter-outline me-1"></i>
+                    Showing campaigns for: <strong>{{ $filteredUser->name ?? 'User #'.request('user_id') }}</strong>
+                </span>
+                <a href="{{ route('admin.campaigns-transactions.list') }}" class="btn btn-sm btn-outline-secondary ms-3">Clear filter</a>
+            </div>
+            @endif
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="table-responsive">
@@ -103,7 +113,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">
+                                    <td colspan="10" class="text-center">
                                         {{ \App\CPU\translate('No transactions found')}}
                                     </td>
                                 </tr>
