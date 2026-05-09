@@ -168,6 +168,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('/website-info/brand-update_privacy_policy', [DashboardController::class, 'brand_privacy_policy_update'])->name('admin.business-settings.brand-privacy-policy-update');
     Route::get('/brand-management/campaign-guideline', [DashboardController::class, 'campaign_guideline'])->name('admin.business-settings.campaign-guideline');
     Route::post('/brand-management/campaign-guideline', [DashboardController::class, 'campaign_guideline_update'])->name('admin.business-settings.campaign-guideline-update');
+    Route::get('/brand-management/brand-faq', [DashboardController::class, 'brand_faq'])->name('admin.business-settings.brand-faq');
+    Route::post('/brand-management/brand-faq', [DashboardController::class, 'brand_faq_update'])->name('admin.business-settings.brand-faq-update');
+    Route::get('/sale-management/sale-faq', [DashboardController::class, 'sale_faq'])->name('admin.business-settings.sale-faq');
+    Route::post('/sale-management/sale-faq', [DashboardController::class, 'sale_faq_update'])->name('admin.business-settings.sale-faq-update');
+    Route::get('/user-management/user-faq', [DashboardController::class, 'user_faq'])->name('admin.business-settings.user-faq');
+    Route::post('/user-management/user-faq', [DashboardController::class, 'user_faq_update'])->name('admin.business-settings.user-faq-update');
     
     // Sales Terms & Conditions & Privacy Policy
     Route::get('/website-info/sales-terms_condition', [DashboardController::class, 'sales_terms_condition'])->name('admin.business-settings.sales-terms-condition');

@@ -21,22 +21,25 @@
             </a>
         </li>
         @if(\App\CPU\Helpers::module_permission_check('user_management'))
+        @php($userMenuOpen = request()->routeIs('admin.user*') || request()->routeIs('admin.user-level.*') || request()->routeIs('admin.business-settings.user-faq*'))
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#users" aria-expanded="false" aria-controls="users">
+            <a class="nav-link {{ $userMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#users" aria-expanded="{{ $userMenuOpen ? 'true' : 'false' }}" aria-controls="users">
                 <span class="menu-title">User Management</span>
                 <i class="mdi mdi-account-group menu-icon"></i>
             </a>
-            <div class="collapse" id="users">
+            <div class="collapse {{ $userMenuOpen ? 'show' : '' }}" id="users">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.user') }}">User Lists</a>
+                        <a class="nav-link {{ request()->routeIs('admin.user') ? 'active' : '' }}" href="{{ route('admin.user') }}">User Lists</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.user.wallet') }}">Wallet Transactions</a>
+                        <a class="nav-link {{ request()->routeIs('admin.user.wallet') ? 'active' : '' }}" href="{{ route('admin.user.wallet') }}">Wallet Transactions</a>
                     </li>
-                    
                     <li class="nav-item">
-                        <a class="nav-link" href="{{route('admin.user-level.index')}}">User Levels</a>
+                        <a class="nav-link {{ request()->routeIs('admin.user-level.*') ? 'active' : '' }}" href="{{route('admin.user-level.index')}}">User Levels</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.business-settings.user-faq*') ? 'active' : '' }}" href="{{ route('admin.business-settings.user-faq') }}">User FAQ</a>
                     </li>
                 </ul>
             </div>
@@ -46,21 +49,25 @@
         
 
         @if(\App\CPU\Helpers::module_permission_check('sale_management'))
+        @php($saleMenuOpen = request()->routeIs('admin.sale.*') || request()->routeIs('admin.business-settings.sale-faq*'))
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#sales" aria-expanded="false" aria-controls="sales">
+            <a class="nav-link {{ $saleMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#sales" aria-expanded="{{ $saleMenuOpen ? 'true' : 'false' }}" aria-controls="sales">
                 <span class="menu-title">Sale Management</span>
                 <i class="mdi mdi-cash-multiple menu-icon"></i>
             </a>
-            <div class="collapse" id="sales">
+            <div class="collapse {{ $saleMenuOpen ? 'show' : '' }}" id="sales">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.sale.list') }}">Sales User</a>
+                        <a class="nav-link {{ request()->routeIs('admin.sale.list') ? 'active' : '' }}" href="{{ route('admin.sale.list') }}">Sales User</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.sale.wallet-transactions') }}">Wallet Transaction</a>
+                        <a class="nav-link {{ request()->routeIs('admin.sale.wallet-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.wallet-transactions') }}">Wallet Transaction</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
+                        <a class="nav-link {{ request()->routeIs('admin.sale.ledger-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.business-settings.sale-faq*') ? 'active' : '' }}" href="{{ route('admin.business-settings.sale-faq') }}">Sale FAQ</a>
                     </li>
                    
                     <li class="nav-item d-none">
@@ -70,7 +77,7 @@
             </div>
         </li>
         @endif
-        @php($brandMenuOpen = request()->routeIs('admin.brand*') || request()->routeIs('admin.campaign.*') || request()->routeIs('admin.campaigns-transactions.*') || request()->routeIs('admin.business-settings.campaign-guideline*') || request()->routeIs('admin.brand-category.*'))
+        @php($brandMenuOpen = request()->routeIs('admin.brand*') || request()->routeIs('admin.campaign.*') || request()->routeIs('admin.campaigns-transactions.*') || request()->routeIs('admin.business-settings.campaign-guideline*') || request()->routeIs('admin.business-settings.brand-faq*') || request()->routeIs('admin.brand-category.*'))
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
             <a class="nav-link {{ $brandMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands" aria-expanded="{{ $brandMenuOpen ? 'true' : 'false' }}" aria-controls="brands">
@@ -90,6 +97,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.business-settings.campaign-guideline*') ? 'active' : '' }}" href="{{ route('admin.business-settings.campaign-guideline') }}">Campaign Guideline</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.business-settings.brand-faq*') ? 'active' : '' }}" href="{{ route('admin.business-settings.brand-faq') }}">Brand FAQ</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.brand-category.*') ? 'active' : '' }}" href="{{ route('admin.brand-category.index') }}">Brand Categories</a>

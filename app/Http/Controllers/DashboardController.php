@@ -766,6 +766,64 @@ class DashboardController extends Controller
         return redirect()->back();
     }
 
+    private function parseFaqSetting(string $type): array
+    {
+        $raw = Helpers::get_business_settings($type);
+        if (empty($raw)) return [];
+        $decoded = is_array($raw) ? $raw : json_decode($raw, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function saveFaqSetting(Request $request, string $type)
+    {
+        $faqs = [];
+        foreach ($request->input('faqs', []) as $item) {
+            $q = trim($item['question'] ?? '');
+            $a = trim($item['answer'] ?? '');
+            if ($q !== '' && $a !== '') {
+                $faqs[] = ['question' => $q, 'answer' => $a];
+            }
+        }
+        \DB::table('business_settings')->updateOrInsert(
+            ['type' => $type],
+            ['value' => json_encode($faqs)]
+        );
+        return redirect()->back()->with('success', 'FAQ saved successfully.');
+    }
+
+    public function brand_faq()
+    {
+        $faqs = $this->parseFaqSetting('brand_faq');
+        return view('admin-views.business-settings.brand-faq', compact('faqs'));
+    }
+
+    public function brand_faq_update(Request $request)
+    {
+        return $this->saveFaqSetting($request, 'brand_faq');
+    }
+
+    public function sale_faq()
+    {
+        $faqs = $this->parseFaqSetting('sale_faq');
+        return view('admin-views.business-settings.sale-faq', compact('faqs'));
+    }
+
+    public function sale_faq_update(Request $request)
+    {
+        return $this->saveFaqSetting($request, 'sale_faq');
+    }
+
+    public function user_faq()
+    {
+        $faqs = $this->parseFaqSetting('user_faq');
+        return view('admin-views.business-settings.user-faq', compact('faqs'));
+    }
+
+    public function user_faq_update(Request $request)
+    {
+        return $this->saveFaqSetting($request, 'user_faq');
+    }
+
     public function userWallet(Request $request) {
         $transactions = $this->getFilteredUserWalletTransactions($request);
         return view('admin-views.customer.coin-transactions', compact('transactions'));

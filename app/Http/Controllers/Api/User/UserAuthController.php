@@ -251,34 +251,26 @@ class UserAuthController extends Controller
             'sale_comission' => $paymentSplit->sales_percentage ?? 0,
 
 
-            'brand_faq' => [
-                [
-                    'question' => 'How to use the app?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ],
-                [
-                    'question' => 'How to earn coins?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ],
-                [
-                    'question' => 'How to withdraw coins?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ]
-            ],
-            'faq' => [
-                [
-                    'question' => 'How to use the app?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ],
-                [
-                    'question' => 'How to earn coins?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ],
-                [
-                    'question' => 'How to withdraw coins?',
-                    'answer' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-                ]
-            ],
+            'brand_faq' => (function () {
+                $raw = Helpers::get_business_settings('brand_faq');
+                if (empty($raw)) return [];
+                $decoded = is_array($raw) ? $raw : json_decode($raw, true);
+                return is_array($decoded) ? $decoded : [];
+            })(),
+           
+            'sale_faq' => (function () {
+                $raw = Helpers::get_business_settings('sale_faq');
+                if (empty($raw)) return [];
+                $decoded = is_array($raw) ? $raw : json_decode($raw, true);
+                return is_array($decoded) ? $decoded : [];
+            })(),
+
+            'faq' => (function () {
+                $raw = Helpers::get_business_settings('user_faq');
+                if (empty($raw)) return [];
+                $decoded = is_array($raw) ? $raw : json_decode($raw, true);
+                return is_array($decoded) ? $decoded : [];
+            })(),
         ];
         return response()->json([
             'status' => true,
