@@ -23,7 +23,8 @@ class CoinWallet extends Model
         'total_coin_earning',
         'todays_coin_earning',
         'total_earning_in_rupees',
-        'total_pending_coin'
+        'total_pending_coin',
+        'referral_earnings'
     ];
 
     public function user()
@@ -70,6 +71,16 @@ class CoinWallet extends Model
                 $query->where('status', 'completed')->orWhereNull('status');
             })
             ->sum('coin') * Helpers::get_business_settings('upi_value');
+    }
+
+    public function getReferralEarningsAttribute() {
+        return $this->transactions()
+            ->where('type', 'credit')
+            ->where('transaction_type', 'referral_reward')
+            ->where(function ($query) {
+                $query->where('status', 'completed')->orWhereNull('status');
+            })
+            ->sum('coin');
     }
 
 }

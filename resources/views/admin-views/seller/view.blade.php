@@ -545,10 +545,11 @@
                                     <select name="status" class="form-control form-select">
                                         <option value="approved" {{ $seller->status === 'approved' ? 'selected' : '' }}>Active</option>
                                         <option value="pending" {{ $seller->status === 'pending' ? 'selected' : '' }}>In-Active</option>
+                                        <option value="banned" {{ $seller->status === 'banned' ? 'selected' : '' }}>Banned</option>
                                     </select>
                                     <div class="verification-current">
                                         <span>Current</span>
-                                        <span class="badge-soft {{ $seller->status === 'approved' ? 'badge-soft-success' : 'badge-soft-warning' }}">{{ $seller->status === 'approved' ? 'Active' : 'In-Active' }}</span>
+                                        <span class="badge-soft {{ $seller->status === 'approved' ? 'badge-soft-success' : ($seller->status === 'banned' ? 'badge-soft-danger' : 'badge-soft-warning') }}">{{ $seller->status === 'approved' ? 'Active' : ($seller->status === 'banned' ? 'Banned' : 'In-Active') }}</span>
                                     </div>
                                 </div>
                             </div>
