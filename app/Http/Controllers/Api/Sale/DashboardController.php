@@ -258,7 +258,9 @@ class DashboardController extends Controller
             $campaign->end_date = $request->end_date;
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
-            $campaign->city = $request->city;
+            $campaign->city = is_array($request->city)
+                ? implode(',', array_filter($request->city))
+                : ($request->city ?? '');
             $campaign->category_id = $category->id;
             $campaign->sub_category_id = $subCategoryId;
             $campaign_guideline = Helpers::get_business_settings('campaign_guideline');
@@ -430,7 +432,9 @@ class DashboardController extends Controller
             $campaign->end_date = $request->end_date;
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
-            $campaign->city = $request->city;
+            $campaign->city = is_array($request->city)
+                ? implode(',', array_filter($request->city))
+                : ($request->city ?? '');
             $campaign->guidelines = implode('|', $request->guidelines);
             $campaign->coins = $request->reward_per_user;
 

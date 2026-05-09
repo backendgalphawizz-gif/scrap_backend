@@ -35,7 +35,6 @@ class SellerDashboardController extends Controller
             // $product_ids = Product::where(['user_id' => $seller['id'], 'added_by' => 'seller'])->pluck('id')->toArray();
 
             $shop = Seller::find($seller['id']);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -70,8 +69,7 @@ class SellerDashboardController extends Controller
 
             $liveCampaigns = Campaign::where('brand_id', $userId)->where('status', 'live')->count();
 
-            $participants = CampaignTransaction::
-                whereHas('campaign', function ($q) use ($userId) {
+            $participants = CampaignTransaction::whereHas('campaign', function ($q) use ($userId) {
                     $q->where('brand_id', $userId);
                 })
                 ->count();
@@ -117,7 +115,6 @@ class SellerDashboardController extends Controller
                 ]
             );
         }
-
     }
 
     public function getCampaignWiseChartData(Request $request, $campaignId)
@@ -162,7 +159,6 @@ class SellerDashboardController extends Controller
                     'report_chart' => $chartData
                 ])
             ], 200);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -170,7 +166,6 @@ class SellerDashboardController extends Controller
                 'data' => []
             ], 401);
         }
-
     }
 
     public function update(Request $request)
@@ -214,7 +209,6 @@ class SellerDashboardController extends Controller
             }
 
             Helpers::systemActivity('profile_updated', $shop, 'updated', 'Brand Profile updated successfull', $shop);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -286,9 +280,11 @@ class SellerDashboardController extends Controller
             $shop->billing_phone = $request->billing_phone;
         }
 
-        if ($shop->bank_status !== 'Verified' &&
+        if (
+            $shop->bank_status !== 'Verified' &&
             ($request->filled('bank_account_number') || $request->filled('bank_ifsc_code') ||
-             $request->filled('bank_account_holder_name') || $request->filled('bank_account_type'))) {
+                $request->filled('bank_account_holder_name') || $request->filled('bank_account_type'))
+        ) {
             $shop->bank_account_number       = $request->bank_account_number ?? $shop->bank_account_number;
             $shop->bank_ifsc_code            = $request->bank_ifsc_code ?? $shop->bank_ifsc_code;
             $shop->bank_account_holder_name  = $request->bank_account_holder_name ?? $shop->bank_account_holder_name;
@@ -314,11 +310,19 @@ class SellerDashboardController extends Controller
     public function createCampaign(Request $request)
     {
         $data = Helpers::get_seller_by_token($request);
-       
+
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
             $shop = Seller::find($seller['id']);
+
+            if ($shop && $shop->status === 'banned') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your account is Banned. Please contact to admin.',
+                    'data' => [],
+                ], 403);
+            }
 
             // $verifiedSocial = SocialVerificationTransaction::STATUS_VERIFIED;
             // if ($shop->instagram_status !== $verifiedSocial || $shop->facebook_status !== $verifiedSocial) {
@@ -339,7 +343,7 @@ class SellerDashboardController extends Controller
 
             $maxPerWindow = (int) Helpers::get_business_settings('brand_max_campaigns_per_timeframe');
             $windowHours = (int) Helpers::get_business_settings('brand_campaign_creation_timeframe_hours');
-           
+
             if ($maxPerWindow > 0 && $windowHours > 0) {
                 $recentCount = Campaign::where('brand_id', $seller['id'])
                     ->where('created_at', '>=', now()->subHours($windowHours))
@@ -430,7 +434,7 @@ class SellerDashboardController extends Controller
             }
 
 
-            
+
             $paymentSplit = PaymentSplit::first();
             $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
             $total_campaign_budget = $request->total_campaign_budget;
@@ -447,7 +451,9 @@ class SellerDashboardController extends Controller
             $campaign->end_date = $request->end_date;
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
-            $campaign->city = $request->city;
+            $campaign->city = is_array($request->city)
+                ? implode(',', array_filter($request->city))
+                : ($request->city ?? '');
             $campaign->category_id = $category->id;
             $campaign->sub_category_id = $subCategoryId;
             $campaign_guideline = Helpers::get_business_settings('campaign_guideline');
@@ -472,7 +478,7 @@ class SellerDashboardController extends Controller
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
-            if($paymentSplit->feedback_percentage){
+            if ($paymentSplit->feedback_percentage) {
                 $campaign->feedback_percentage = $paymentSplit->feedback_percentage;
                 $final_feedback_reward = ($request->reward_per_user * $paymentSplit->feedback_percentage) / 100;
                 $campaign->feedback_coin = $final_feedback_reward / $upi_value;
@@ -491,19 +497,18 @@ class SellerDashboardController extends Controller
             }
             $campaign->repeat_brand_percentage = $paymentSplit->repeat_brand_percentage ?? 0;
 
-            if($paymentSplit->user_percentage){
+            if ($paymentSplit->user_percentage) {
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * $paymentSplit->user_percentage) / 100;
                 $final_reward_for_user = ($request->reward_per_user * $paymentSplit->user_percentage) / 100;
                 $campaign->final_reward_for_user = $final_reward_for_user;
                 $campaign->coins = $final_reward_for_user / $upi_value;
-                
-            }else{
+            } else {
                 $campaign->campaign_user_budget = ($request->total_campaign_budget * 50) / 100;
                 $final_reward_for_user = ($request->reward_per_user * 50) / 100;
                 $campaign->final_reward_for_user = $final_reward_for_user;
                 $campaign->coins = $final_reward_for_user / $upi_value;
             }
-           
+
             $campaign->save();
 
             // here remove amount from wellert and create transaction for campaign creation
@@ -516,12 +521,11 @@ class SellerDashboardController extends Controller
             \App\Models\SellerWalletHistory::create([
                 'seller_id' => $seller['id'],
                 'amount'    => $compign_budget_with_gst,
-                'remarks'   => 'Campaign creation: '.$campaign->title,
+                'remarks'   => 'Campaign creation: ' . $campaign->title,
                 'type'      => 'debit',
             ]);
 
             Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -566,7 +570,6 @@ class SellerDashboardController extends Controller
                 'message' => 'Campaign detail',
                 'data' => [new CommonResource($campaign)]
             ], 200);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -652,7 +655,9 @@ class SellerDashboardController extends Controller
             $campaign->end_date = $request->end_date;
             $campaign->gender = $request->gender;
             $campaign->state = $request->state;
-            $campaign->city = $request->city;
+            $campaign->city = is_array($request->city)
+                ? implode(',', array_filter($request->city))
+                : ($request->city ?? '');
             $campaign->category_id = $category->id;
             $campaign->sub_category_id = $subCategoryId;
             $campaign->guidelines = implode('|', $request->guidelines);
@@ -668,8 +673,6 @@ class SellerDashboardController extends Controller
             $campaign->save();
 
             Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign updated successfully', $campaign);
-
-
         } else {
             return response()->json([
                 'status' => false,
@@ -699,7 +702,6 @@ class SellerDashboardController extends Controller
             $campaign->save();
 
             Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign status updated to ' . ($request->status), $campaign);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -720,7 +722,7 @@ class SellerDashboardController extends Controller
         $data = Helpers::get_seller_by_token($request);
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            
+
             $campaigns = Campaign::where('brand_id', $seller['id'])
                 ->when($request->has('status'), function ($query) use ($request) {
                     // pending, active, completed
@@ -735,7 +737,7 @@ class SellerDashboardController extends Controller
                 })
                 ->orderBy('id', 'DESC')
                 ->get();
-               return response()->json([
+            return response()->json([
                 'status' => true,
                 'message' => 'Campaign list retrieved successfully',
                 'data' => CommonResource::collection($campaigns)
@@ -800,7 +802,6 @@ class SellerDashboardController extends Controller
                 'message' => "Account deleted successfully",
                 'data' => []
             ], 200);
-
         } else {
             return response()->json([
                 'status' => false,
@@ -819,6 +820,16 @@ class SellerDashboardController extends Controller
             'status' => true,
             'message' => 'Notification retrieved successfully',
             'data' => CommonResource::collection($notifications)
+        ]);
+    }
+
+    public function notificationsCount(Request $request)
+    {
+        $notifications = Notification::where(['status' => 1, 'type' => 'brand'])->count();
+        return response()->json([
+            'status' => true,
+            'message' => 'Notification count retrieved successfully',
+            'data' => $notifications
         ]);
     }
 
@@ -910,7 +921,7 @@ class SellerDashboardController extends Controller
         $total = Campaign::where('brand_id', $brand->id)
             ->where('sale_id', $salePerson->id);
 
-        
+
         $exists = $total
             ->where('created_at', '>=', now()->subDays(100))
             ->exists();
@@ -964,5 +975,4 @@ class SellerDashboardController extends Controller
             'data'    => CommonResource::collection($refunds),
         ], 200);
     }
-
 }

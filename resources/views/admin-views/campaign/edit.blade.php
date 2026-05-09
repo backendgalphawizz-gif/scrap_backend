@@ -222,14 +222,13 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="city">{{ \App\CPU\translate('City')}}</label>
-                                        <select name="city" id="city" class="form-select form-control @error('city') is-invalid @enderror" required
+                                        <label for="city">{{ \App\CPU\translate('City')}} <small class="text-muted">(Ctrl/Cmd for multi)</small></label>
+                                        <select name="city[]" id="city" class="form-select form-control @error('city') is-invalid @enderror" multiple size="5"
                                             {{ old('state', $campaign->state) === 'any' ? 'disabled' : '' }}>
-                                            <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                            <option value="any" {{ old('state', $campaign->state) === 'any' ? 'selected' : '' }}>Any</option>
+                                            <option value="Any" {{ old('state', $campaign->state) === 'any' ? 'selected' : '' }}>Any</option>
                                         </select>
                                         @error('city') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                                        <input type="hidden" id="preselected_city" value="{{ old('city', $campaign->city) }}">
+                                        <input type="hidden" id="preselected_cities" value="{{ old('city', $campaign->city) }}">
                                     </div>
                                 </div>
                                 <div class="col-md-12">
@@ -452,22 +451,23 @@
 
     function syncCityOptions() {
         const state = $('#state').val();
-        const selectedCity = @json(old('city', $campaign->city));
+        const preselected = ($('#preselected_cities').val() || '').split(',').map(s => s.trim()).filter(Boolean);
         const citySelect = $('#city');
         citySelect.empty();
-        citySelect.append(`<option value="">{{ \App\CPU\translate('Select')}}</option>`);
-        citySelect.append(`<option value="Any" ${selectedCity === 'Any' ? 'selected' : ''}>Any</option>`);
+        const anySelected = preselected.includes('Any') || preselected.includes('any');
+        citySelect.append(`<option value="Any" ${anySelected ? 'selected' : ''}>Any</option>`);
 
         if (state && cityData[state]) {
             cityData[state].forEach(function(city) {
-                const selectedAttr = city === selectedCity ? 'selected' : '';
-                citySelect.append(`<option value="${city}" ${selectedAttr}>${city}</option>`);
+                const isSelected = preselected.includes(city);
+                citySelect.append(`<option value="${city}" ${isSelected ? 'selected' : ''}>${city}</option>`);
             });
         }
     }
 
     $('#state').on('change', function() {
         if (!$('#panIndiaCheck').is(':checked')) {
+            $('#preselected_cities').val('');
             syncCityOptions();
         }
     });
@@ -478,14 +478,14 @@
         if (enabled) {
             stateSelect.val('any').prop('disabled', true);
             citySelect.empty()
-                .append('<option value="any" selected>Any</option>')
+                .append('<option value="Any" selected>Any</option>')
                 .prop('disabled', true);
         } else {
             stateSelect.val('').prop('disabled', false);
             citySelect.empty()
-                .append('<option value="">{{ \App\CPU\translate("Select")}}</option>')
                 .append('<option value="Any">Any</option>')
                 .prop('disabled', false);
+            syncCityOptions();
         }
     }
 
@@ -493,11 +493,18 @@
         setPanIndia($(this).is(':checked'));
     });
 
-    // Re-enable disabled selects before submit so values are included in POST
-    $('.banner_form').on('submit', function() {
+    // Re-enable disabled selects and validate before submit
+    $('.banner_form').on('submit', function(e) {
         if ($('#panIndiaCheck').is(':checked')) {
             $('#state').prop('disabled', false);
             $('#city').prop('disabled', false);
+        } else {
+            const selected = $('#city').val();
+            if (!selected || selected.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one city.');
+                return;
+            }
         }
     });
 

@@ -84,6 +84,17 @@ class SellerAuthController extends Controller
                 ], 404);
             }
 
+            if ($user->status === 'banned') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your account is Banned. Please contact to admin.',
+                    'data' => [],
+                    'otp' => $otp, // REMOVE in production
+                    'mobile' => $mobile,
+                    'otp_expires_at' => Carbon::now()->addMinutes(5)->toDateTimeString()
+                ], 403);
+            }
+
             if ($user->status != 'approved') {
                 return response()->json([
                     'status' => false,

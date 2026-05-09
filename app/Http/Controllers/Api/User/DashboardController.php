@@ -31,7 +31,7 @@ class DashboardController extends Controller
                 $q->where('visibility_status', 'true');
             })
             ->when($city !== '', function ($q) use ($city) {
-                $q->where('city', $city);
+                $q->whereRaw('FIND_IN_SET(?, city) > 0', [$city]);
             })
             ->when($state !== '', function ($q) use ($state) {
                 $q->where('state', $state);
@@ -119,12 +119,13 @@ class DashboardController extends Controller
                 });
             })
             ->when($isLocalForVocal && $city != '', function ($q) use ($city) {
-                $q->where('city', $city);
+                $q->whereRaw('FIND_IN_SET(?, city) > 0', [$city]);
             })
             ->when(!$isLocalForVocal && $city != '' && $city != 'any', function ($q) use ($city) {
                 $q->where(function ($sub) use ($city) {
-                    $sub->where('city', $city)
-                        ->orWhere('city', 'any');
+                    $sub->whereRaw('FIND_IN_SET(?, city) > 0', [$city])
+                        ->orWhere('city', 'any')
+                        ->orWhere('city', 'Any');
                 });
             })
             ->when($isLocalForVocal && $state != '', function ($q) use ($state) {
