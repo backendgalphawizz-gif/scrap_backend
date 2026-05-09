@@ -30,7 +30,7 @@ class CheckAccountStatus
                 if (!$account) {
                     return $this->unauthorized('Unauthorized.');
                 }
-                if ($account->status !== 'approved') {
+                if ($account->status == 'banned') {
                     return $this->accountInactive();
                 }
                 break;

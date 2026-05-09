@@ -260,13 +260,12 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="city">{{ \App\CPU\translate('City')}}</label>
-                                    <select name="city" id="city" class="form-select form-control" required
+                                    <label for="city">{{ \App\CPU\translate('City')}} <small class="text-muted">(hold Ctrl/Cmd to select multiple)</small></label>
+                                    <select name="city[]" id="city" class="form-select form-control" multiple size="5"
                                         {{ old('state') === 'Any' ? 'disabled' : '' }}>
-                                        <option value="">{{ \App\CPU\translate('Select')}}</option>
-                                        <option value="Any" {{ old('city') === 'Any' ? 'selected' : '' }}>Any</option>
+                                        <option value="Any" {{ in_array('Any', (array)old('city', [])) ? 'selected' : '' }}>Any</option>
                                     </select>
-                                    <input type="hidden" id="preselected_city" value="{{ old('city') }}">
+                                    <input type="hidden" id="preselected_cities" value="{{ implode(',', (array)old('city', [])) }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -459,23 +458,22 @@
 
     function syncCityOptions() {
         const state = $('#state').val();
-        const selectedCity = $('#preselected_city').val();
+        const preselected = ($('#preselected_cities').val() || '').split(',').map(s => s.trim()).filter(Boolean);
         const citySelect = $('#city');
         citySelect.empty();
-        citySelect.append(`<option value="">{{ \App\CPU\translate('Select')}}</option>`);
-        citySelect.append(`<option value="Any" ${selectedCity === 'Any' ? 'selected' : ''}>Any</option>`);
+        citySelect.append(`<option value="Any" ${preselected.includes('Any') ? 'selected' : ''}>Any</option>`);
 
         if (state && cityData[state]) {
             cityData[state].forEach(function(city) {
-                const selectedAttr = city === selectedCity ? 'selected' : '';
-                citySelect.append(`<option value="${city}" ${selectedAttr}>${city}</option>`);
+                const isSelected = preselected.includes(city);
+                citySelect.append(`<option value="${city}" ${isSelected ? 'selected' : ''}>${city}</option>`);
             });
         }
     }
 
     $('#state').on('change', function() {
         if (!$('#panIndiaCheck').is(':checked')) {
-            $('#preselected_city').val('');
+            $('#preselected_cities').val('');
             syncCityOptions();
         }
     });
@@ -491,9 +489,9 @@
         } else {
             stateSelect.val('').prop('disabled', false);
             citySelect.empty()
-                .append('<option value="">{{ \App\CPU\translate("Select")}}</option>')
                 .append('<option value="Any">Any</option>')
                 .prop('disabled', false);
+            syncCityOptions();
         }
     }
 
@@ -501,11 +499,18 @@
         setPanIndia($(this).is(':checked'));
     });
 
-    // Re-enable disabled selects before submit so values are included in POST
-    $('form').on('submit', function() {
+    // Re-enable disabled selects and validate before submit
+    $('form').on('submit', function(e) {
         if ($('#panIndiaCheck').is(':checked')) {
             $('#state').prop('disabled', false);
             $('#city').prop('disabled', false);
+        } else {
+            const selected = $('#city').val();
+            if (!selected || selected.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one city.');
+                return;
+            }
         }
     });
 

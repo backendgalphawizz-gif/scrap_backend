@@ -723,12 +723,14 @@ class UserProfileController extends Controller
                         ->orWhere('gender', 'both');
                 });
             })
-            // City: no restriction (null/empty) OR matches user city
+            // City: no restriction (null/empty/Any) OR city list contains user's city
             ->when($city !== '', function ($q) use ($city) {
                 $q->where(function ($sub) use ($city) {
                     $sub->whereNull('city')
                         ->orWhere('city', '')
-                        ->orWhere('city', $city);
+                        ->orWhere('city', 'Any')
+                        ->orWhere('city', 'any')
+                        ->orWhereRaw('FIND_IN_SET(?, city) > 0', [$city]);
                 });
             })
             // State: no restriction (null/empty) OR matches user state

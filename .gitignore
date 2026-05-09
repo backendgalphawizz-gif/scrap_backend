@@ -14,7 +14,7 @@ auth.json
 /node_modules
 /public/build
 /public/hot
-/app/Console
+# /app/Console
 
 # Laravel storage symlink target (keep `public/storage` as symlink only)
 /public/storage

@@ -133,7 +133,7 @@ class CampaignController extends Controller
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
         $campaign->state = $request->state;
-        $campaign->city = $request->city;
+        $campaign->city = implode(',', array_filter((array)($request->city ?? [])));
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->reward_per_user;
 
@@ -295,7 +295,7 @@ class CampaignController extends Controller
         $campaign->end_date = $request->end_date;
         $campaign->gender = $request->gender;
         $campaign->state = $request->state;
-        $campaign->city = $request->city;
+        $campaign->city = implode(',', array_filter((array)($request->city ?? [])));
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
         $campaign->coins = $request->coins ?? $campaign->coins;
         $campaign->reward_per_user = $request->reward_per_user;
