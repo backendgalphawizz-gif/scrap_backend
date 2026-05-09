@@ -62,7 +62,7 @@
                                     accept=".jpg,.png,.jpeg,.gif,.bmp,.tif,.tiff|image/*">
 
                                 <img id="viewer"
-                                    src="{{asset('public/assets/admin/img/900x400/img1.jpg')}}"
+                                    src="{{asset('assets/front-end/img/placeholder.png')}}"
                                     class="img-thumbnail mt-2"
                                     style="max-width:200px;">
                             </div>
@@ -165,8 +165,7 @@
                                 </td>
 
                                 <td>
-                                    <img width="75" height="75"
-                                        src="{{asset('storage/app/public/notification')}}/{{$notification['image']}}">
+                                    <img width="75" height="75" src="{{ $notification->image }}">
                                 </td>
 
                                 <td id="count-{{$notification->id}}">
@@ -233,6 +232,16 @@
 
 @push('script')
 <script>
+    document.getElementById('customFileEg1').addEventListener('change', function () {
+        var file = this.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('viewer').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
     function resendNotification(el) {
         var id = el.getAttribute('data-id');
         if (!id) {

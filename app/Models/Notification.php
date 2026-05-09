@@ -18,7 +18,8 @@ class Notification extends Model
     }
 
     public function getImageAttribute($image) {
-        return (strpos($image, 'https://') === 0) ? $image : asset('storage/profile/' . ( $image ?: 'def.png'));
+        if (empty($image) || $image === 'null') return null;
+        return (strpos($image, 'https://') === 0) ? $image : asset('storage/notification/' . $image);
     }
 
 }
