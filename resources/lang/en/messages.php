@@ -624,4 +624,7 @@
   'You wont be able to revert this!' => 'You wont be able to revert this!',
   'Special characters are not allowed' => 'Special characters are not allowed',
   'More than 3 consecutive same characters are not allowed' => 'More than 3 consecutive same characters are not allowed',
+  'Brand FAQ' => 'Brand FAQ',
+  'Sale FAQ' => 'Sale FAQ',
+  'User FAQ' => 'User FAQ',
 );

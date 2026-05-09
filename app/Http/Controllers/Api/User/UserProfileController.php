@@ -519,7 +519,7 @@ class UserProfileController extends Controller
     public function notifications(Request $request)
     {
         $limit = $request->limit ?? 25;
-        $notifications = Notification::where(['status' => 1, 'type' => 'user'])->orderBy('id', 'DESC')->paginate($limit);
+        $notifications = Notification::where(['status' => 1, 'user_type' => 'user'])->orderBy('id', 'DESC')->paginate($limit);
         return response()->json([
             'status' => true,
             'message' => 'Notification retrieved successfully',

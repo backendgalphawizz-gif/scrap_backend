@@ -357,7 +357,7 @@
 
     <div class="page-header">
         <h3 class="page-title">
-            <span class="page-title-icon bg-gradient-primary text-white me-2">
+            <span class="page-title-icon bg-gradient-primary me-2">
                 <i class="mdi mdi-store menu-icon"></i>
             </span> Brand User Profile
         </h3>
@@ -383,11 +383,11 @@
                             <img class="rounded-circle brand-avatar-lg"
                                  src="{{ $seller->image }}"
                                  alt="Brand avatar"
-                                 onerror="this.onerror=null;this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}';" style="width: 60px; height: 60px;">
+                                 onerror="this.onerror=null;this.src='{{ asset('assets/front-end/img/placeholder.png') }}';" style="width: 60px; height: 60px;">
                             <div>
-                                <h4 class="mb-1 text-white">{{ $seller->username ?: '-' }}</h4>
-                                <div class="small text-white-50 mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>
-                                <div class="small text-white-50">{{ $seller->email ?: '-' }} | {{ $seller->phone ?: '-' }}</div>
+                                <h4 class="mb-1">{{ $seller->username ?: '-' }}</h4>
+                                <div class="small text-dark mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>
+                                <div class="small text-dark">{{ $seller->email ?: '-' }} | {{ $seller->phone ?: '-' }}</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
                                     <span class="brand-mini-chip"><i class="mdi mdi-clock-outline"></i> Joined {{ optional($seller->created_at)->format('d/m/Y') ?: '-' }}</span>
                                     <span class="brand-mini-chip"><i class="mdi mdi-bullseye-arrow"></i> Campaigns {{ $seller->campaigns_count ?? 0 }}</span>
@@ -403,8 +403,8 @@
                                     Account: {{ ucfirst($seller->status ?? 'pending') }}
                                 </span>
                             </div>
-                            <div class="small text-white-50">Unique Code: {{ $seller->unique_code ?: '-' }}</div>
-                            <div class="small text-white-50">Referral Code: {{ $seller->referral_code ?: '-' }}</div>
+                            <div class="small text-dark">Unique Code: {{ $seller->unique_code ?: '-' }}</div>
+                            <div class="small text-dark">Referral Code: {{ $seller->referral_code ?: '-' }}</div>
                         </div>
                     </div>
                 </div>
