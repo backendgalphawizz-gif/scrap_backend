@@ -58,8 +58,19 @@ Route::post('/optimize-clear', function () {
 
 Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+Route::get('categories', [UserAuthController::class, 'categories']);
+Route::get('main-categories', [UserAuthController::class, 'mainCategories']);
+Route::get('professions', [UserAuthController::class, 'professions']);
+Route::get('banners', [UserAuthController::class, 'banners']);
+Route::get('popup-banner', [UserAuthController::class, 'popupBanner']);
+Route::get('config', [UserAuthController::class, 'config']);
+Route::post('auth/send-otp', [UserAuthController::class, 'sendOtp']);
+Route::post('auth/verify-otp', [UserAuthController::class, 'verifyOtp']);
+Route::post('auth/resend-otp', [UserAuthController::class, 'resendOtp']);
+Route::post('auth/register', [UserAuthController::class, 'register']);
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
+Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
 
-// Landing Page (public — no auth required)
 Route::prefix('landing-page')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\LandingPageController::class, 'index']);
     Route::get('/{section}', [\App\Http\Controllers\Api\LandingPageController::class, 'section']);
@@ -162,21 +173,6 @@ Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->gr
     
 });
 
-Route::get('categories', [UserAuthController::class, 'categories']);
-Route::get('main-categories', [UserAuthController::class, 'mainCategories']);
-Route::get('professions', [UserAuthController::class, 'professions']);
-Route::get('banners', [UserAuthController::class, 'banners']);
-Route::get('popup-banner', [UserAuthController::class, 'popupBanner']);
-Route::get('config', [UserAuthController::class, 'config']);
-Route::post('auth/send-otp', [UserAuthController::class, 'sendOtp']);
-Route::post('auth/verify-otp', [UserAuthController::class, 'verifyOtp']);
-Route::post('auth/resend-otp', [UserAuthController::class, 'resendOtp']);
-Route::post('auth/register', [UserAuthController::class, 'register']);
-
-Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect']);
-
-Route::get('/auth/{provider}/social_login', [SocialAuthController::class, 'social_login']);
-
 Route::group(['prefix' => 'brand'], function () {
     // Public brand routes (no auth required)
     Route::get('brand-category-list', [SellerAuthController::class, 'brandCategoryList']);
@@ -266,3 +262,4 @@ Route::group(['prefix' => 'sale'], function () {
         Route::get('sales-privacy-policy', [SaleDashboardController::class, 'salesPrivacyPolicy']);
     });
 });
+

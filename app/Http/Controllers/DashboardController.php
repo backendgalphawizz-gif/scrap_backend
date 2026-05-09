@@ -417,7 +417,7 @@ class DashboardController extends Controller
         $seller = Seller::findOrFail($id);
 
         $request->validate([
-            'status' => 'nullable|in:approved,pending',
+            'status' => 'nullable|in:approved,pending,banned',
             'instagram_status' => 'nullable|in:not_verified,pending,verified',
             'facebook_status' => 'nullable|in:not_verified,pending,verified',
             'gst_status' => 'nullable|string|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
