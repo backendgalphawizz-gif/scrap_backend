@@ -505,64 +505,64 @@ class DashboardController extends Controller
         }
         // comapny name
         DB::table('business_settings')->updateOrInsert(['type' => 'company_name'], [
-            'value' => $request['company_name']
+            'value' => $request->input('company_name') ?? ''
         ]);
         
         DB::table('business_settings')->updateOrInsert(['type' => 'tds_percent'], [
-            'value' => $request['tds_percent']
+            'value' => $request->input('tds_percent') ?? ''
         ]);
         // company email
         DB::table('business_settings')->updateOrInsert(['type' => 'company_email'], [
-            'value' => $request['company_email']
+            'value' => $request->input('company_email') ?? ''
         ]);
         // company Phone
         DB::table('business_settings')->updateOrInsert(['type' => 'company_phone'], [
-            'value' => $request['company_phone']
+            'value' => $request->input('company_phone') ?? ''
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'timezone'], [
-            'value' => $request['timezone']
+            'value' => $request->input('timezone') ?? ''
         ]);
         
         DB::table('business_settings')->updateOrInsert(['type' => 'minimum_coin_withdrawl'], [
-            'value' => $request['minimum_coin_withdrawl']
+            'value' => $request->input('minimum_coin_withdrawl') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'sale_post_commission'], [
-            'value' => $request['sale_post_commission']
+            'value' => $request->input('sale_post_commission') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'sale_brand_commission'], [
-            'value' => $request['sale_brand_commission']
+            'value' => $request->input('sale_brand_commission') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'upi_value'], [
-            'value' => $request['upi_value']
+            'value' => $request->input('upi_value') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'voucher_value'], [
-            'value' => $request['voucher_value']
+            'value' => $request->input('voucher_value') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'post_footer_content'], [
-            'value' => $request['post_footer_content']
+            'value' => $request->input('post_footer_content') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'minimum_wallet_balance'], [
-            'value' => $request['minimum_wallet_balance']
+            'value' => $request->input('minimum_wallet_balance') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'campaign_gst_percentage'], [
             'value' => $request->filled('campaign_gst_percentage') ? $request['campaign_gst_percentage'] : '18'
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'kyc_amount'], [
-            'value' => $request['kyc_amount']
+            'value' => $request->input('kyc_amount') ?? ''
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'max_posts_per_user'], [
-            'value' => $request['max_posts_per_user']
+            'value' => $request->input('max_posts_per_user') ?? ''
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'brand_wise_posting_limits'], [
-            'value' => strtoupper($request['brand_wise_posting_limits']) // always uppercase
+            'value' => strtoupper($request->input('brand_wise_posting_limits') ?? '')
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'cost_per_post'], [
-            'value' => $request['cost_per_post']
+            'value' => $request->input('cost_per_post') ?? ''
         ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'brand_max_campaigns_per_timeframe'], [
@@ -572,38 +572,49 @@ class DashboardController extends Controller
             'value' => $request['brand_campaign_creation_timeframe_hours'] ?? '24',
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'post_sharing_reward'], [
-            'value' => $request['post_sharing_reward']
+            'value' => $request->input('post_sharing_reward') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'feedback_incentive'], [
-            'value' => $request['feedback_incentive']
+            'value' => $request->input('feedback_incentive') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'platform_commission'], [
-            'value' => $request['platform_commission']
+            'value' => $request->input('platform_commission') ?? ''
         ]);
 
         // Social media links
         foreach (['social_facebook', 'social_twitter', 'social_instagram', 'social_youtube', 'social_linkedin'] as $key) {
             DB::table('business_settings')->updateOrInsert(['type' => $key], [
-                'value' => $request->input($key, '')
+                'value' => $request->input($key) ?? ''
             ]);
         }
 
         // Footer extras
         DB::table('business_settings')->updateOrInsert(['type' => 'footer_short_desc'], [
-            'value' => $request->input('footer_short_desc', '')
+            'value' => $request->input('footer_short_desc') ?? ''
         ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'footer_copyright'], [
-            'value' => $request->input('footer_copyright', '')
+            'value' => $request->input('footer_copyright') ?? ''
         ]);
 
         // web logo
         $webLogo = BusinessSetting::where(['type' => 'company_web_logo'])->first();
-        if ($request->has('company_web_logo')) {
+        if ($request->hasFile('company_web_logo')) {
             try {
-                //code...
                 $webLogo = ImageManager::upload('company/', 'png', $request->file('company_web_logo'));
-                BusinessSetting::where(['type' => 'company_web_logo'])->update([
+                BusinessSetting::updateOrInsert(['type' => 'company_web_logo'], [
                     'value' => $webLogo,
+                ]);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        }
+
+        // favicon
+        if ($request->hasFile('company_favicon')) {
+            try {
+                $favicon = ImageManager::upload('company/', 'png', $request->file('company_favicon'));
+                BusinessSetting::updateOrInsert(['type' => 'company_favicon'], [
+                    'value' => $favicon,
                 ]);
             } catch (\Throwable $th) {
                 //throw $th;
@@ -952,6 +963,102 @@ class DashboardController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Withdrawal approved successfully.'
+        ]);
+    }
+
+    /**
+     * Admin proxy: verify a PAN number via Nerofy API.
+     * Keeps the API token server-side.
+     */
+    public function adminVerifyPan(Request $request)
+    {
+        $request->validate([
+            'pan_number' => ['required', 'string', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/i'],
+        ]);
+
+        $panNumber = strtoupper(trim($request->pan_number));
+        $token     = env('NEROFY_API_TOKEN');
+
+        $ch = curl_init('https://api.nerofy.in/api/v1/service/pancard/verify');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => $panNumber]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $raw  = curl_exec($ch);
+        $err  = curl_error($ch);
+        curl_close($ch);
+
+        if ($err || $raw === false) {
+            return response()->json(['status' => false, 'message' => 'Could not reach PAN verification service.'], 502);
+        }
+
+        $body = json_decode($raw, true);
+        if (!isset($body['data'])) {
+            return response()->json(['status' => false, 'message' => $body['message'] ?? 'Invalid response from PAN verification service.'], 502);
+        }
+
+        $data  = $body['data'];
+        $valid = isset($data['pan_status']) && strtoupper($data['pan_status']) === 'PAN IS VALID';
+
+        return response()->json([
+            'status'     => true,
+            'valid'      => $valid,
+            'pan_status' => $data['pan_status'] ?? null,
+            'name'       => $data['name'] ?? null,
+        ]);
+    }
+
+    /**
+     * Admin proxy: verify a GST number via Nerofy API.
+     * Keeps the API token server-side.
+     */
+    public function adminVerifyGst(Request $request)
+    {
+        $request->validate([
+            'gst_number' => ['required', 'string', 'min:15', 'max:15'],
+        ]);
+
+        $gstNumber = strtoupper(trim($request->gst_number));
+        $token     = env('NEROFY_API_TOKEN');
+
+        $ch = curl_init('https://api.nerofy.in/api/v1/service/gstin/verify');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['gstinNumber' => $gstNumber]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $raw  = curl_exec($ch);
+        $err  = curl_error($ch);
+        curl_close($ch);
+
+        if ($err || $raw === false) {
+            return response()->json(['status' => false, 'message' => 'Could not reach GST verification service.'], 502);
+        }
+
+        $body = json_decode($raw, true);
+        if (!isset($body['data'])) {
+            return response()->json(['status' => false, 'message' => $body['message'] ?? 'Invalid response from GST verification service.'], 502);
+        }
+
+        $data  = $body['data'];
+        $valid = isset($data['gst_status']) && $data['gst_status'] === 'GSTIN Exists';
+
+        return response()->json([
+            'status'      => true,
+            'valid'       => $valid,
+            'gst_status'  => $data['gst_status'] ?? null,
+            'legal_name'  => $data['legal_name'] ?? $data['legalName'] ?? null,
         ]);
     }
 

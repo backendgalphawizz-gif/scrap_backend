@@ -13,9 +13,11 @@
     <meta name="_token" content="{{csrf_token()}}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Favicon and Touch Icons-->
-    <link rel="apple-touch-icon" sizes="180x180" href="">
-    <link rel="icon" type="image/png" sizes="32x32" href="">
-    <link rel="icon" type="image/png" sizes="16x16" href="">
+    @php($__favicon = \App\CPU\Helpers::get_business_settings('company_favicon'))
+    @php($__faviconUrl = $__favicon ? asset('storage/company/'.$__favicon) : '')
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $__faviconUrl }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $__faviconUrl }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ $__faviconUrl }}">
     <link rel="stylesheet" href="{{asset('public/assets/back-end')}}/css/toastr.css"/>
     <!-- Main Theme Styles + Bootstrap-->
     <link rel="stylesheet" media="screen" href="{{asset('public/assets/front-end')}}/css/theme.min.css">

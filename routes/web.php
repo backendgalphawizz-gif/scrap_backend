@@ -61,13 +61,21 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/brands', [DashboardController::class, 'brands'])->name('admin.brand');
     Route::get('/brands/{id}', [DashboardController::class, 'showBrand'])->name('admin.brand.view');
     Route::post('/brands/{id}', [DashboardController::class, 'updateBrand'])->name('admin.brand.updateStatus');
+
+    // Nerofy API proxy routes for admin PAN/GST verification
+    Route::post('/verify-pan', [DashboardController::class, 'adminVerifyPan'])->name('admin.verify.pan');
+    Route::post('/verify-gst', [DashboardController::class, 'adminVerifyGst'])->name('admin.verify.gst');
+
     Route::get('/roles-permissions', [DashboardController::class, 'rolesNdPermission'])->name('admin.roles-nd-permissions');
     Route::post('/roles-permissions/store', [DashboardController::class, 'storeRolesNdPermission'])->name('admin.roles-nd-permissions.store');
 
     // Reports
     Route::get('reports/brand-report', [ReportController::class, 'index'])->name('admin.brand.reports');
+    Route::get('reports/brand-report-export', [ReportController::class, 'exportBrandReport'])->name('admin.brand.reports.export');
     Route::get('reports/campaign-report', [ReportController::class, 'campaignReport'])->name('admin.campaign.reports');
+    Route::get('reports/campaign-report-export', [ReportController::class, 'exportCampaignReport'])->name('admin.campaign.reports.export');
     Route::get('reports/post-report', [ReportController::class, 'postReport'])->name('admin.post.reports');
+    Route::get('reports/post-report-export', [ReportController::class, 'exportPostReport'])->name('admin.post.reports.export');
     Route::get('activity-logs', [ReportController::class, 'activityLogs'])->name('admin.activity.logs');
     
     // BannerController

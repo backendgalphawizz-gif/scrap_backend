@@ -120,7 +120,7 @@
                             </div>
                             @php($tz=\App\Models\BusinessSetting::where('type','timezone')->first())
                             @php($tz=$tz?$tz->value:0)
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('time')}} {{\App\CPU\translate('zone')}}</label>
                                     <select name="timezone" class="form-select form-control js-select2-custom">
@@ -133,13 +133,24 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 @php($company_web_logo=\App\CPU\Helpers::get_business_settings('company_web_logo'))
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('company_web_logo')}}</label>
                                     <input type="file" name="company_web_logo" class="form-control" accept="image/*" id="customFileUploadLogo">
                                     @if($company_web_logo)
                                     <img id="viewerLogo" src="{{ asset('storage/company/'.$company_web_logo) }}" style="max-width: 100px; margin-top: 10px;">
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                @php($company_favicon=\App\CPU\Helpers::get_business_settings('company_favicon'))
+                                <div class="form-group">
+                                    <label class="title-color d-flex">{{\App\CPU\translate('Favicon')}}</label>
+                                    <input type="file" name="company_favicon" class="form-control" accept="image/*" id="customFileUploadFavicon">
+                                    <small class="text-muted">Recommended: 32×32 or 16×16 px PNG/ICO</small>
+                                    @if($company_favicon)
+                                    <img id="viewerFavicon" src="{{ asset('storage/company/'.$company_favicon) }}" style="max-width: 48px; margin-top: 10px;">
                                     @endif
                                 </div>
                             </div>
@@ -165,7 +176,7 @@
                             @php($campaign_gst_percentage=\App\Models\BusinessSetting::where('type','campaign_gst_percentage')->first()->value ?? '18')
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">KYC Amount</label>
+                                    <label class="title-color d-flex">KYC Amount (₹)</label>
                                     <input class="form-control" type="text" name="kyc_amount" value="{{ $kyc_amount }}">
                                 </div>
                             </div>
@@ -183,7 +194,7 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">Cost per post</label>
+                                    <label class="title-color d-flex">Cost per post (₹)</label>
                                     <input class="form-control" type="text" name="cost_per_post" value="{{ $cost_per_post }}">
                                 </div>
                             </div>
@@ -213,7 +224,7 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">TSD Percent</label>
+                                    <label class="title-color d-flex">TSD (%)</label>
                                     <input class="form-control" type="text" name="tds_percent" value="{{ $tds_percent }}">
                                 </div>
                             </div>
@@ -237,13 +248,13 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">Brand Minimum wallet balance</label>
+                                    <label class="title-color d-flex">Brand Minimum wallet balance(₹)</label>
                                     <input class="form-control" type="text" name="minimum_wallet_balance" value="{{ $minimum_wallet_balance }}">
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">Campaign GST percentage</label>
+                                    <label class="title-color d-flex">Campaign GST (%)</label>
                                     <input class="form-control" type="text" name="campaign_gst_percentage" value="{{ $campaign_gst_percentage }}" placeholder="18">
                                 </div>
                             </div>

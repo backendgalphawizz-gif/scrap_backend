@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Http\Controllers\Api\CampaignDayStatusController;
 use Illuminate\Console\Command;
-
+use Illuminate\Support\Facades\Log;
 class SyncCampaignPostDayStatus extends Command
 {
     protected $signature = 'campaign:sync-post-day-status';
@@ -35,7 +35,7 @@ class SyncCampaignPostDayStatus extends Command
                 ['promoted_completed_to_approved', $data['promoted_completed_to_approved'] ?? '—'],
             ]
         );
-
+        Log::info("Sync completed log by Haqdddd.");
         if (! empty($data['errors'])) {
             $this->warn('Errors: '.json_encode($data['errors']));
         }

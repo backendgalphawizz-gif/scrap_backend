@@ -281,8 +281,19 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label">PAN Number</label>
-                                    <input type="text" class="form-control" value="{{$user->pan_number}}">
-                                    <img src="{{ $user->pan_image }}" class="img-thumbnail mt-2" style="max-width:150px">
+                                    <div class="input-group">
+                                        <input type="text" id="customerPanNumber" class="form-control" value="{{$user->pan_number}}" placeholder="ABCDE1234F" style="text-transform:uppercase" readonly>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnVerifyCustomerPan"
+                                            {{ $user->pan_status === 'Verified' ? 'disabled' : '' }}
+                                            title="{{ $user->pan_status === 'Verified' ? 'Already verified' : 'Verify via Nerofy' }}">
+                                            <span id="verifyCustPanText">Verify</span>
+                                            <span id="verifyCustPanSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                        </button>
+                                    </div>
+                                    <div id="custPanVerifyResult" class="mt-1 small"></div>
+                                    @if($user->pan_image)
+                                        <img src="{{ $user->pan_image }}" class="img-thumbnail mt-2" style="max-width:150px">
+                                    @endif
                                 </div>
                             </div>
 
@@ -456,5 +467,57 @@
     @if(session('error'))
     toastr.error("{{ session('error') }}");
     @endif
+</script>
+<script>
+    // Customer PAN Verification
+    const custPanRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/i;
+
+    $('#btnVerifyCustomerPan').on('click', function () {
+        const panNumber = $('#customerPanNumber').val().trim().toUpperCase();
+        const $result   = $('#custPanVerifyResult');
+
+        if (!panNumber) {
+            $result.html('<span class="text-danger">Please enter a PAN number first.</span>');
+            return;
+        }
+        if (!custPanRegex.test(panNumber)) {
+            $result.html('<span class="text-danger">Invalid PAN format. Expected: ABCDE1234F</span>');
+            return;
+        }
+
+        const $btn     = $(this);
+        const $text    = $('#verifyCustPanText');
+        const $spinner = $('#verifyCustPanSpinner');
+
+        $btn.prop('disabled', true);
+        $text.text('Verifying…');
+        $spinner.removeClass('d-none');
+        $result.html('');
+
+        $.ajax({
+            url: '{{ route("admin.verify.pan") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                pan_number: panNumber,
+            },
+            success: function (res) {
+                if (res.valid) {
+                    $result.html('<span class="text-success">✔ PAN is valid' + (res.name ? ' — ' + res.name : '') + '</span>');
+                } else {
+                    $result.html('<span class="text-danger">✘ PAN is invalid (' + (res.pan_status || 'not valid') + ')</span>');
+                }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON ? (xhr.responseJSON.message || 'Verification failed.') : 'Server error.';
+                $result.html('<span class="text-danger">' + msg + '</span>');
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+                $text.text('Verify');
+                $spinner.addClass('d-none');
+            }
+        });
+    });
 </script>
 @endsection

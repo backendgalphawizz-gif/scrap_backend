@@ -553,11 +553,21 @@
                                     </div>
                                 </div>
                             </div>
-
+                                <div class="col-md-12"></div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>GST Verification Status</label>
-                                    <select name="gst_status" class="form-control form-select">
+                                    <div class="d-flex gap-2 align-items-center mb-1">
+                                        <span class="small text-muted">GST: <strong>{{ $seller->gst_number ?: 'N/A' }}</strong></span>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVerifyGst"
+                                            {{ (!$seller->gst_number || $seller->gst_status === 'Verified') ? 'disabled' : '' }}
+                                            title="{{ $seller->gst_status === 'Verified' ? 'Already verified' : (!$seller->gst_number ? 'No GST number on record' : 'Verify via Nerofy') }}">
+                                            <span id="verifyGstText">Verify GST</span>
+                                            <span id="verifyGstSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                        </button>
+                                    </div>
+                                    <div id="gstVerifyResult" class="mb-1 small"></div>
+                                    <select name="gst_status" id="gstStatusSelect" class="form-control form-select">
                                         <option value="Not Submitted" {{ $seller->gst_status === 'Not Submitted' ? 'selected' : '' }}>Not Submitted</option>
                                         <option value="Submitted" {{ $seller->gst_status === 'Submitted' ? 'selected' : '' }}>Submitted</option>
                                         <option value="Under Verification" {{ $seller->gst_status === 'Under Verification' ? 'selected' : '' }}>Under Verification</option>
@@ -574,7 +584,17 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>PAN Verification Status</label>
-                                    <select name="pan_status" class="form-control form-select">
+                                    <div class="d-flex gap-2 align-items-center mb-1">
+                                        <span class="small text-muted">PAN: <strong>{{ $seller->pan_number ?: 'N/A' }}</strong></span>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVerifySellerPan"
+                                            {{ (!$seller->pan_number || $seller->pan_status === 'Verified') ? 'disabled' : '' }}
+                                            title="{{ $seller->pan_status === 'Verified' ? 'Already verified' : (!$seller->pan_number ? 'No PAN number on record' : 'Verify via Nerofy') }}">
+                                            <span id="verifySellerPanText">Verify PAN</span>
+                                            <span id="verifySellerPanSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                        </button>
+                                    </div>
+                                    <div id="sellerPanVerifyResult" class="mb-1 small"></div>
+                                    <select name="pan_status" id="panStatusSelect" class="form-control form-select">
                                         <option value="Not Submitted" {{ $seller->pan_status === 'Not Submitted' ? 'selected' : '' }}>Not Submitted</option>
                                         <option value="Submitted" {{ $seller->pan_status === 'Submitted' ? 'selected' : '' }}>Submitted</option>
                                         <option value="Under Verification" {{ $seller->pan_status === 'Under Verification' ? 'selected' : '' }}>Under Verification</option>
@@ -611,4 +631,103 @@
 @endsection
 
 @push('script')
+<script>
+    const sellerPanRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/i;
+    const sellerPanNumber = '{{ $seller->pan_number }}';
+    const sellerGstNumber = '{{ $seller->gst_number }}';
+
+    // Verify PAN
+    $('#btnVerifySellerPan').on('click', function () {
+        const panNumber = sellerPanNumber.trim().toUpperCase();
+        const $result   = $('#sellerPanVerifyResult');
+
+        if (!panNumber) {
+            $result.html('<span class="text-danger">No PAN number on record for this brand.</span>');
+            return;
+        }
+        if (!sellerPanRegex.test(panNumber)) {
+            $result.html('<span class="text-danger">PAN format invalid: ' + panNumber + '</span>');
+            return;
+        }
+
+        const $btn     = $(this);
+        const $text    = $('#verifySellerPanText');
+        const $spinner = $('#verifySellerPanSpinner');
+
+        $btn.prop('disabled', true);
+        $text.text('Verifying…');
+        $spinner.removeClass('d-none');
+        $result.html('');
+
+        $.ajax({
+            url: '{{ route("admin.verify.pan") }}',
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}', pan_number: panNumber },
+            success: function (res) {
+                if (res.valid) {
+                    $result.html('<span class="text-success">✔ PAN is valid' + (res.name ? ' — ' + res.name : '') + '</span>');
+                    $('#panStatusSelect').val('Submitted');
+                } else {
+                    $result.html('<span class="text-danger">✘ PAN is invalid (' + (res.pan_status || 'not valid') + ')</span>');
+                }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON ? (xhr.responseJSON.message || 'Verification failed.') : 'Server error.';
+                $result.html('<span class="text-danger">' + msg + '</span>');
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+                $text.text('Verify PAN');
+                $spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Verify GST
+    $('#btnVerifyGst').on('click', function () {
+        const gstNumber = sellerGstNumber.trim().toUpperCase();
+        const $result   = $('#gstVerifyResult');
+
+        if (!gstNumber) {
+            $result.html('<span class="text-danger">No GST number on record for this brand.</span>');
+            return;
+        }
+        if (gstNumber.length !== 15) {
+            $result.html('<span class="text-danger">GST number must be 15 characters.</span>');
+            return;
+        }
+
+        const $btn     = $(this);
+        const $text    = $('#verifyGstText');
+        const $spinner = $('#verifyGstSpinner');
+
+        $btn.prop('disabled', true);
+        $text.text('Verifying…');
+        $spinner.removeClass('d-none');
+        $result.html('');
+
+        $.ajax({
+            url: '{{ route("admin.verify.gst") }}',
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}', gst_number: gstNumber },
+            success: function (res) {
+                if (res.valid) {
+                    $result.html('<span class="text-success">✔ GST is valid' + (res.legal_name ? ' — ' + res.legal_name : '') + '</span>');
+                    $('#gstStatusSelect').val('Submitted');
+                } else {
+                    $result.html('<span class="text-danger">✘ GST is invalid (' + (res.gst_status || 'not valid') + ')</span>');
+                }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON ? (xhr.responseJSON.message || 'Verification failed.') : 'Server error.';
+                $result.html('<span class="text-danger">' + msg + '</span>');
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+                $text.text('Verify GST');
+                $spinner.addClass('d-none');
+            }
+        });
+    });
+</script>
 @endpush

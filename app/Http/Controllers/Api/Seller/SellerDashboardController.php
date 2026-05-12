@@ -265,6 +265,27 @@ class SellerDashboardController extends Controller
         $shop = Seller::find($seller['id']);
 
         if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
+            // Verify PAN with third-party API before accepting it
+            $panVerification = $this->verifyPanNumber($request->pan_number);
+
+            if ($panVerification['error'] !== null) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $panVerification['error'],
+                ], 502);
+            }
+
+            if (!$panVerification['valid']) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                    'data'    => [
+                        'pan_number' => $request->pan_number,
+                        'pan_status' => $panVerification['status'],
+                    ],
+                ], 422);
+            }
+
             $shop->pan_number = $request->pan_number;
             $shop->pan_status = 'Submitted';
             if ($request->hasFile('pan_image')) {
@@ -273,6 +294,29 @@ class SellerDashboardController extends Controller
         }
 
         if ($request->has('gst_number') && $shop->gst_status !== 'Verified') {
+            if ($request->filled('gst_number')) {
+                // Verify GST with third-party API before accepting it
+                $gstVerification = $this->verifyGstNumber($request->gst_number);
+
+                if ($gstVerification['error'] !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $gstVerification['error'],
+                    ], 502);
+                }
+
+                if (!$gstVerification['valid']) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'GST number is invalid or does not exist. Please enter a valid GSTIN.',
+                        'data'    => [
+                            'gst_number' => $request->gst_number,
+                            'gst_status' => $gstVerification['status'],
+                        ],
+                    ], 422);
+                }
+            }
+
             $shop->gst_number = $request->gst_number;
             $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
             $shop->billing_name = $request->billing_name;
@@ -288,7 +332,7 @@ class SellerDashboardController extends Controller
             $shop->bank_account_number       = $request->bank_account_number ?? $shop->bank_account_number;
             $shop->bank_ifsc_code            = $request->bank_ifsc_code ?? $shop->bank_ifsc_code;
             $shop->bank_account_holder_name  = $request->bank_account_holder_name ?? $shop->bank_account_holder_name;
-            $shop->bank_account_type         = $request->bank_account_type ?? $shop->bank_account_type;
+            $shop->bank_account_type         = strtolower($request->bank_account_type ?? $shop->bank_account_type);
             $shop->bank_status               = 'Submitted';
         }
 
@@ -974,5 +1018,117 @@ class SellerDashboardController extends Controller
             'message' => 'Refund list retrieved successfully',
             'data'    => CommonResource::collection($refunds),
         ], 200);
+    }
+
+    /**
+     * Verify a PAN number against the Nerofy third-party API.
+     *
+     * Returns an array with keys:
+     *   'valid'    (bool)        – true if PAN IS VALID
+     *   'status'   (string|null) – raw pan_status from the API
+     *   'name'     (string|null) – registered_name from the API
+     *   'error'    (string|null) – human-readable error when API call fails
+     */
+    private function verifyPanNumber(string $panNumber): array
+    {
+        $token = env('NEROFY_API_TOKEN');
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/pancard/verify',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => strtoupper(trim($panNumber))]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+        ]);
+
+        $response  = curl_exec($curl);
+        $curlError = curl_error($curl);
+        curl_close($curl);
+
+        if ($curlError) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'PAN verification service unreachable: ' . $curlError];
+        }
+
+        $decoded = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['pan_status'])) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Invalid response from PAN verification service.'];
+        }
+
+        $panStatus = strtoupper(trim($decoded['data']['pan_status'] ?? ''));
+        $isValid   = $panStatus === 'PAN IS VALID';
+
+        return [
+            'valid'  => $isValid,
+            'status' => $decoded['data']['pan_status'] ?? null,
+            'name'   => $decoded['data']['registered_name'] ?? null,
+            'error'  => null,
+        ];
+    }
+
+    /**
+     * Verify a GSTIN against the Nerofy third-party API.
+     *
+     * Returns an array with keys:
+     *   'valid'    (bool)        – true if GSTIN Exists
+     *   'status'   (string|null) – raw gst_status from the API
+     *   'name'     (string|null) – legal_name_of_business from the API
+     *   'error'    (string|null) – human-readable error when API call fails
+     */
+    private function verifyGstNumber(string $gstNumber): array
+    {
+        $token = env('NEROFY_API_TOKEN');
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/gstin/verify',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode(['gstinNumber' => strtoupper(trim($gstNumber))]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+        ]);
+
+        $response  = curl_exec($curl);
+        $curlError = curl_error($curl);
+        curl_close($curl);
+
+        if ($curlError) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'GST verification service unreachable: ' . $curlError];
+        }
+
+        $decoded = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['gst_status'])) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Invalid response from GST verification service.'];
+        }
+
+        $gstStatus = trim($decoded['data']['gst_status'] ?? '');
+        $isValid   = $gstStatus === 'GSTIN Exists';
+
+        return [
+            'valid'  => $isValid,
+            'status' => $gstStatus,
+            'name'   => $decoded['data']['legal_name_of_business'] ?? null,
+            'error'  => null,
+        ];
     }
 }
