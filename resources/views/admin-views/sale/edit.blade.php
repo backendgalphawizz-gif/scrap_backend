@@ -120,8 +120,17 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label for="pan_number" class="form-label">{{ \App\CPU\translate('pan_number') }}</label>
-                                <input type="text" name="pan_number" id="pan_number" class="form-control @error('pan_number') is-invalid @enderror" value="{{ old('pan_number', $sale->pan_number) }}">
-                                @error('pan_number') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                <div class="input-group">
+                                    <input type="text" name="pan_number" id="pan_number" class="form-control @error('pan_number') is-invalid @enderror" value="{{ old('pan_number', $sale->pan_number) }}" placeholder="ABCDE1234F" style="text-transform:uppercase">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnVerifyPan"
+                                        {{ $sale->pan_status === 'Verified' ? 'disabled' : '' }}
+                                        title="{{ $sale->pan_status === 'Verified' ? 'Already verified' : 'Verify via Nerofy' }}">
+                                        <span id="verifyPanText">Verify</span>
+                                        <span id="verifyPanSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    </button>
+                                </div>
+                                <div id="panVerifyResult" class="mt-1 small"></div>
+                                @error('pan_number') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-3">
                                 <label for="pan_status" class="form-label">{{ \App\CPU\translate('pan_status') }}</label>
@@ -266,5 +275,53 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    // PAN Verification
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/i;
+
+    $('#btnVerifyPan').on('click', function () {
+        const panNumber = $('#pan_number').val().trim().toUpperCase();
+        const $result   = $('#panVerifyResult');
+
+        if (!panRegex.test(panNumber)) {
+            $result.html('<span class="text-danger">Invalid PAN format. Expected: ABCDE1234F</span>');
+            return;
+        }
+
+        const $btn     = $(this);
+        const $text    = $('#verifyPanText');
+        const $spinner = $('#verifyPanSpinner');
+
+        $btn.prop('disabled', true);
+        $text.text('Verifying…');
+        $spinner.removeClass('d-none');
+        $result.html('');
+
+        $.ajax({
+            url: '{{ route("admin.verify.pan") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                pan_number: panNumber,
+            },
+            success: function (res) {
+                if (res.valid) {
+                    $result.html('<span class="text-success">✔ PAN is valid' + (res.name ? ' — ' + res.name : '') + '</span>');
+                    $('#pan_status').val('Submitted');
+                } else {
+                    $result.html('<span class="text-danger">✘ PAN is invalid (' + (res.pan_status || 'not valid') + ')</span>');
+                }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON ? (xhr.responseJSON.message || 'Verification failed.') : 'Server error.';
+                $result.html('<span class="text-danger">' + msg + '</span>');
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+                $text.text('Verify');
+                $spinner.addClass('d-none');
+            }
+        });
+    });
 </script>
 @endpush

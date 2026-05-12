@@ -99,6 +99,27 @@ class DashboardController extends Controller
             $seller = $data['data'];
             $shop = Sale::find($seller['id']);
             if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
+                // Verify PAN with third-party API before accepting it
+                $panVerification = $this->verifyPanNumber($request->pan_number);
+
+                if ($panVerification['error'] !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $panVerification['error'],
+                    ], 502);
+                }
+
+                if (!$panVerification['valid']) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                        'data'    => [
+                            'pan_number' => $request->pan_number,
+                            'pan_status' => $panVerification['status'],
+                        ],
+                    ], 422);
+                }
+
                 $shop->pan_number = $request->pan_number;
                 $shop->pan_status = 'Submitted';
                 if ($request->hasFile('pan_image')) {
@@ -808,6 +829,50 @@ class DashboardController extends Controller
             'message' => 'Sales Privacy Policy retrieved successfully',
             'data' => $policy
         ], 200);
+    }
+
+    /**
+     * Verify a PAN number with the Nerofy API.
+     *
+     * @return array{valid: bool, status: string|null, name: string|null, error: string|null}
+     */
+    private function verifyPanNumber(string $panNumber): array
+    {
+        $token = env('NEROFY_API_TOKEN');
+
+        $ch = curl_init('https://api.nerofy.in/api/v1/service/pancard/verify');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => strtoupper(trim($panNumber))]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $raw = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($err || $raw === false) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Could not reach PAN verification service.'];
+        }
+
+        $body = json_decode($raw, true);
+        if (!isset($body['data'])) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => $body['message'] ?? 'Invalid response from PAN verification service.'];
+        }
+
+        $data  = $body['data'];
+        $valid = isset($data['pan_status']) && strtoupper($data['pan_status']) === 'PAN IS VALID';
+
+        return [
+            'valid'  => $valid,
+            'status' => $data['pan_status'] ?? null,
+            'name'   => $data['name'] ?? null,
+            'error'  => null,
+        ];
     }
 
 }

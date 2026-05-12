@@ -21,7 +21,8 @@
         <!-- Layout styles -->
         <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
         <!-- End layout styles -->
-        <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}">
+        @php($__favicon = \App\CPU\Helpers::get_business_settings('company_favicon'))
+        <link rel="shortcut icon" href="{{ $__favicon ? asset('storage/company/'.$__favicon) : asset('assets/images/favicon.png') }}">
     </head>
 <body>
 <!-- Builder -->

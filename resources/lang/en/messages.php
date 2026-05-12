@@ -627,4 +627,7 @@
   'Brand FAQ' => 'Brand FAQ',
   'Sale FAQ' => 'Sale FAQ',
   'User FAQ' => 'User FAQ',
+  'Favicon' => 'Favicon',
+  'CSV' => 'CSV',
+  'Export CSV' => 'Export CSV',
 );

@@ -116,6 +116,95 @@ class ReportController extends Controller
         return view('admin-views.report._seller-earning',compact('data', 'campaignCount', 'brandsCount', 'brands', 'totals', 'date_type','from', 'to'));
     }
 
+    public function exportBrandReport(Request $request)
+    {
+        $date_type = $request->get('date_type', 'this_year');
+        $from = date('Y-m-d');
+        $to   = date('Y-m-d');
+
+        switch ($date_type) {
+            case 'this_week':
+                $from = now()->startOfWeek();
+                $to   = now()->endOfWeek();
+                break;
+            case 'this_month':
+                $from = now()->startOfMonth();
+                $to   = now()->endOfMonth();
+                break;
+            case 'this_year':
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+                break;
+            case 'custom_date':
+                $from = $request->get('from', date('Y-m-d'));
+                $to   = $request->get('to', date('Y-m-d'));
+                break;
+            default:
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+        }
+
+        $campaigns = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('id')
+            ->get();
+
+        $rows = $campaigns->map(function ($campaign) {
+            $baseAmount   = (float) ($campaign->total_campaign_budget ?? 0);
+            $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
+            $gstAmount    = max(0, $amountWithGst - $baseAmount);
+
+            $userPercentage     = (float) ($campaign->user_percentage ?? 0);
+            $salesPercentage    = (float) ($campaign->sales_percentage ?? 0);
+            $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
+            $adminPercentage    = (float) ($campaign->admin_percentage ?? 0);
+
+            $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
+            $discountAmount     = ($baseAmount * $discountPercentage) / 100;
+            $amountWithoutGst   = $baseAmount - $discountAmount;
+
+            return [
+                'Brand'                              => $campaign->brand->username ?? '-',
+                'Campaign'                           => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'Total Amount with GST'              => number_format($amountWithGst, 2, '.', ''),
+                'GST'                                => number_format($gstAmount, 2, '.', ''),
+                'Total Amount without GST'           => number_format($amountWithoutGst, 2, '.', ''),
+                'Total Amount without GST + Discount'=> number_format($baseAmount, 2, '.', ''),
+                'Discount'                           => number_format($discountAmount, 2, '.', ''),
+                'Users'                              => number_format(($amountWithoutGst * $userPercentage) / 100, 2, '.', ''),
+                'Sales'                              => number_format(($amountWithoutGst * $salesPercentage) / 100, 2, '.', ''),
+                'Referral'                           => number_format(($amountWithoutGst * $referralPercentage) / 100, 2, '.', ''),
+                'Admin'                              => number_format(($amountWithoutGst * $adminPercentage) / 100, 2, '.', ''),
+            ];
+        });
+
+        $filename = 'brand-report-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($rows) {
+            $handle = fopen('php://output', 'w');
+
+            if ($rows->isNotEmpty()) {
+                fputcsv($handle, array_keys($rows->first()));
+            }
+
+            foreach ($rows as $row) {
+                fputcsv($handle, array_values($row));
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function campaignReport(Request $request) {
         $date_type = request('date_type') ?? 'this_year';
         $from = date('Y-m-d');
@@ -175,6 +264,78 @@ class ReportController extends Controller
         ];
 
         return view('admin-views.report._campaign-reports', compact('data', 'campaigns', 'date_type', 'from', 'to'));
+    }
+
+    public function exportCampaignReport(Request $request)
+    {
+        $date_type = $request->get('date_type', 'this_year');
+        $from = date('Y-m-d');
+        $to   = date('Y-m-d');
+
+        switch ($date_type) {
+            case 'this_week':
+                $from = now()->startOfWeek();
+                $to   = now()->endOfWeek();
+                break;
+            case 'this_month':
+                $from = now()->startOfMonth();
+                $to   = now()->endOfMonth();
+                break;
+            case 'this_year':
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+                break;
+            case 'custom_date':
+                $from = $request->get('from', date('Y-m-d'));
+                $to   = $request->get('to', date('Y-m-d'));
+                break;
+            default:
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+        }
+
+        $campaigns = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->withCount([
+                'campaign_transactions as participants',
+                'campaign_transactions as approved_posts' => function ($q) {
+                    $q->where('status', 'approved');
+                },
+                'campaign_transactions as rejected_posts' => function ($q) {
+                    $q->where('status', 'rejected');
+                },
+            ])
+            ->orderByDesc('id')
+            ->get();
+
+        $filename = 'campaign-report-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($campaigns) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Campaign', 'Brand', 'Budget', 'Participants', 'Approved', 'Rejected', 'Status']);
+            foreach ($campaigns as $campaign) {
+                fputcsv($handle, [
+                    $campaign->title,
+                    $campaign->brand->username ?? '-',
+                    $campaign->total_campaign_budget,
+                    $campaign->participants,
+                    $campaign->approved_posts,
+                    $campaign->rejected_posts,
+                    ucwords($campaign->status),
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function postReport(Request $request) {
@@ -240,6 +401,70 @@ class ReportController extends Controller
             ->withQueryString();
 
         return view('admin-views.report._post-reports', compact('data', 'posts', 'date_type', 'from', 'to'));
+    }
+
+    public function exportPostReport(Request $request)
+    {
+        $date_type = $request->get('date_type', 'this_year');
+        $from = date('Y-m-d');
+        $to   = date('Y-m-d');
+
+        switch ($date_type) {
+            case 'this_week':
+                $from = now()->startOfWeek();
+                $to   = now()->endOfWeek();
+                break;
+            case 'this_month':
+                $from = now()->startOfMonth();
+                $to   = now()->endOfMonth();
+                break;
+            case 'this_year':
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+                break;
+            case 'custom_date':
+                $from = $request->get('from', date('Y-m-d'));
+                $to   = $request->get('to', date('Y-m-d'));
+                break;
+            default:
+                $from = now()->startOfYear();
+                $to   = now()->endOfYear();
+        }
+
+        $posts = CampaignTransaction::with(['campaign.brand'])
+            ->select('campaign_id', 'post_url', 'status', 'shared_on', 'likes', 'comments', 'created_at')
+            ->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('id')
+            ->get();
+
+        $filename = 'post-report-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($posts) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Campaign', 'Brand', 'Status', 'Likes', 'Comments', 'Post URL', 'Posted Date']);
+            foreach ($posts as $post) {
+                fputcsv($handle, [
+                    $post->campaign?->title ?? '-',
+                    $post->campaign?->brand->username ?? '-',
+                    ucwords($post->status),
+                    $post->likes,
+                    $post->comments,
+                    $post->post_url,
+                    date('d M, Y', strtotime($post->created_at)),
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function activityLogs(Request $request) {

@@ -121,7 +121,7 @@
 
                     <div class="row">
 
-                        <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                        <div class="col-md-6 col-lg-2 col-sm-12 stretch-card grid-margin">
                             <div class="card bg-gradient-danger card-img-holder text-white">
                                 <div class="card-body">
                                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
@@ -134,7 +134,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                        <div class="col-md-6 col-lg-2 col-sm-12 stretch-card grid-margin">
                             <div class="card bg-gradient-info card-img-holder text-white">
                                 <div class="card-body">
                                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
@@ -147,7 +147,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                        <div class="col-md-6 col-lg-2 col-sm-12 stretch-card grid-margin">
                             <div class="card bg-gradient-success card-img-holder text-white">
                                 <div class="card-body">
                                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
@@ -160,7 +160,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                        <div class="col-md-6 col-lg-2 col-sm-12 stretch-card grid-margin">
                             <div class="card bg-gradient-warning card-img-holder text-white">
                                 <div class="card-body">
                                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
@@ -173,7 +173,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                        <div class="col-md-6 col-lg-2 col-sm-12 stretch-card grid-margin">
                             <div class="card bg-gradient-danger card-img-holder text-white">
                                 <div class="card-body">
                                     <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
@@ -203,13 +203,14 @@
                                 {{ ($brandsCount ?? 0) }}
                             </span>
                         </h4>
+                        <a class="btn btn-outline-primary ms-auto" href="{{ route('admin.brand.reports.export', ['date_type' => $date_type, 'from' => ($from instanceof \Carbon\Carbon ? $from->format('Y-m-d') : $from), 'to' => ($to instanceof \Carbon\Carbon ? $to->format('Y-m-d') : $to)]) }}">
+                            {{ \App\CPU\translate('Export CSV') }}
+                        </a>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table id="datatable"
-                        class="table">
-
+                    <table id="datatable" class="table">
                         <thead class="text-capitalize">
                             <tr>
                                 <th>Brand</th>
@@ -225,7 +226,6 @@
                                 <th>Admin</th>
                             </tr>
                         </thead>
-
                         <tbody>
                             @if(($brands->count() > 0) && isset($totals))
                                 <tr class="fw-bold">

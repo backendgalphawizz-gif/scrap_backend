@@ -72,28 +72,29 @@ class UserProfileController extends Controller
     public function updateKyc(Request $request)
     {
         $user = $request->user();
-
-        // $rules = [
-        //     'pan_number' => 'required',
-        //     'aadhar_number' => 'required',
-        //     'bank_name' => 'required',
-        //     'ifsc_code' => 'required',
-        //     'account_number' => 'required',
-        //     'branch_name' => 'required',
-        //     'upi_id' => 'required'
-        // ];
-
-        // $validator = Validator::make($request->all(), $rules);
-
-        // if ($validator->fails()) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => Helpers::single_error_processor($validator)
-        //     ], 422);
-        // }
-
-        // $user->update($request->only(['name', 'email', 'mobile','dob','gender','profession', 'address','city','state', 'native_state', 'native_city', 'instagram_username','facebook_username']));
+        
         if ($request->has('pan_number') && $user->pan_status !== 'Verified') {
+            // Verify PAN with third-party API before accepting it
+            $panVerification = $this->verifyPanNumber($request->pan_number);
+
+            if ($panVerification['error'] !== null) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $panVerification['error'],
+                ], 502);
+            }
+
+            if (!$panVerification['valid']) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                    'data'    => [
+                        'pan_number' => $request->pan_number,
+                        'pan_status' => $panVerification['status'],
+                    ],
+                ], 422);
+            }
+
             $user->pan_number = $request->pan_number;
             $user->pan_status = 'Submitted';
             if ($request->hasFile('pan_image')) {
@@ -757,6 +758,62 @@ class UserProfileController extends Controller
             'message'      => 'Interest-based campaigns retrieved successfully',
             'data'         => CommonResource::collection($campaigns),
         ]);
+    }
+
+    /**
+     * Verify a PAN number against the Nerofy third-party API.
+     *
+     * Returns an array with keys:
+     *   'valid'    (bool)        – true if PAN IS VALID
+     *   'status'   (string|null) – raw pan_status from the API
+     *   'name'     (string|null) – registered_name from the API
+     *   'error'    (string|null) – human-readable error when API call fails
+     */
+    private function verifyPanNumber(string $panNumber): array
+    {
+        $token = env('NEROFY_API_TOKEN');
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/pancard/verify',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => strtoupper(trim($panNumber))]),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token,
+            ],
+        ]);
+
+        $response = curl_exec($curl);
+        $curlError = curl_error($curl);
+        curl_close($curl);
+
+        if ($curlError) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'PAN verification service unreachable: ' . $curlError];
+        }
+
+        $decoded = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['pan_status'])) {
+            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Invalid response from PAN verification service.'];
+        }
+
+        $panStatus = strtoupper(trim($decoded['data']['pan_status'] ?? ''));
+        $isValid   = $panStatus === 'PAN IS VALID';
+
+        return [
+            'valid'  => $isValid,
+            'status' => $decoded['data']['pan_status'] ?? null,
+            'name'   => $decoded['data']['registered_name'] ?? null,
+            'error'  => null,
+        ];
     }
 
     }

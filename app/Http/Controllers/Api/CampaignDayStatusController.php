@@ -13,7 +13,7 @@ use Throwable;
 use Illuminate\Support\Facades\Log;
 class CampaignDayStatusController extends Controller
 {
-    private const MAX_DAY_STATUS = 7;
+    private const MAX_DAY_STATUS = 3;
 
     /**
      * Resolve scraped post storage for both platforms.
@@ -74,6 +74,7 @@ class CampaignDayStatusController extends Controller
                 'scraped_at' => null,
             ];
         }
+        
         log::info("Syncing transaction  {$transaction} with unique_code {$transaction->unique_code} for user_id {$transaction->user_id}.");
         $scrapedAtRaw = $this->latestScrapedAt($transaction->unique_code, $transaction->shared_on);
         log::info("Fetched scraped_at {$scrapedAtRaw} for unique_code {$transaction->unique_code} from table {$this->scrapedPostsTable($transaction->shared_on)}.");
