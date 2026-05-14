@@ -12,11 +12,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ProcessScrapeResults extends Command
-{
+{   
     protected $signature = 'campaign:process-results';
 
     protected $description = 'Verify campaign posts, keep rewards pending, and release them 3 days after campaign completion';
     private const MAX_VERIFIED_DAYS = 3;
+    private const GRACE_PERIOD_DAYS = 1;
 
     public function handle(): void
     {
@@ -254,7 +255,7 @@ class ProcessScrapeResults extends Command
             return false;
         }
 
-        $releaseDate = Carbon::parse($transaction->campaign->end_date)->endOfDay()->addDays(3);
+        $releaseDate = Carbon::parse($transaction->campaign->end_date)->endOfDay()->addDays(self::GRACE_PERIOD_DAYS);
 
         return Carbon::now()->greaterThanOrEqualTo($releaseDate);
     }
