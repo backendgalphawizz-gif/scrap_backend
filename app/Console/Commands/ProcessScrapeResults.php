@@ -10,7 +10,6 @@ use App\Models\CampaignTransaction;
 use App\Models\CoinWallet;
 use App\Models\CoinTransaction;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class ProcessScrapeResults extends Command
 {   
@@ -202,48 +201,31 @@ class ProcessScrapeResults extends Command
         return $row;
     }
 
-    private function fetchScrapedDates(CampaignTransaction $transaction): Collection
-    {
-        $table = $this->scrapedTableForPlatform($transaction->shared_on);
-
-        $rows = DB::table($table)
-            ->where(function ($query) use ($transaction) {
-                $query->where('unique_code', $transaction->unique_code);
-                if (!empty($transaction->post_url)) {
-                    $query->orWhere('post_url', $transaction->post_url);
-                }
-            })
-            ->whereNotNull('scraped_at')
-            ->select('scraped_at')
-            ->orderBy('scraped_at')
-            ->get();
-
-        return $rows
-            ->map(fn ($row) => Carbon::parse($row->scraped_at)->toDateString())
-            ->unique()
-            ->values();
-    }
-
     private function calculateVerifiedDays(CampaignTransaction $transaction): int
     {
-        $scrapedDates = $this->fetchScrapedDates($transaction);
+        $row = $this->getLatestScrapedPost(
+            $transaction->unique_code,
+            $transaction->shared_on,
+            $transaction->post_url ?? null
+        );
 
-        if ($scrapedDates->isEmpty()) {
+        if (!$row || !$row->scraped_at) {
             return 0;
         }
 
-        $start = Carbon::parse($transaction->start_date)->startOfDay();
-        $verifiedDays = 0;
+        $start     = Carbon::parse($transaction->start_date)->startOfDay();
+        $scrapedAt = Carbon::parse($row->scraped_at)->startOfDay();
 
-        for ($dayIndex = 0; $dayIndex < self::MAX_VERIFIED_DAYS; $dayIndex++) {
-            $expectedDate = $start->copy()->addDays($dayIndex)->toDateString();
-            if (!$scrapedDates->contains($expectedDate)) {
-                break;
-            }
-            $verifiedDays++;
+        // Post must have been scraped on or after the campaign start date
+        if ($scrapedAt->lt($start)) {
+            return 0;
         }
 
-        return $verifiedDays;
+        // Day 1 = start_date itself, day 2 = start_date + 1, etc.
+        // scraped_at advances each day the scraper confirms the post is still live
+        $days = (int) $start->diffInDays($scrapedAt) + 1;
+
+        return min(self::MAX_VERIFIED_DAYS, $days);
     }
 
     private function ensurePendingRewardTransaction(CampaignTransaction $transaction): CoinTransaction
