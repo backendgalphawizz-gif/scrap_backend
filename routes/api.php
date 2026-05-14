@@ -58,6 +58,16 @@ Route::post('/optimize-clear', function () {
 
 Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
+
+Route::get('/campaign/run-process-results', function () {
+    Artisan::call('campaign:process-results');
+
+    return response()->json([
+        'status' => true,
+        'message' => 'campaign:process-results executed successfully',
+        'output' => Artisan::output(),
+    ]);
+});
 Route::get('categories', [UserAuthController::class, 'categories']);
 Route::get('main-categories', [UserAuthController::class, 'mainCategories']);
 Route::get('professions', [UserAuthController::class, 'professions']);

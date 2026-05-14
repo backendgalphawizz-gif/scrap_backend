@@ -1,0 +1,144 @@
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    php artisan campaign:process-results                      │
+│                         runs daily at 06:00                                 │
+└───────────────────────────────┬─────────────────────────────────────────────┘
+                                │
+                ┌───────────────▼───────────────┐
+                │  Load all CampaignTransactions │
+                │  status IN (pending, active,   │
+                │  approved, flagged)            │
+                │  WHERE unique_code IS NOT NULL │
+                └───────────────┬───────────────┘
+                                │  foreach transaction
+                                ▼
+              ┌─────────────────────────────────────────┐
+              │  ensurePendingRewardTransaction()        │
+              │  → CoinTransaction firstOrCreate         │
+              │    (status=pending, type=campaign_reward)│
+              └─────────────────┬───────────────────────┘
+                                │
+                                ▼
+              ┌─────────────────────────────────────────┐
+              │  calculateVerifiedDays()                 │
+              │  → Query scrapped_posts by unique_code   │
+              │  → Count consecutive days from           │
+              │    start_date that have a scrape record  │
+              │    (max 3 days)                          │
+              └─────────────────┬───────────────────────┘
+                                │
+                   ┌────────────▼────────────┐
+                   │   verifiedDays == ?      │
+                   └─────┬──────────┬────────┘
+                         │          │
+              verifiedDays >= 3   verifiedDays > 0
+                         │          │
+                         ▼          ▼
+              ┌──────────────┐  ┌─────────────────────┐
+              │ STATUS →     │  │ STATUS → active      │
+              │  approved    │  │ save, continue       │
+              └──────┬───────┘  └─────────────────────┘
+                     │
+          ┌──────────▼──────────┐
+          │  canReleaseReward()?│
+          │  campaign.end_date  │
+          │  + 1 grace day      │
+          │  must be in the past│
+          └───────┬─────────────┘
+                  │              │
+               YES │           NO │
+                  ▼              ▼
+       ┌──────────────────┐  ┌──────────────────┐
+       │  releaseReward() │  │  STATUS stays     │
+       │                  │  │  approved, pending│
+       │  1. CoinWallet   │  │  reward           │
+       │     .balance +=  │  └──────────────────┘
+       │     coins        │
+       │                  │
+       │  2. CoinTransaction
+       │     status →     │
+       │     completed    │
+       │                  │
+       │  3. Referral?    │
+       │     if campaign  │
+       │     .referral_coin│
+       │     > 0 AND user │
+       │     has referrer:│
+       │     CoinWallet   │
+       │     += referral_ │
+       │     coin, log    │
+       │     CoinTransaction
+       │                  │
+       │  4. STATUS →     │
+       │     completed    │
+       └──────────────────┘
+
+
+          ─── back to verifiedDays == 0 branch ───
+
+                         verifiedDays == 0
+                                │
+                   ┌────────────▼────────────┐
+                   │  past campaign end_date? │
+                   └──────┬──────────────────┘
+                          │           │
+                        YES          NO
+                          │           │
+              ┌───────────▼───┐   ┌───▼─────────────┐
+              │ already       │   │ STATUS → pending │
+              │ FLAGGED?      │   └──────────────────┘
+              └──┬────────────┘
+                 │        │
+               YES       NO
+                 │        │
+                 ▼        ▼
+        ┌──────────┐  ┌──────────────────────┐
+        │markDeleted│  │markFlagged()         │
+        │STATUS →   │  │STATUS → flagged      │
+        │deleted    │  │violation_reason set  │
+        │CoinTxn →  │  └──────────────────────┘
+        │rejected   │
+        └──────────┘
+
+
+═══════════════════════════════════════════════════════════
+  After all transactions processed:
+  autoCompleteEligibleCampaigns()
+═══════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│  Load campaigns WHERE status IN                          │
+│  (active, live, pending, accepted, paused)               │
+│  chunkById(100)                                          │
+└──────────────────────────────┬──────────────────────────┘
+                               │  foreach campaign
+                               ▼
+              ┌────────────────────────────────┐
+              │  Any of these true?             │
+              │  • end_date is past             │
+              │  • occupied slots >= required   │
+              │  • estimated spend >= budget    │
+              └───────────┬────────────────────┘
+                          │ YES
+                          ▼
+              ┌────────────────────────────────┐
+              │  campaign.status → completed   │
+              └───────────┬────────────────────┘
+                          │
+                          ▼
+              ┌────────────────────────────────┐
+              │  createCampaignSalesCommission()│
+              │  (only if campaign.sale_id set  │
+              │   AND sales_percentage > 0      │
+              │   AND no prior ledger entry)    │
+              │                                │
+              │  SaleCommissionLedger.create(  │
+              │    amount = completed_txns      │
+              │             × reward_per_user  │
+              │    commission_amount = amount   │
+              │             × sales_percentage │
+              │             / 100              │
+              │    status = pending            │
+              │  )                             │
+              │  ← admin approves manually     │
+              │    → Sale.balance credited     │
+              └────────────────────────────────┘

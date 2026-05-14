@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Campaign;
+use App\Models\SaleCommissionLedger;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CampaignTransaction;
@@ -126,11 +127,56 @@ class ProcessScrapeResults extends Command
 
                     $campaign->status = 'completed';
                     $campaign->save();
+                    $this->createCampaignSalesCommission($campaign);
                     $updated++;
                 }
             });
 
         return $updated;
+    }
+
+    private function createCampaignSalesCommission(Campaign $campaign): void
+    {
+        if (empty($campaign->sale_id)) {
+            return;
+        }
+
+        $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
+        if ($salesPercentage <= 0) {
+            return;
+        }
+
+        // Idempotent: skip if a commission entry already exists for this campaign
+        $alreadyExists = SaleCommissionLedger::where('campaign_id', $campaign->id)
+            ->where('reference_type', 'campaign_reward')
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        // Base amount: sum of reward_per_user for all completed (rewarded) transactions
+        $completedCount = CampaignTransaction::where('campaign_id', $campaign->id)
+            ->where('status', CampaignTransaction::STATUS_COMPLETED)
+            ->count();
+
+        $rewardPerUser = (float) ($campaign->reward_per_user ?? 0);
+        $amount = $completedCount * $rewardPerUser;
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        SaleCommissionLedger::create([
+            'sale_id'         => $campaign->sale_id,
+            'brand_id'        => $campaign->brand_id,
+            'campaign_id'     => $campaign->id,
+            'amount'          => $amount,
+            'commission_rate' => $salesPercentage,
+            'commission_amount' => round($amount * $salesPercentage / 100, 2),
+            'reference_type'  => 'campaign_reward',
+            'status'          => 'pending',
+        ]);
     }
 
     private function scrapedTableForPlatform(string $platform): string
