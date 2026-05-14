@@ -277,7 +277,7 @@ class DashboardController extends Controller
             'status' => CampaignTransaction::STATUS_PENDING,
             'earning' => $campaign->coins ?? 0,
             'start_date' => date('Y-m-d'),
-            'end_date' => date('Y-m-d', strtotime('+7 days')),
+            'end_date' => now()->addDays((int) (env('CAMPAIGN_VERIFICATION_DAYS', 3) ?: 3))->toDateString(),
             'unique_code' => $request->unique_code,
             'post_url' => $request->post_url,
         ]);
@@ -311,7 +311,7 @@ class DashboardController extends Controller
 
         CoinTransaction::create([
             'coin_wallet_id'   => $wallet->id,
-            'transaction_id'   => 'CAMP-PENDING-' . $transaction->id,
+            'transaction_id'   => 'TXN-' . $transaction->id,
             'campaign_id'      => $campaign->id,
             'coin'             => $coins,
             'type'             => 'credit',

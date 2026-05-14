@@ -15,9 +15,19 @@ class ProcessScrapeResults extends Command
 {   
     protected $signature = 'campaign:process-results';
 
-    protected $description = 'Verify campaign posts, keep rewards pending, and release them 3 days after campaign completion';
-    private const MAX_VERIFIED_DAYS = 3;
+    protected $description = 'Verify campaign posts, keep rewards pending, and release them after campaign completion';
     private const GRACE_PERIOD_DAYS = 1;
+
+    private ?int $maxVerifiedDays = null;
+
+    private function getMaxVerifiedDays(): int
+    {
+        if ($this->maxVerifiedDays === null) {
+            $setting = (int) env('CAMPAIGN_VERIFICATION_DAYS', 3);
+            $this->maxVerifiedDays = $setting > 0 ? $setting : 3;
+        }
+        return $this->maxVerifiedDays;
+    }
 
     public function handle(): void
     {
@@ -51,7 +61,7 @@ class ProcessScrapeResults extends Command
             $verifiedDays = $this->calculateVerifiedDays($transaction);
             $transaction->day_status = $verifiedDays;
 
-            if ($verifiedDays >= self::MAX_VERIFIED_DAYS) {
+            if ($verifiedDays >= $this->getMaxVerifiedDays()) {
                 if ($transaction->status !== CampaignTransaction::STATUS_APPROVED) {
                     $approved++;
                 }
@@ -225,7 +235,7 @@ class ProcessScrapeResults extends Command
         // scraped_at advances each day the scraper confirms the post is still live
         $days = (int) $start->diffInDays($scrapedAt) + 1;
 
-        return min(self::MAX_VERIFIED_DAYS, $days);
+        return min($this->getMaxVerifiedDays(), $days);
     }
 
     private function ensurePendingRewardTransaction(CampaignTransaction $transaction): CoinTransaction
@@ -244,7 +254,7 @@ class ProcessScrapeResults extends Command
             'type'             => 'credit',
         ], [
             'coin_wallet_id'   => $wallet->id,
-            'transaction_id'   => 'CAMP-PENDING-' . $transaction->id,
+            'transaction_id'   => 'TXN-' . $transaction->id,
             'campaign_id'      => $transaction->campaign_id,
             'coin'             => $coins,
             'type'             => 'credit',
@@ -279,7 +289,7 @@ class ProcessScrapeResults extends Command
 
     private function canReleaseReward(CampaignTransaction $transaction, int $verifiedDays): bool
     {
-        if ($verifiedDays < self::MAX_VERIFIED_DAYS) {
+        if ($verifiedDays < $this->getMaxVerifiedDays()) {
             return false;
         }
 
