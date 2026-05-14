@@ -293,7 +293,7 @@ class ProcessScrapeResults extends Command
             return false;
         }
 
-        $releaseDate = Carbon::parse($transaction->campaign->end_date)->endOfDay()->addDays(self::GRACE_PERIOD_DAYS);
+        $releaseDate = Carbon::parse($transaction->end_date)->endOfDay()->addDays(self::GRACE_PERIOD_DAYS);
 
         return Carbon::now()->greaterThanOrEqualTo($releaseDate);
     }
