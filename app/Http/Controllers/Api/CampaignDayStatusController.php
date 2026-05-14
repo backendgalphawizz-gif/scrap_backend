@@ -60,7 +60,8 @@ class CampaignDayStatusController extends Controller
     }
 
     /**
-     * Read-only diagnostics for day_status; no mutation is applied here.
+     * Read-only diagnostics for day_status; no DB mutation is applied here.
+     * All actual status transitions and day_status updates are handled by campaign:process-results.
      *
      * @return array{outcome:string,computed_day_status:int,has_valid_scrape:bool,scraped_at:?string}
      */
@@ -74,47 +75,18 @@ class CampaignDayStatusController extends Controller
                 'scraped_at' => null,
             ];
         }
-        
-        log::info("Syncing transaction  {$transaction} with unique_code {$transaction->unique_code} for user_id {$transaction->user_id}.");
+
         $scrapedAtRaw = $this->latestScrapedAt($transaction->unique_code, $transaction->shared_on);
-        log::info("Fetched scraped_at {$scrapedAtRaw} for unique_code {$transaction->unique_code} from table {$this->scrapedPostsTable($transaction->shared_on)}.");
-        $start = Carbon::parse($transaction->start_date)->startOfDay();
-        log::info("Parsed start_date {$transaction->start_date} as {$start} for transaction ID {$transaction->id}.");
         $created = Carbon::parse($transaction->created_at)->startOfDay();
-        log::info("Parsed created_at {$transaction->created_at} as {$created} for transaction ID {$transaction->id}.");
+        $today = Carbon::now()->startOfDay();
         $hasValidScrape = false;
+
         if (isset($scrapedAtRaw)) {
             $scrapedAt = Carbon::parse($scrapedAtRaw);
             $hasValidScrape = $scrapedAt->greaterThan($created);
-            log::info("Evaluated has_valid_scrape as {$hasValidScrape} by comparing scraped_at {$scrapedAt} to created_at {$created}.");
-        
-            $today = Carbon::now()->startOfDay();
-            // $dayStatus = $hasValidScrape ? $this->calendarDayStatus($start, $today) : 0;
-            $days = (int) $created->diffInDays($today, false);
-            if($days < 12){
-                if($days > 0){ 
-                        log::warning("Negative day difference calculated for transaction ID {$transaction->id}: created_at {$created} is in the future compared to today {$today}. Defaulting to 0.");
-                        // $transaction->update(['day_status' => $days]);
-                        $updatedStatus = CampaignTransaction::query()->where('unique_code', $transaction->unique_code)->update(['day_status' => $days, 'status' => 'active']);
-                        log::info("if Updated day_status to {$updatedStatus} for transaction ID {$transaction->id} due to future created_at date.");
-                }else {
-                    log::info("Calculated day difference as {$days} between created_at {$created} and today {$today} for transaction ID {$transaction->id}.");
-                    // $transaction->update(['day_status' => $days]);
-                    $updatedStatus = CampaignTransaction::query()->where('unique_code', $transaction->unique_code)->update(['day_status' => $days]);
-                    log::info("else Updated day_status to {$updatedStatus} for transaction ID {$transaction->id} based on calendar day difference.");
-                }
-            }
-        
         }
 
-        
-        
-        // log::info("Calculated raw day difference as {$days} between created_at {$created} and today {$today} for transaction ID {$transaction->id}.");
         $dayStatus = $hasValidScrape ? $this->calendarDayStatus($created, $today) : 0;
-
-        log::info("Computed day_status {$dayStatus} for transaction ID {$transaction->id} based on scraped_at {$scrapedAtRaw} and start_date {$transaction->start_date}.");
-    
-       
 
         return [
             'outcome' => $hasValidScrape ? 'updated' : 'updated_absent',
