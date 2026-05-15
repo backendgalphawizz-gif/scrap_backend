@@ -150,57 +150,19 @@ class Helpers
 
 	    return $result['access_token'] ?? null;
 	}
-	public static function send_push_notif_to_topic($token, $title, $body, $data = [],$android = [])
+	public static function send_push_notif_to_topic($token, $title, $body, $data = [], $android = [])
 	{
-        
-	    $accessToken = self::getAccessToken();
-      
-	    if (!$accessToken) {
-	        return "Access token failed";
-	    }
+        if (empty($token)) {
+            return null;
+        }
 
-	    $projectId = 'rexarix-f24a2'; // 🔥 replace this
-
-	    $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
-        $data = [
-            "title"=>$title,
-            "body"=>$body,
-        ];
-
-		$payload = [
-		    "message" => [
-		        "token" => (string)$token,
-		        "notification" => [
-		            "title" => (string)$title,
-		            "body"  => (string)$body
-		        ],
-		        "data" => array_map('strval', $data),
-		        "android" => [
-		            "priority" => "HIGH"
-		        ]
-		    ]
-		];
-
-	    $headers = [
-	        "Authorization: Bearer " . $accessToken,
-	        "Content-Type: application/json"
-	    ];
-
-	    $ch = curl_init();
-	    curl_setopt_array($ch, [
-	        CURLOPT_URL => $url,
-	        CURLOPT_POST => true,
-	        CURLOPT_HTTPHEADER => $headers,
-	        CURLOPT_RETURNTRANSFER => true,
-	        CURLOPT_POSTFIELDS => json_encode($payload),
-	    ]);
-
-	    $response = curl_exec($ch);
-	//    echo "<pre>";
-	//    print_r($response);
-	//    exit;
-		   
-	    return $response;
+        try {
+            $firebase = new FirebaseService();
+            return $firebase->sendNotification((string)$token, (string)$title, (string)$body, $data);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('FCM send failed: ' . $e->getMessage());
+            return null;
+        }
 	}
 
     
