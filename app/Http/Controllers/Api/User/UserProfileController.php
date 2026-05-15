@@ -678,7 +678,9 @@ class UserProfileController extends Controller
         // Parse user's saved interest category IDs
         $interestIds = [];
         if (!empty($user->my_interest)) {
-            $interestIds = array_values(array_filter(array_map('intval', explode(',', $user->my_interest))));
+            // Trim spaces around commas to handle "1, 2" format
+            $rawInterest = $user->my_interest;
+            $interestIds = array_values(array_filter(array_map('intval', array_map('trim', explode(',', $rawInterest)))));
         }
 
         if (empty($interestIds)) {
@@ -689,6 +691,12 @@ class UserProfileController extends Controller
                 'data'         => [],
             ]);
         }
+        
+        // DEBUG: Log parsed interest IDs
+        \Log::debug('InterestCampaigns Debug', [
+            'raw_my_interest' => $user->my_interest ?? 'NULL',
+            'parsed_interestIds' => $interestIds,
+        ]);
 
         $myInterests = BrandCategory::whereIn('id', $interestIds)->get(['id', 'name']);
 
@@ -752,6 +760,16 @@ class UserProfileController extends Controller
             })
             ->orderBy('id', 'DESC')
             ->paginate($request->input('limit', 10));
+        
+        // DEBUG: Log campaign query filters
+        \Log::debug('InterestCampaigns Filters', [
+            'interest_ids' => $interestIds,
+            'user_gender' => $gender,
+            'user_city' => $city,
+            'user_state' => $state,
+            'user_age' => $userAge,
+            'results_count' => $campaigns->total(),
+        ]);
 
         return response()->json([
             'status'       => true,
