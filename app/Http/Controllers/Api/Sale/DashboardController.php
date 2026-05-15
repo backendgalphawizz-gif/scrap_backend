@@ -496,7 +496,13 @@ class DashboardController extends Controller
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            $campaigns = Campaign::with(['brand', 'feedbacks.user', 'campaign_transactions.user'])->where('sale_id', $seller['id'])
+            $campaigns = Campaign::with(['brand', 'feedbacks.user', 'campaign_transactions.user'])
+                ->withSum([
+                    'commissionLedgers as total_campaign_commission' => function ($query) {
+                        $query->where('reference_type', 'campaign_reward');
+                    }
+                ], 'commission_amount')
+                ->where('sale_id', $seller['id'])
                 ->when($request->has('status'), function($query) use ($request) {
                     // if ($request->status == 'active') {
                     //     $query->whereDate('start_date', '<=', Carbon::now())->whereDate('end_date', '>=', Carbon::now());
