@@ -202,10 +202,35 @@ class CampaignController extends Controller
     public function status(Request $request)
     {
         if ($request->ajax()) {
-            $banner = Campaign::find($request->id);
-            $banner->status = $request->status;
-            $banner->save();
-            $data = $request->status;
+            $campaign = Campaign::with('brand')->find($request->id);
+            $oldStatus = $campaign->status;
+            $campaign->status = $request->status;
+            $campaign->save();
+            
+            // Send FCM notification to brand about campaign status change
+            if ($campaign->brand && $campaign->brand->cm_firebase_token) {
+                $title = '';
+                $body = '';
+                
+                if ($request->status === 'active' || $request->status === 'live' || $request->status === 'accepted') {
+                    $title = 'Campaign Approved! 🎉';
+                    $body = "Your campaign \"{$campaign->title}\" has been approved and is now live.";
+                } elseif ($request->status === 'rejected') {
+                    $title = 'Campaign Rejected';
+                    $body = "Your campaign \"{$campaign->title}\" has been rejected. Please review and resubmit.";
+                } elseif ($request->status === 'paused') {
+                    $title = 'Campaign Paused';
+                    $body = "Your campaign \"{$campaign->title}\" has been paused.";
+                } elseif ($request->status === 'stopped') {
+                    $title = 'Campaign Stopped';
+                    $body = "Your campaign \"{$campaign->title}\" has been stopped.";
+                }
+                
+                if ($title && $body) {
+                    Helpers::send_push_notif_to_topic($campaign->brand->cm_firebase_token, $title, $body);
+                }
+            }
+            
             return response()->json(['status' => true, 'message' => 'Status updated success']);
         }
     }

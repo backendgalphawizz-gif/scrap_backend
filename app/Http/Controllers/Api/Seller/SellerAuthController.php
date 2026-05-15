@@ -24,6 +24,7 @@ class SellerAuthController extends Controller
         $rules = [
             'mobile' => 'required|digits:10',
             'type' => 'required|in:login,forgot_password,signup',
+            'fcm_id' => 'nullable|string',
         ];
 
         if ($request->type === 'signup') {
@@ -107,6 +108,10 @@ class SellerAuthController extends Controller
             }
 
             $user->auth_token = $token;
+            // Store FCM token for push notifications
+            if ($request->filled('fcm_id')) {
+                $user->cm_firebase_token = $request->fcm_id;
+            }
             $user->save();
 
             Helpers::systemActivity('login_activity', $user, 'login', 'OTP sent to user & token generated', $user);
@@ -146,6 +151,7 @@ class SellerAuthController extends Controller
             'mobile' => 'required|digits:10',
             'otp' => 'required|digits:4',
             'type' => 'nullable|in:login,forgot_password,signup',
+            'fcm_id' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -194,8 +200,14 @@ class SellerAuthController extends Controller
 
         if (empty($seller->auth_token) || strlen((string) $seller->auth_token) < 30) {
             $seller->auth_token = Str::random(50);
-            $seller->save();
         }
+        
+        // Store FCM token for push notifications
+        if ($request->filled('fcm_id')) {
+            $seller->cm_firebase_token = $request->fcm_id;
+        }
+        
+        $seller->save();
 
         return response()->json([
             'status' => true,
@@ -231,7 +243,8 @@ class SellerAuthController extends Controller
                 'username' => 'required|string|max:255',
                 'mobile' => 'required|digits:10|unique:sellers,phone',
                 'email' => 'nullable|email|unique:sellers,email',
-                'referral_code' => 'nullable|string|max:50'
+                'referral_code' => 'nullable|string|max:50',
+                'fcm_id' => 'nullable|string'
             ]);
 
             if ($validator->fails()) {
@@ -264,6 +277,7 @@ class SellerAuthController extends Controller
                 'instagram_username' => $request->instagram_username,
                 'facebook_username' => $request->facebook_username,
                 'auth_token' => $token,
+                'cm_firebase_token' => $request->fcm_id ?? NULL,
                 'category_id' => $request->category_id ?? NULL,
                 'sub_category_id' => $request->sub_category_id ?? NULL,
                 'gst_number' => $request->gst_number ?? '',

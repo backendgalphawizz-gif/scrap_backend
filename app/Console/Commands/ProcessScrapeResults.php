@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\CPU\Helpers;
 use App\Models\Campaign;
 use App\Models\SaleCommissionLedger;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CampaignTransaction;
@@ -68,6 +70,9 @@ class ProcessScrapeResults extends Command
                 $transaction->status = CampaignTransaction::STATUS_APPROVED;
                 $transaction->violation_reason = null;
                 $transaction->save();
+                
+                // Send FCM notification to user about post being approved
+                $this->sendApprovedNotification($transaction);
 
                 if ($this->canReleaseReward($transaction, $verifiedDays)) {
                     $this->releaseReward($transaction, $rewardTransaction);
@@ -272,6 +277,14 @@ class ProcessScrapeResults extends Command
         $transaction->status = CampaignTransaction::STATUS_FLAGGED;
         $transaction->violation_reason = 'Post not verified. Submit a valid post URL to avoid deletion.';
         $transaction->save();
+        
+        // Send FCM notification to user about post being flagged
+        $user = User::find($transaction->user_id);
+        if ($user && $user->fcm_id) {
+            $title = 'Post Flagged ⚠️';
+            $body = "Your post for campaign \"{$transaction->campaign->title}\" has been flagged. Please submit a valid post URL to avoid deletion.";
+            Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
+        }
     }
 
     private function markDeleted(CampaignTransaction $transaction, CoinTransaction $rewardTransaction): void
@@ -284,6 +297,14 @@ class ProcessScrapeResults extends Command
             $rewardTransaction->status = 'rejected';
             $rewardTransaction->description = 'Campaign reward cancelled for ' . ($transaction->campaign->title ?? 'campaign');
             $rewardTransaction->save();
+        }
+        
+        // Send FCM notification to user about post being deleted
+        $user = User::find($transaction->user_id);
+        if ($user && $user->fcm_id) {
+            $title = 'Post Deleted ❌';
+            $body = "Your post for campaign \"{$transaction->campaign->title}\" could not be verified and has been deleted. Your participation has been removed.";
+            Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
         }
     }
 
@@ -348,5 +369,15 @@ class ProcessScrapeResults extends Command
 
         $transaction->status = CampaignTransaction::STATUS_COMPLETED;
         $transaction->save();
+    }
+
+    private function sendApprovedNotification(CampaignTransaction $transaction): void
+    {
+        $user = User::find($transaction->user_id);
+        if ($user && $user->fcm_id) {
+            $title = 'Post Approved! ✅';
+            $body = "Your post for campaign \"{$transaction->campaign->title}\" has been approved. Reward will be released upon campaign completion.";
+            Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
+        }
     }
 }

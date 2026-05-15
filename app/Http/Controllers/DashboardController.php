@@ -710,8 +710,22 @@ class DashboardController extends Controller
     {
         $seller = Seller::find($request->id);
         if ($seller) {
+            $oldStatus = $seller->status;
             $seller->status = $seller->status == 'approved' ? 'pending' : 'approved'; // toggle status
             $seller->save();
+            
+            // Send FCM notification to brand about account approval
+            if ($seller->status === 'approved' && $seller->cm_firebase_token) {
+                $title = 'Account Approved! 🎉';
+                $brandName = trim(($seller->f_name ?? '') . ' ' . ($seller->l_name ?? ''));
+                $body = "Congratulations {$brandName}! Your brand account has been approved and is now active.";
+                Helpers::send_push_notif_to_topic($seller->cm_firebase_token, $title, $body);
+            } elseif ($seller->status === 'pending' && $seller->cm_firebase_token) {
+                $title = 'Account Status Updated';
+                $body = 'Your account is now pending review.';
+                Helpers::send_push_notif_to_topic($seller->cm_firebase_token, $title, $body);
+            }
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Seller status updated successfully',
@@ -959,6 +973,15 @@ class DashboardController extends Controller
 
         $transaction->status = 'completed';
         $transaction->save();
+        
+        // Send FCM notification to user about payout approval
+        $user = \App\Models\User::find($wallet->user_id);
+        if ($user && $user->fcm_id) {
+            $title = 'Payout Approved! 💰';
+            $amount = number_format($transaction->coin, 2);
+            $body = "Your payout of ₹{$amount} has been approved and processed to your wallet.";
+            Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
+        }
 
         return response()->json([
             'status' => true,
