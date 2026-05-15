@@ -82,7 +82,7 @@ class Campaign extends Model
 
     public function brand()
     {
-        return $this->belongsTo(Seller::class, 'brand_id', 'id')->select('id', 'username', DB::raw('CONCAT(f_name, " " ,l_name) as name'), 'image', 'instagram_username', 'facebook_username', 'bank_account_number', 'bank_ifsc_code', 'bank_account_holder_name', 'bank_account_type');
+        return $this->belongsTo(Seller::class, 'brand_id', 'id')->select('id', 'username', DB::raw('CONCAT(f_name, " " ,l_name) as name'), 'image', 'instagram_username', 'facebook_username', 'bank_account_number', 'bank_ifsc_code', 'bank_account_holder_name', 'bank_account_type', 'cm_firebase_token');
     }
 
     public function category()
