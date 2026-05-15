@@ -116,6 +116,11 @@ class Campaign extends Model
             ->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
     }
 
+    public function commissionLedgers()
+    {
+        return $this->hasMany(SaleCommissionLedger::class, 'campaign_id');
+    }
+
     public function getLeftDaysAttribute()
     {
         $endDate = \Carbon\Carbon::parse($this->end_date);
