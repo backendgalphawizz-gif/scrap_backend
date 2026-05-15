@@ -231,9 +231,16 @@
                                         <td class="pl-xl-5">{{$campaign->state}}</td>
                                         <td class="pl-xl-5">{{$campaign->gender}}</td>
                                         <td>
-                                            <span class="badge badge-{{ in_array($campaign->status, ['active','completed']) ? 'gradient-success' : 'gradient-danger' }}">
-                                                {{ ucwords($campaign->status) }}
-                                            </span>
+                                            <select class="form-select form-select-sm campaign-status-select" data-campaign-id="{{$campaign->id}}" style="min-width: 130px;">
+                                                <option value="pending" {{ $campaign->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                                <option value="active" {{ $campaign->status === 'active' ? 'selected' : '' }}>Active</option>
+                                                <option value="live" {{ $campaign->status === 'live' ? 'selected' : '' }}>Live</option>
+                                                <option value="accepted" {{ $campaign->status === 'accepted' ? 'selected' : '' }}>Accepted</option>
+                                                <option value="paused" {{ $campaign->status === 'paused' ? 'selected' : '' }}>Paused</option>
+                                                <option value="completed" {{ $campaign->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                                <option value="stopped" {{ $campaign->status === 'stopped' ? 'selected' : '' }}>Stopped</option>
+                                                <option value="rejected" {{ $campaign->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                            </select>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
@@ -329,6 +336,44 @@
             }
         });
     });
+
+    // Handle campaign status dropdown change
+    $(document).on('change', '.campaign-status-select', function() {
+        var id = $(this).data('campaign-id');
+        var status = $(this).val();
+        
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+            }
+        });
+        
+        $.ajax({
+            url: "{{route('admin.campaign.status')}}",
+            method: 'POST',
+            data: {
+                id: id,
+                status: status
+            },
+            success: function(response) {
+                if (response.status) {
+                    toastr.success(response.message);
+                    // Reload the page to reflect changes
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error(response.message || 'Failed to update campaign status');
+                }
+            },
+            error: function(xhr) {
+                toastr.error('Error updating campaign status');
+                // Revert the select to previous value
+                location.reload();
+            }
+        });
+    });
+
     $(document).on('click', '.delete', function() {
         var id = $(this).attr("id");
         Swal.fire({
