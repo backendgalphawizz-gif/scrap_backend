@@ -691,12 +691,6 @@ class UserProfileController extends Controller
                 'data'         => [],
             ]);
         }
-        
-        // DEBUG: Log parsed interest IDs
-        \Log::debug('InterestCampaigns Debug', [
-            'raw_my_interest' => $user->my_interest ?? 'NULL',
-            'parsed_interestIds' => $interestIds,
-        ]);
 
         $myInterests = BrandCategory::whereIn('id', $interestIds)->get(['id', 'name']);
 
@@ -742,11 +736,13 @@ class UserProfileController extends Controller
                         ->orWhereRaw('FIND_IN_SET(?, city) > 0', [$city]);
                 });
             })
-            // State: no restriction (null/empty) OR matches user state
+            // State: no restriction (null/empty/Any) OR matches user state
             ->when($state !== '', function ($q) use ($state) {
                 $q->where(function ($sub) use ($state) {
                     $sub->whereNull('state')
                         ->orWhere('state', '')
+                        ->orWhere('state', 'Any')
+                        ->orWhere('state', 'any')
                         ->orWhere('state', $state);
                 });
             })
@@ -760,16 +756,6 @@ class UserProfileController extends Controller
             })
             ->orderBy('id', 'DESC')
             ->paginate($request->input('limit', 10));
-        
-        // DEBUG: Log campaign query filters
-        \Log::debug('InterestCampaigns Filters', [
-            'interest_ids' => $interestIds,
-            'user_gender' => $gender,
-            'user_city' => $city,
-            'user_state' => $state,
-            'user_age' => $userAge,
-            'results_count' => $campaigns->total(),
-        ]);
 
         return response()->json([
             'status'       => true,
