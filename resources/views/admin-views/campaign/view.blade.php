@@ -4,7 +4,6 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<link rel="stylesheet" href="{{asset('public/assets/back-end')}}/css/toastr.css"/>
 <style>
     .campaign-filter-scroll {
         overflow-x: auto;
@@ -295,8 +294,41 @@
 @endsection
 
 @push('script')
-<script src="{{asset('public/assets/back-end/js/toastr.js')}}"></script>
 <script>
+    function notifySuccess(message) {
+        if (typeof toastr !== 'undefined' && toastr.success) {
+            toastr.success(message);
+            return;
+        }
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: message,
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+    }
+
+    function notifyError(message) {
+        if (typeof toastr !== 'undefined' && toastr.error) {
+            toastr.error(message);
+            return;
+        }
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: message,
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+        });
+    }
+
     $('#mbimageFileUploader').change(function() {
         readURL(this);
     });
@@ -315,24 +347,20 @@
     $(document).on('change', '.status', function() {
         var id = $(this).attr("id");
         var status = $(this).prop("checked") == true ? 1 : 0;
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-            }
-        });
         $.ajax({
             url: "{{route('admin.campaign.status')}}",
             method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             data: {
                 id: id,
                 status: status
             },
             success: function(data) {
                 if (data == 1) {
-                    toastr.success('{{ \App\CPU\translate('
+                    notifySuccess('{{ \App\CPU\translate('
                         Banner published successfully!')}}');
                 } else {
-                    toastr.success('{{ \App\CPU\translate('
+                    notifySuccess('{{ \App\CPU\translate('
                         Banner unpublished successfully!')}}');
                 }
             }
@@ -344,32 +372,27 @@
         var id = $(this).data('campaign-id');
         var status = $(this).val();
         
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        
         $.ajax({
             url: "{{route('admin.campaign.status')}}",
             method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             data: {
                 id: id,
                 status: status
             },
             success: function(response) {
                 if (response.status) {
-                    toastr.success(response.message);
+                    notifySuccess(response.message);
                     // Reload the page to reflect changes
                     setTimeout(function() {
                         location.reload();
                     }, 1500);
                 } else {
-                    toastr.error(response.message || 'Failed to update campaign status');
+                    notifyError(response.message || 'Failed to update campaign status');
                 }
             },
             error: function(xhr) {
-                toastr.error('Error updating campaign status');
+                notifyError('Error updating campaign status');
                 // Revert the select to previous value
                 location.reload();
             }
@@ -390,13 +413,9 @@
             delete it!')}}'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                    }
-                });
                 $.ajax({
                     url: "{{route('admin.campaign.delete')}}",
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     method: 'POST',
                     data: {
                         id: id
