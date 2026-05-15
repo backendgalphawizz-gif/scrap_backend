@@ -4,6 +4,7 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{asset('public/assets/back-end')}}/css/toastr.css"/>
 <style>
     .campaign-filter-scroll {
         overflow-x: auto;
@@ -294,6 +295,7 @@
 @endsection
 
 @push('script')
+<script src="{{asset('public/assets/back-end/js/toastr.js')}}"></script>
 <script>
     $('#mbimageFileUploader').change(function() {
         readURL(this);
@@ -344,7 +346,7 @@
         
         $.ajaxSetup({
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
         
