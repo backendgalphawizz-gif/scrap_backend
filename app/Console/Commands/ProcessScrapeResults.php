@@ -60,7 +60,7 @@ class ProcessScrapeResults extends Command
             }
 
             $rewardTransaction = $this->ensurePendingRewardTransaction($transaction);
-            $verifiedDays = $this->calculateVerifiedDays($transaction);
+            ['days' => $verifiedDays, 'post_url' => $scrapedPostUrl] = $this->calculateVerifiedDays($transaction);
             $transaction->day_status = $verifiedDays;
 
             if ($verifiedDays >= $this->getMaxVerifiedDays()) {
@@ -69,6 +69,9 @@ class ProcessScrapeResults extends Command
                 }
                 $transaction->status = CampaignTransaction::STATUS_APPROVED;
                 $transaction->violation_reason = null;
+                if ($scrapedPostUrl) {
+                    $transaction->post_url = $scrapedPostUrl;
+                }
                 $transaction->save();
                 
                 // Send FCM notification to user about post being approved
@@ -86,6 +89,9 @@ class ProcessScrapeResults extends Command
             if ($verifiedDays > 0) {
                 $transaction->status = CampaignTransaction::STATUS_ACTIVE;
                 $transaction->violation_reason = null;
+                if ($scrapedPostUrl) {
+                    $transaction->post_url = $scrapedPostUrl;
+                }
                 $transaction->save();
                 $pending++;
                 continue;
@@ -216,7 +222,7 @@ class ProcessScrapeResults extends Command
         return $row;
     }
 
-    private function calculateVerifiedDays(CampaignTransaction $transaction): int
+    private function calculateVerifiedDays(CampaignTransaction $transaction): array
     {
         $row = $this->getLatestScrapedPost(
             $transaction->unique_code,
@@ -225,7 +231,7 @@ class ProcessScrapeResults extends Command
         );
 
         if (!$row || !$row->scraped_at) {
-            return 0;
+            return ['days' => 0, 'post_url' => null];
         }
 
         $start     = Carbon::parse($transaction->start_date)->startOfDay();
@@ -233,14 +239,17 @@ class ProcessScrapeResults extends Command
 
         // Post must have been scraped on or after the campaign start date
         if ($scrapedAt->lt($start)) {
-            return 0;
+            return ['days' => 0, 'post_url' => null];
         }
 
         // Day 1 = start_date itself, day 2 = start_date + 1, etc.
         // scraped_at advances each day the scraper confirms the post is still live
         $days = (int) $start->diffInDays($scrapedAt) + 1;
 
-        return min($this->getMaxVerifiedDays(), $days);
+        return [
+            'days'     => min($this->getMaxVerifiedDays(), $days),
+            'post_url' => $row->post_url ?? null,
+        ];
     }
 
     private function ensurePendingRewardTransaction(CampaignTransaction $transaction): CoinTransaction
