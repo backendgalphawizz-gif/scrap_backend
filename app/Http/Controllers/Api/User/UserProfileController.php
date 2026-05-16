@@ -121,9 +121,8 @@ class UserProfileController extends Controller
         $bankFields = ['bank_name', 'ifsc_code', 'account_number', 'branch_name'];
         $hasBankField = collect($bankFields)->some(fn ($f) => $request->has($f));
         if ($hasBankField && $user->bank_status !== 'Verified') {
-            $existing = is_array(json_decode($user->bank_detail ?? '{}', true))
-                ? json_decode($user->bank_detail, true)
-                : [];
+            $decoded = json_decode($user->bank_detail ?? '{}', true);
+            $existing = is_array($decoded) ? $decoded : [];
             $merged = array_merge($existing, array_filter(
                 $request->only($bankFields),
                 fn ($v) => $v !== null && $v !== ''
