@@ -381,7 +381,9 @@ class DashboardController extends Controller
                 $q->where('user_id', $user->id);
             },
             'occupiedTransactions as occupied_slots'
-        ])->with(['brand', 'campaign_transactions'])->whereIn('id', $campaign_ids)->get();
+        ])->with(['brand', 'campaign_transactions' => function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        }])->whereIn('id', $campaign_ids)->get();
 
         $total_coins_earned = strval(0);
         $total_campaigns = strval(CampaignTransaction::where('user_id', $user->id)->count());
