@@ -9,15 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('campaign_transactions', function (Blueprint $table) {
-            $table->string('unique_code', 20)->nullable()->unique()->after('campaign_id');
+            $table->longText('unique_code')->nullable()->unique()->after('campaign_id');
         });
 
         Schema::table('tagged_posts_test', function (Blueprint $table) {
-            $table->string('unique_code', 20)->nullable()->index()->after('scraped_at');
+            $table->longText('unique_code')->nullable()->index()->after('scraped_at');
         });
 
         Schema::table('facebook_posts_test', function (Blueprint $table) {
-            $table->string('unique_code', 20)->nullable()->index()->after('scraped_at');
+            $table->longText('unique_code')->nullable()->index()->after('scraped_at');
         });
     }
 
