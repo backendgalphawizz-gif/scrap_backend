@@ -64,7 +64,8 @@ class ProcessScrapeResults extends Command
             $transaction->day_status = $verifiedDays;
 
             if ($verifiedDays >= $this->getMaxVerifiedDays()) {
-                if ($transaction->status !== CampaignTransaction::STATUS_APPROVED) {
+                $wasAlreadyApproved = $transaction->status === CampaignTransaction::STATUS_APPROVED;
+                if (!$wasAlreadyApproved) {
                     $approved++;
                 }
                 $transaction->status = CampaignTransaction::STATUS_APPROVED;
@@ -73,9 +74,11 @@ class ProcessScrapeResults extends Command
                     $transaction->post_url = $scrapedPostUrl;
                 }
                 $transaction->save();
-                
-                // Send FCM notification to user about post being approved
-                $this->sendApprovedNotification($transaction);
+
+                // Send FCM notification only on first approval (not on repeated cron runs)
+                if (!$wasAlreadyApproved) {
+                    $this->sendApprovedNotification($transaction);
+                }
 
                 if ($this->canReleaseReward($transaction, $verifiedDays)) {
                     $this->releaseReward($transaction, $rewardTransaction);
