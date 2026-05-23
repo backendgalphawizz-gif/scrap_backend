@@ -63,6 +63,7 @@ class User extends Authenticatable
         'facebook_status',
         'post_slots',
         'my_interest',
+        'fcm_id',
     ];
 
     /**

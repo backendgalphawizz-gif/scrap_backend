@@ -580,7 +580,7 @@ class UserProfileController extends Controller
             'unique_code'  => $request->unique_code,
             'status'       => SocialVerificationTransaction::STATUS_PENDING,
             'submitted_at' => now(),
-            'end_date'     => now()->addDays(7)->toDateString(),
+            'end_date'     => now()->addDays(1)->toDateString(),
         ]);
 
         $user->$statusField = SocialVerificationTransaction::STATUS_PENDING;
@@ -623,17 +623,29 @@ class UserProfileController extends Controller
 
         $canPostMore = $maxPostsPerDay > 0 && $todaysPostCount < $maxPostsPerDay;
 
+        $instagramTx = SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_INSTAGRAM)
+            ->latest()
+            ->first();
+
+        $facebookTx = SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_FACEBOOK)
+            ->latest()
+            ->first();
+
         return response()->json([
             'status'  => true,
             'message' => 'Social verification status retrieved successfully',
             'data'    => [
                 'instagram' => [
-                    'status'           => $user->instagram_status,
-                    'username'         => $user->instagram_username,
+                    'status'       => $user->instagram_status,
+                    'username'     => $user->instagram_username,
+                    'submitted_at' => $instagramTx?->submitted_at,
                 ],
                 'facebook' => [
-                    'status'           => $user->facebook_status,
-                    'username'         => $user->facebook_username,
+                    'status'       => $user->facebook_status,
+                    'username'     => $user->facebook_username,
+                    'submitted_at' => $facebookTx?->submitted_at,
                 ],
                 'level'             => $level ? $level->name : null,
                 'max_posts_per_day' => $maxPostsPerDay,
@@ -641,6 +653,27 @@ class UserProfileController extends Controller
                 'can_post_more'     => $canPostMore,
             ],
         ]);
+    }
+
+    public function updateDeviceToken(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $user->fcm_id = $request->token;
+        $user->save();
+
+        return response()->json(['status' => true, 'message' => 'Device token updated.']);
     }
 
     public function updateInterest(Request $request)

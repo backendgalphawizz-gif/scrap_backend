@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\SocialVerificationTransaction;
 use App\Models\Seller;
 use App\Models\User;
+use App\Services\FcmNotificationService;
 use Carbon\Carbon;
 
 class ProcessSocialVerifications extends Command
@@ -15,12 +16,12 @@ class ProcessSocialVerifications extends Command
 
     protected $description = 'Check scraped posts for pending social verification unique codes and update user status';
 
-    public function handle(): void
+    public function handle(FcmNotificationService $fcm): void
     {
         $this->info('Processing social verification transactions...');
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, SocialVerificationTransaction> $transactions */
-        $transactions = SocialVerificationTransaction::with('user')
+        $transactions = SocialVerificationTransaction::with(['user', 'seller'])
             ->where('status', SocialVerificationTransaction::STATUS_PENDING)
             ->get();
 
@@ -38,8 +39,8 @@ class ProcessSocialVerifications extends Command
             if ($found) {
                 $this->markVerified($transaction);
                 $verified++;
-            } elseif (Carbon::now()->gt(Carbon::parse($transaction->end_date)->endOfDay())) {
-                $this->markNotVerified($transaction);
+            } elseif (Carbon::now()->gt(Carbon::parse($transaction->submitted_at)->addHours(24))) {
+                $this->markNotVerified($transaction, $fcm);
                 $failed++;
             } else {
                 $pending++;
@@ -73,9 +74,10 @@ class ProcessSocialVerifications extends Command
         }
     }
 
-    private function markNotVerified(SocialVerificationTransaction $transaction): void
+    private function markNotVerified(SocialVerificationTransaction $transaction, FcmNotificationService $fcm): void
     {
-        $transaction->status = SocialVerificationTransaction::STATUS_NOT_VERIFIED;
+        $transaction->status          = SocialVerificationTransaction::STATUS_NOT_VERIFIED;
+        $transaction->notified_24h_at = now();
         $transaction->save();
 
         $statusField = $transaction->platform . '_status';
@@ -86,6 +88,20 @@ class ProcessSocialVerifications extends Command
         if ($transaction->seller_id) {
             Seller::where('id', $transaction->seller_id)
                 ->update([$statusField => SocialVerificationTransaction::STATUS_NOT_VERIFIED]);
+        }
+
+        $platform = ucfirst($transaction->platform);
+        $title    = 'Verification Unsuccessful';
+        $body     = "We couldn't verify your {$platform} post. Open the app to try again.";
+        $data     = [
+            'type'     => 'social_verification_failed',
+            'platform' => $transaction->platform,
+        ];
+
+        if ($transaction->user_id && $transaction->user) {
+            $fcm->sendToUser($transaction->user, $title, $body, $data);
+        } elseif ($transaction->seller_id && $transaction->seller) {
+            $fcm->sendToSeller($transaction->seller, $title, $body, $data);
         }
     }
 }

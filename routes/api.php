@@ -175,6 +175,7 @@ Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->gr
     Route::get('notifications', [UserProfileController::class, 'notifications']);
     Route::post('verify-social', [UserProfileController::class, 'verifySocial']);
     Route::get('social-verification-status', [UserProfileController::class, 'socialVerificationStatus']);
+    Route::post('update-device-token', [UserProfileController::class, 'updateDeviceToken']);
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
     Route::get('support-tickets', [UserSupportTicketController::class, 'index']);
     Route::post('support-tickets', [UserSupportTicketController::class, 'store']);
@@ -236,6 +237,7 @@ Route::group(['prefix' => 'brand'], function () {
 
         Route::post('verify-social', [SellerSocialVerificationController::class, 'verifySocial']);
         Route::get('social-verification-status', [SellerSocialVerificationController::class, 'socialVerificationStatus']);
+        Route::post('update-device-token', [SellerSocialVerificationController::class, 'updateDeviceToken']);
 
         Route::get('support-tickets', [BrandSupportTicketController::class, 'index']);
         Route::post('support-tickets', [BrandSupportTicketController::class, 'store']);

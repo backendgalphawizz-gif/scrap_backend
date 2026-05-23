@@ -63,6 +63,7 @@ class Seller extends Authenticatable
         'bank_account_type',
         'bank_status',
         'bank_rejection_reason',
+        'cm_firebase_token',
     ];
 
     protected $appends = [

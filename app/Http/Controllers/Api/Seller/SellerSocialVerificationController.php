@@ -73,7 +73,7 @@ class SellerSocialVerificationController extends Controller
             'unique_code'  => $request->unique_code,
             'status'       => SocialVerificationTransaction::STATUS_PENDING,
             'submitted_at' => now(),
-            'end_date'     => now()->addDays(7)->toDateString(),
+            'end_date'     => now()->addDays(1)->toDateString(),
         ]);
 
         $seller->$statusField = SocialVerificationTransaction::STATUS_PENDING;
@@ -114,14 +114,41 @@ class SellerSocialVerificationController extends Controller
             'message' => 'Social verification status retrieved successfully',
             'data'    => [
                 'instagram' => [
-                    'status'   => $seller->instagram_status,
-                    'username' => $seller->instagram_username,
+                    'status'       => $seller->instagram_status,
+                    'username'     => $seller->instagram_username,
+                    'submitted_at' => $instagram?->submitted_at,
                 ],
                 'facebook'  => [
-                    'status'   => $seller->facebook_status,
-                    'username' => $seller->facebook_username,
+                    'status'       => $seller->facebook_status,
+                    'username'     => $seller->facebook_username,
+                    'submitted_at' => $facebook?->submitted_at,
                 ],
             ],
         ]);
+    }
+
+    public function updateDeviceToken(Request $request)
+    {
+        ['seller' => $seller, 'error' => $error] = $this->resolveseller($request);
+
+        if ($error) {
+            return $error;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $seller->cm_firebase_token = $request->token;
+        $seller->save();
+
+        return response()->json(['status' => true, 'message' => 'Device token updated.']);
     }
 }
