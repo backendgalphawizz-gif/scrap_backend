@@ -60,7 +60,7 @@ class Campaign extends Model
 
     public function getGuidelinesAttribute($value)
     {
-        return $value ? explode('|', $value) : [];
+        return $value ? explode(',', $value) : [];
     }
 
     public function getThumbnailAttribute($value)
