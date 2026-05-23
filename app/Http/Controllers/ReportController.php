@@ -533,4 +533,264 @@ class ReportController extends Controller
         return view('admin-views.report._activity-logs', compact('logs', 'date_type', 'from', 'to', 'search', 'limit'));
     }
 
+    public function financialReport(Request $request)
+    {
+        [$date_type, $from, $to] = $this->resolveReportDateRange($request);
+        $limit = (int) ($request->get('limit') ?? 10);
+
+        $campaignQuery = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->withCount([
+                'campaign_transactions as posts_completed_total' => function ($q) {
+                    $q->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
+                },
+                'campaign_transactions as posts_verified' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_APPROVED,
+                        CampaignTransaction::STATUS_COMPLETED,
+                    ]);
+                },
+                'campaign_transactions as posts_not_verified' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_PENDING,
+                        CampaignTransaction::STATUS_ACTIVE,
+                        CampaignTransaction::STATUS_FLAGGED,
+                    ]);
+                },
+            ]);
+
+        $allRows = (clone $campaignQuery)->get()->map(fn ($campaign) => $this->mapFinancialReportRow($campaign));
+        $totals = $this->aggregateFinancialReportTotals($allRows);
+
+        $rows = $campaignQuery
+            ->orderByDesc('id')
+            ->paginate($limit)
+            ->through(fn ($campaign) => $this->mapFinancialReportRow($campaign))
+            ->withQueryString();
+
+        return view('admin-views.report._financial-report', compact('rows', 'totals', 'date_type', 'from', 'to'));
+    }
+
+    public function exportFinancialReport(Request $request)
+    {
+        [$date_type, $from, $to] = $this->resolveReportDateRange($request);
+
+        $campaigns = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->withCount([
+                'campaign_transactions as posts_completed_total' => function ($q) {
+                    $q->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
+                },
+                'campaign_transactions as posts_verified' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_APPROVED,
+                        CampaignTransaction::STATUS_COMPLETED,
+                    ]);
+                },
+                'campaign_transactions as posts_not_verified' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_PENDING,
+                        CampaignTransaction::STATUS_ACTIVE,
+                        CampaignTransaction::STATUS_FLAGGED,
+                    ]);
+                },
+            ])
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($campaign) => $this->mapFinancialReportRow($campaign));
+
+        $totals = $this->aggregateFinancialReportTotals($campaigns);
+        $filename = 'financial-report-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($campaigns, $totals) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Brand', 'Campaign', 'Start Date', 'End Date',
+                'Total Amount with GST', 'Total Amount without GST', 'Per Post Cost', 'Total Post Required', 'Discount',
+                'Post Completed', '', '',
+                'Already Spent', '', '',
+                'To Users', '', '',
+                'To Sales', '', '',
+                'For referral', '', '',
+                'Admin', '', '',
+            ]);
+            fputcsv($handle, [
+                '', '', '', '', '', '', '', '', '',
+                'Total', 'Verified', 'Not Verified',
+                'Total', 'Verified', 'Not Verified',
+                'Total', 'Verified', 'Not Verified',
+                'Total', 'Verified', 'Not Verified',
+                'Total', 'Verified', 'Not Verified',
+                'Total', 'Verified', 'Not Verified',
+            ]);
+
+            fputcsv($handle, $this->financialReportCsvRow($totals, 'Total'));
+
+            foreach ($campaigns as $row) {
+                fputcsv($handle, $this->financialReportCsvRow($row, $row['brand'], $row['campaign'], $row['start_date'], $row['end_date']));
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function resolveReportDateRange(Request $request): array
+    {
+        $date_type = $request->get('date_type', 'this_year');
+        $from = date('Y-m-d');
+        $to = date('Y-m-d');
+
+        switch ($date_type) {
+            case 'today':
+                $from = now()->startOfDay();
+                $to = now()->endOfDay();
+                break;
+            case 'this_week':
+                $from = now()->startOfWeek();
+                $to = now()->endOfWeek();
+                break;
+            case 'this_month':
+                $from = now()->startOfMonth();
+                $to = now()->endOfMonth();
+                break;
+            case 'this_year':
+                $from = now()->startOfYear();
+                $to = now()->endOfYear();
+                break;
+            case 'custom_date':
+                $from = $request->get('from', date('Y-m-d'));
+                $to = $request->get('to', date('Y-m-d'));
+                break;
+            default:
+                $from = now()->startOfYear();
+                $to = now()->endOfYear();
+        }
+
+        return [$date_type, $from, $to];
+    }
+
+    private function mapFinancialReportRow(Campaign $campaign): array
+    {
+        $baseAmount = (float) ($campaign->total_campaign_budget ?? 0);
+        $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
+        $userPercentage = (float) ($campaign->user_percentage ?? 0);
+        $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
+        $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
+        $adminPercentage = (float) ($campaign->admin_percentage ?? 0);
+
+        $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
+        $discountAmount = ($baseAmount * $discountPercentage) / 100;
+        $amountWithoutGst = $baseAmount - $discountAmount;
+
+        $totalPostRequired = (int) ($campaign->total_user_required ?? 0);
+        $perPostCost = $totalPostRequired > 0 ? ($baseAmount / $totalPostRequired) : 0;
+
+        $postsCompletedTotal = (int) ($campaign->posts_completed_total ?? 0);
+        $postsVerified = (int) ($campaign->posts_verified ?? 0);
+        $postsNotVerified = (int) ($campaign->posts_not_verified ?? 0);
+
+        $splitAmount = function (float $percentage, int $postCount) use ($perPostCost) {
+            return ($perPostCost * $percentage / 100) * $postCount;
+        };
+
+        return [
+            'brand' => $campaign->brand->username ?? '-',
+            'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+            'start_date' => $campaign->start_date ? date('d-M-y', strtotime($campaign->start_date)) : '-',
+            'end_date' => $campaign->end_date ? date('d-M-y', strtotime($campaign->end_date)) : '-',
+            'amount_with_gst' => $amountWithGst,
+            'amount_without_gst' => $amountWithoutGst,
+            'per_post_cost' => $perPostCost,
+            'total_post_required' => $totalPostRequired,
+            'discount' => $discountAmount,
+            'posts_completed_total' => $postsCompletedTotal,
+            'posts_verified' => $postsVerified,
+            'posts_not_verified' => $postsNotVerified,
+            'already_spent_total' => $perPostCost * $postsCompletedTotal,
+            'already_spent_verified' => $perPostCost * $postsVerified,
+            'already_spent_not_verified' => $perPostCost * $postsNotVerified,
+            'users_total' => $splitAmount($userPercentage, $postsCompletedTotal),
+            'users_verified' => $splitAmount($userPercentage, $postsVerified),
+            'users_not_verified' => $splitAmount($userPercentage, $postsNotVerified),
+            'sales_total' => $splitAmount($salesPercentage, $postsCompletedTotal),
+            'sales_verified' => $splitAmount($salesPercentage, $postsVerified),
+            'sales_not_verified' => $splitAmount($salesPercentage, $postsNotVerified),
+            'referral_total' => $splitAmount($referralPercentage, $postsCompletedTotal),
+            'referral_verified' => $splitAmount($referralPercentage, $postsVerified),
+            'referral_not_verified' => $splitAmount($referralPercentage, $postsNotVerified),
+            'admin_total' => $splitAmount($adminPercentage, $postsCompletedTotal),
+            'admin_verified' => $splitAmount($adminPercentage, $postsVerified),
+            'admin_not_verified' => $splitAmount($adminPercentage, $postsNotVerified),
+        ];
+    }
+
+    private function aggregateFinancialReportTotals($rows): array
+    {
+        $keys = [
+            'amount_with_gst', 'amount_without_gst', 'per_post_cost', 'total_post_required', 'discount',
+            'posts_completed_total', 'posts_verified', 'posts_not_verified',
+            'already_spent_total', 'already_spent_verified', 'already_spent_not_verified',
+            'users_total', 'users_verified', 'users_not_verified',
+            'sales_total', 'sales_verified', 'sales_not_verified',
+            'referral_total', 'referral_verified', 'referral_not_verified',
+            'admin_total', 'admin_verified', 'admin_not_verified',
+        ];
+
+        $totals = array_fill_keys($keys, 0);
+
+        foreach ($rows as $row) {
+            foreach ($keys as $key) {
+                $totals[$key] += (float) ($row[$key] ?? 0);
+            }
+        }
+
+        return $totals;
+    }
+
+    private function financialReportCsvRow(array $row, string $col1 = '', string $col2 = '', ?string $startDate = null, ?string $endDate = null): array
+    {
+        $fmt = fn ($value) => rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
+
+        return [
+            $col1,
+            $col2,
+            $startDate ?? '',
+            $endDate ?? '',
+            $fmt($row['amount_with_gst']),
+            $fmt($row['amount_without_gst']),
+            $fmt($row['per_post_cost']),
+            $fmt($row['total_post_required']),
+            $fmt($row['discount']),
+            $fmt($row['posts_completed_total']),
+            $fmt($row['posts_verified']),
+            $fmt($row['posts_not_verified']),
+            $fmt($row['already_spent_total']),
+            $fmt($row['already_spent_verified']),
+            $fmt($row['already_spent_not_verified']),
+            $fmt($row['users_total']),
+            $fmt($row['users_verified']),
+            $fmt($row['users_not_verified']),
+            $fmt($row['sales_total']),
+            $fmt($row['sales_verified']),
+            $fmt($row['sales_not_verified']),
+            $fmt($row['referral_total']),
+            $fmt($row['referral_verified']),
+            $fmt($row['referral_not_verified']),
+            $fmt($row['admin_total']),
+            $fmt($row['admin_verified']),
+            $fmt($row['admin_not_verified']),
+        ];
+    }
+
 }
