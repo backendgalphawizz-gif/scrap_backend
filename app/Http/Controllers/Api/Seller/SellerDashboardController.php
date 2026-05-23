@@ -21,6 +21,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use function App\CPU\translate;
 use App\Http\Resources\CommonResource;
+use App\Services\PanValidationService;
 
 
 
@@ -188,8 +189,42 @@ class SellerDashboardController extends Controller
                 $shop->gst_status = $request->filled('gst_number') ? 'Submitted' : 'Not Submitted';
             }
             $shop->business_registeration_type = $request->business_registeration_type ?? 'Proprietor';
-            $shop->pan_number = $request->pan_number ?? '';
-            if ($request->has('pan_number') || $request->hasFile('pan_image')) {
+            if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
+                $panValidationService = app(PanValidationService::class);
+                $panVerification = $panValidationService->verifyPanNumber($request->pan_number);
+
+                if ($panVerification['error'] !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $panVerification['error'],
+                    ], 502);
+                }
+
+                if (!$panVerification['valid']) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                    ], 422);
+                }
+
+                $assignError = $panValidationService->validateAssignment(
+                    $request->pan_number,
+                    PanValidationService::sellerDisplayName($shop),
+                    $panVerification['name'] ?? null,
+                    null,
+                    $shop->id
+                );
+                if ($assignError !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $assignError,
+                    ], 422);
+                }
+
+                $shop->pan_number = $panValidationService->normalizePan($request->pan_number);
+                $shop->pan_status = 'Submitted';
+            }
+            if ($request->hasFile('pan_image') && $shop->pan_status !== 'Verified') {
                 $shop->pan_status = 'Submitted';
             }
             if ($request->hasFile('pan_image')) {
@@ -266,7 +301,8 @@ class SellerDashboardController extends Controller
 
         if ($request->has('pan_number') && $shop->pan_status !== 'Verified') {
             // Verify PAN with third-party API before accepting it
-            $panVerification = $this->verifyPanNumber($request->pan_number);
+            $panValidationService = app(PanValidationService::class);
+            $panVerification = $panValidationService->verifyPanNumber($request->pan_number);
 
             if ($panVerification['error'] !== null) {
                 return response()->json([
@@ -286,7 +322,21 @@ class SellerDashboardController extends Controller
                 ], 422);
             }
 
-            $shop->pan_number = $request->pan_number;
+            $assignError = $panValidationService->validateAssignment(
+                $request->pan_number,
+                PanValidationService::sellerDisplayName($shop),
+                $panVerification['name'] ?? null,
+                null,
+                $shop->id
+            );
+            if ($assignError !== null) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $assignError,
+                ], 422);
+            }
+
+            $shop->pan_number = $panValidationService->normalizePan($request->pan_number);
             $shop->pan_status = 'Submitted';
             if ($request->hasFile('pan_image')) {
                 $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'), $shop->pan_image);
@@ -1018,62 +1068,6 @@ class SellerDashboardController extends Controller
             'message' => 'Refund list retrieved successfully',
             'data'    => CommonResource::collection($refunds),
         ], 200);
-    }
-
-    /**
-     * Verify a PAN number against the Nerofy third-party API.
-     *
-     * Returns an array with keys:
-     *   'valid'    (bool)        – true if PAN IS VALID
-     *   'status'   (string|null) – raw pan_status from the API
-     *   'name'     (string|null) – registered_name from the API
-     *   'error'    (string|null) – human-readable error when API call fails
-     */
-    private function verifyPanNumber(string $panNumber): array
-    {
-        $token = env('NEROFY_API_TOKEN');
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/pancard/verify',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => '',
-            CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 15,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST  => 'POST',
-            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => strtoupper(trim($panNumber))]),
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $token,
-            ],
-        ]);
-
-        $response  = curl_exec($curl);
-        $curlError = curl_error($curl);
-        curl_close($curl);
-
-        if ($curlError) {
-            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'PAN verification service unreachable: ' . $curlError];
-        }
-
-        $decoded = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['pan_status'])) {
-            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Invalid response from PAN verification service.'];
-        }
-
-        $panStatus = strtoupper(trim($decoded['data']['pan_status'] ?? ''));
-        $isValid   = $panStatus === 'PAN IS VALID';
-
-        return [
-            'valid'  => $isValid,
-            'status' => $decoded['data']['pan_status'] ?? null,
-            'name'   => $decoded['data']['registered_name'] ?? null,
-            'error'  => null,
-        ];
     }
 
     /**

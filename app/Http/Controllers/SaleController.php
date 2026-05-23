@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sale;
 use App\Models\SaleWalletTransaction;
 use App\Models\SaleCommissionLedger;
+use App\Services\PanValidationService;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 
@@ -112,7 +113,43 @@ class SaleController extends Controller
             'name' => 'required|string|max:100',
             'status' => 'required|in:pending,active,inactive,blocked',
             'pan_number' => 'nullable|string|max:10',
-            'pan_status' => 'nullable|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+            'pan_status' => [
+                'nullable',
+                'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
+                function ($attribute, $value, $fail) use ($sale, $request) {
+                    if ($value !== 'Verified') {
+                        return;
+                    }
+                    $panNumber = $request->filled('pan_number')
+                        ? $request->pan_number
+                        : $sale->pan_number;
+                    if (empty($panNumber)) {
+                        $fail('Cannot set PAN status to Verified without a PAN number.');
+                        return;
+                    }
+                    $panValidationService = app(PanValidationService::class);
+                    $panVerification = $panValidationService->verifyPanNumber($panNumber);
+                    if ($panVerification['error'] !== null) {
+                        $fail($panVerification['error']);
+                        return;
+                    }
+                    if (!$panVerification['valid']) {
+                        $fail('PAN number is invalid and cannot be verified.');
+                        return;
+                    }
+                    $assignError = $panValidationService->validateAssignment(
+                        $panNumber,
+                        (string) $request->name,
+                        $panVerification['name'] ?? null,
+                        null,
+                        null,
+                        $sale->id
+                    );
+                    if ($assignError !== null) {
+                        $fail($assignError);
+                    }
+                },
+            ],
             'pan_rejection_reason' => 'nullable|string|max:1000',
             'bank_status' => 'nullable|in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
             'bank_rejection_reason' => 'nullable|string|max:1000',
@@ -136,7 +173,40 @@ class SaleController extends Controller
 
         $sale->name = $request->name;
         $sale->status = $request->status;
-        $sale->pan_number = $request->pan_number;
+
+        if ($request->filled('pan_number') && $sale->pan_status !== 'Verified') {
+            $panValidationService = app(PanValidationService::class);
+            $panVerification = $panValidationService->verifyPanNumber($request->pan_number);
+
+            if ($panVerification['error'] !== null) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $panVerification['error']);
+            }
+
+            if (!$panVerification['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['pan_number' => 'PAN number is invalid. Please enter a valid PAN.']);
+            }
+
+            $assignError = $panValidationService->validateAssignment(
+                $request->pan_number,
+                (string) $request->name,
+                $panVerification['name'] ?? null,
+                null,
+                null,
+                $sale->id
+            );
+            if ($assignError !== null) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['pan_number' => $assignError]);
+            }
+
+            $sale->pan_number = $panValidationService->normalizePan($request->pan_number);
+        }
+
         $sale->pan_status = $request->pan_status ?? $sale->pan_status;
         $sale->pan_rejection_reason = $request->pan_rejection_reason;
         $sale->bank_status = $request->bank_status ?? $sale->bank_status;

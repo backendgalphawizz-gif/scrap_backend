@@ -14,6 +14,7 @@ use App\CPU\Helpers;
 use App\CPU\ImageManager;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use App\Services\PanValidationService;
 
 class SellerAuthController extends Controller
 {
@@ -262,6 +263,43 @@ class SellerAuthController extends Controller
 
             $panSubmitted = $request->filled('pan_number') || $pan_image !== null;
             $gstSubmitted = $request->filled('gst_number');
+            $normalizedPan = null;
+
+            if ($request->filled('pan_number')) {
+                $panValidationService = app(PanValidationService::class);
+                $panVerification = $panValidationService->verifyPanNumber($request->pan_number);
+
+                if ($panVerification['error'] !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $panVerification['error'],
+                    ], 502);
+                }
+
+                if (!$panVerification['valid']) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                    ], 422);
+                }
+
+                $profileName = trim($request->f_name . ' ' . ($request->l_name ?? ''));
+                $assignError = $panValidationService->validateAssignment(
+                    $request->pan_number,
+                    $profileName,
+                    $panVerification['name'] ?? null,
+                    null,
+                    null
+                );
+                if ($assignError !== null) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => $assignError,
+                    ], 422);
+                }
+
+                $normalizedPan = $panValidationService->normalizePan($request->pan_number);
+            }
 
             $user = Seller::create([
                 'f_name' => $request->f_name,
@@ -283,7 +321,7 @@ class SellerAuthController extends Controller
                 'gst_number' => $request->gst_number ?? '',
                 'gst_status' => $gstSubmitted ? 'Submitted' : 'Not Submitted',
                 'business_registeration_type' => $request->business_registeration_type ?? 'Proprietor',
-                'pan_number' => $request->pan_number ?? NULL,
+                'pan_number' => $normalizedPan ?? ($request->pan_number ?? null),
                 'pan_image' => $pan_image ?? NULL,
                 'pan_status' => $panSubmitted ? 'Submitted' : 'Not Submitted',
                 'primary_contact' => $request->primary_contact ?? NULL,

@@ -662,7 +662,12 @@
         $.ajax({
             url: '{{ route("admin.verify.pan") }}',
             method: 'POST',
-            data: { _token: '{{ csrf_token() }}', pan_number: panNumber },
+            data: {
+                _token: '{{ csrf_token() }}',
+                pan_number: panNumber,
+                profile_name: @json(trim(($seller->f_name ?? '') . ' ' . ($seller->l_name ?? ''))),
+                exclude_seller_id: {{ $seller->id }},
+            },
             success: function (res) {
                 if (res.valid) {
                     $result.html('<span class="text-success">✔ PAN is valid' + (res.name ? ' — ' + res.name : '') + '</span>');
