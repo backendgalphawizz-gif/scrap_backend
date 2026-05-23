@@ -145,6 +145,7 @@ class DashboardController extends Controller
                 );
             })
             ->where(['status' => 'active'])
+            ->where('end_date', '>=', now()->toDateString())
             ->whereNotIn('id', function ($sub) use ($user) {
                 $sub->select('campaign_id')
                     ->from('user_campaign_skips')
@@ -227,32 +228,36 @@ class DashboardController extends Controller
         ])->first();
 
         if ($transaction) {
-            if (in_array($transaction->status, [
-                CampaignTransaction::STATUS_COMPLETED,
-                CampaignTransaction::STATUS_DELETED,
-                CampaignTransaction::STATUS_REJECTED,
-            ], true)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'This participation can no longer be updated.',
-                ], 422);
-            }
+             return response()->json([
+                'status' => false,
+                'message' => 'Already participated in this campaign on ' . $request->share_on . '. You cannot participate again on the same platform.',
+            ], 422);
+            // if (in_array($transaction->status, [
+            //     CampaignTransaction::STATUS_COMPLETED,
+            //     CampaignTransaction::STATUS_DELETED,
+            //     CampaignTransaction::STATUS_REJECTED,
+            // ], true)) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'This participation can no longer be updated.',
+            //     ], 422);
+            // }
 
-            $transaction->unique_code = $request->unique_code;
-            if ($request->filled('post_url')) {
-                $transaction->post_url = $request->post_url;
-            }
-            if ($transaction->status === CampaignTransaction::STATUS_FLAGGED) {
-                $transaction->violation_reason = null;
-            }
-            $transaction->save();
+            // $transaction->unique_code = $request->unique_code;
+            // if ($request->filled('post_url')) {
+            //     $transaction->post_url = $request->post_url;
+            // }
+            // if ($transaction->status === CampaignTransaction::STATUS_FLAGGED) {
+            //     $transaction->violation_reason = null;
+            // }
+            // $transaction->save();
 
-            $this->createPendingCampaignReward($user->id, $campaign, $transaction);
+            // $this->createPendingCampaignReward($user->id, $campaign, $transaction);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Campaign post details updated successfully.',
-            ]);
+            // return response()->json([
+            //     'status' => true,
+            //     'message' => 'Campaign post details updated successfully.',
+            // ]);
         }
 
         if (Carbon::parse($campaign->end_date)->endOfDay()->isPast()) {
