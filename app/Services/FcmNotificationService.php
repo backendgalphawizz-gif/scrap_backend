@@ -4,19 +4,12 @@ namespace App\Services;
 
 use App\Models\Seller;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
+use App\Providers\FirebaseService;
 use Illuminate\Support\Facades\Log;
 
 class FcmNotificationService
 {
-    private const FCM_ENDPOINT = 'https://fcm.googleapis.com/fcm/send';
-
-    private string $serverKey;
-
-    public function __construct()
-    {
-        $this->serverKey = config('services.fcm.server_key', '');
-    }
+    public function __construct(private FirebaseService $firebase) {}
 
     public function sendToUser(User $user, string $title, string $body, array $data = []): bool
     {
@@ -38,36 +31,15 @@ class FcmNotificationService
 
     private function send(string $token, string $title, string $body, array $data = []): bool
     {
-        if (empty($this->serverKey)) {
-            Log::warning('FCM server key not configured. Set FCM_SERVER_KEY in .env');
-            return false;
-        }
-
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . $this->serverKey,
-                'Content-Type'  => 'application/json',
-            ])->post(self::FCM_ENDPOINT, [
-                'to'           => $token,
-                'notification' => [
-                    'title' => $title,
-                    'body'  => $body,
-                    'sound' => 'default',
-                ],
-                'data'         => $data,
-                'priority'     => 'high',
-            ]);
+            $result = $this->firebase->sendNotification($token, $title, $body, $data);
 
-            if ($response->successful() && isset($response->json()['success']) && $response->json()['success'] === 1) {
-                return true;
+            if (is_string($result)) {
+                Log::warning('FCM notification failed', ['error' => $result]);
+                return false;
             }
 
-            Log::warning('FCM notification failed', [
-                'status'   => $response->status(),
-                'response' => $response->json(),
-            ]);
-
-            return false;
+            return true;
         } catch (\Throwable $e) {
             Log::error('FCM notification exception: ' . $e->getMessage());
             return false;
