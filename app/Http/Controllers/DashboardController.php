@@ -20,6 +20,7 @@ use App\Models\Voucher;
 use App\Http\Resources\CommonResource;
 use DB;
 use App\CPU\ImageManager;
+use App\Services\PanValidationService;
 use Carbon\Carbon;
 // use Gregwar\Captcha\PhraseBuilder;
 
@@ -325,9 +326,30 @@ class DashboardController extends Controller
             ],
             'pan_status' => [
                 'nullable', 'string', 'in:Not Submitted,Submitted,Under Verification,Verified,Rejected',
-                function ($attribute, $value, $fail) use ($user) {
+                function ($attribute, $value, $fail) use ($user, $request) {
                     if ($value === 'Verified' && empty($user->pan_number)) {
                         $fail('Cannot set PAN status to Verified without a PAN number.');
+                    }
+                    if ($value === 'Verified' && !empty($user->pan_number)) {
+                        $panValidationService = app(PanValidationService::class);
+                        $panVerification = $panValidationService->verifyPanNumber($user->pan_number);
+                        if ($panVerification['error'] !== null) {
+                            $fail($panVerification['error']);
+                            return;
+                        }
+                        if (!$panVerification['valid']) {
+                            $fail('PAN number is invalid and cannot be verified.');
+                            return;
+                        }
+                        $assignError = $panValidationService->validateAssignment(
+                            $user->pan_number,
+                            (string) $request->name,
+                            $panVerification['name'] ?? null,
+                            $user->id
+                        );
+                        if ($assignError !== null) {
+                            $fail($assignError);
+                        }
                     }
                 },
             ],
@@ -444,6 +466,32 @@ class DashboardController extends Controller
         }
 
         if ($request->filled('pan_status')) {
+            if ($request->pan_status === 'Verified') {
+                if (empty($seller->pan_number)) {
+                    return redirect()->back()->with('error', 'Cannot set PAN status to Verified without a PAN number.');
+                }
+
+                $panValidationService = app(PanValidationService::class);
+                $panVerification = $panValidationService->verifyPanNumber($seller->pan_number);
+                if ($panVerification['error'] !== null) {
+                    return redirect()->back()->with('error', $panVerification['error']);
+                }
+                if (!$panVerification['valid']) {
+                    return redirect()->back()->with('error', 'PAN number is invalid and cannot be verified.');
+                }
+
+                $assignError = $panValidationService->validateAssignment(
+                    $seller->pan_number,
+                    PanValidationService::sellerDisplayName($seller),
+                    $panVerification['name'] ?? null,
+                    null,
+                    $seller->id
+                );
+                if ($assignError !== null) {
+                    return redirect()->back()->with('error', $assignError);
+                }
+            }
+
             $seller->pan_status = $request->pan_status;
             if ($request->pan_status !== 'Rejected') {
                 $seller->pan_rejection_reason = null;
@@ -997,43 +1045,54 @@ class DashboardController extends Controller
     {
         $request->validate([
             'pan_number' => ['required', 'string', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/i'],
+            'profile_name' => ['nullable', 'string', 'max:255'],
+            'exclude_user_id' => ['nullable', 'integer'],
+            'exclude_seller_id' => ['nullable', 'integer'],
+            'exclude_sale_id' => ['nullable', 'integer'],
         ]);
 
-        $panNumber = strtoupper(trim($request->pan_number));
-        $token     = env('NEROFY_API_TOKEN');
+        $panValidationService = app(PanValidationService::class);
+        $panVerification = $panValidationService->verifyPanNumber($request->pan_number);
 
-        $ch = curl_init('https://api.nerofy.in/api/v1/service/pancard/verify');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode(['panNumber' => $panNumber]),
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $token,
-            ],
-            CURLOPT_TIMEOUT        => 15,
-        ]);
-        $raw  = curl_exec($ch);
-        $err  = curl_error($ch);
-        curl_close($ch);
-
-        if ($err || $raw === false) {
-            return response()->json(['status' => false, 'message' => 'Could not reach PAN verification service.'], 502);
+        if ($panVerification['error'] !== null) {
+            return response()->json(['status' => false, 'message' => $panVerification['error']], 502);
         }
 
-        $body = json_decode($raw, true);
-        if (!isset($body['data'])) {
-            return response()->json(['status' => false, 'message' => $body['message'] ?? 'Invalid response from PAN verification service.'], 502);
+        if (!$panVerification['valid']) {
+            return response()->json([
+                'status'     => true,
+                'valid'      => false,
+                'pan_status' => $panVerification['status'],
+                'name'       => $panVerification['name'],
+            ]);
         }
 
-        $data  = $body['data'];
-        $valid = isset($data['pan_status']) && strtoupper($data['pan_status']) === 'PAN IS VALID';
+        if ($panValidationService->isPanTaken(
+            $request->pan_number,
+            $request->integer('exclude_user_id') ?: null,
+            $request->integer('exclude_seller_id') ?: null,
+            $request->integer('exclude_sale_id') ?: null
+        )) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'This PAN number is already registered with another account.',
+            ], 422);
+        }
+
+        if ($request->filled('profile_name')) {
+            if (!$panValidationService->namesMatch($request->profile_name, $panVerification['name'] ?? null)) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Profile name does not match the name registered on this PAN.',
+                ], 422);
+            }
+        }
 
         return response()->json([
             'status'     => true,
-            'valid'      => $valid,
-            'pan_status' => $data['pan_status'] ?? null,
-            'name'       => $data['name'] ?? null,
+            'valid'      => true,
+            'pan_status' => $panVerification['status'],
+            'name'       => $panVerification['name'],
         ]);
     }
 

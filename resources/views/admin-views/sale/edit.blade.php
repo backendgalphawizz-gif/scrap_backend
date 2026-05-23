@@ -303,6 +303,8 @@
             data: {
                 _token: '{{ csrf_token() }}',
                 pan_number: panNumber,
+                profile_name: $('#name').val().trim(),
+                exclude_sale_id: {{ $sale->id }},
             },
             success: function (res) {
                 if (res.valid) {

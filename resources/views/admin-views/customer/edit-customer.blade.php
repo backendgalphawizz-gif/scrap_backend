@@ -500,6 +500,8 @@
             data: {
                 _token: '{{ csrf_token() }}',
                 pan_number: panNumber,
+                profile_name: $('input[name="name"]').val().trim(),
+                exclude_user_id: {{ $user->id }},
             },
             success: function (res) {
                 if (res.valid) {
