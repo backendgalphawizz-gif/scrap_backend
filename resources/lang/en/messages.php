@@ -299,6 +299,7 @@
   'Transaction ID' => 'Transaction ID',
   'Brand_Report' => 'Brand Report',
   'Brand_Reports' => 'Brand Reports',
+  'Financial_Report' => 'Financial Report',
   'Filter_Data' => 'Filter Data',
   'This_Year' => 'This Year',
   'This_Month' => 'This Month',

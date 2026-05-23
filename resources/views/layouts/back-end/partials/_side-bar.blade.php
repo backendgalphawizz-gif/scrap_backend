@@ -211,6 +211,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.post.reports') }}">Post Reports</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.financial.reports') }}">Financial Report</a>
+                    </li>
                 </ul>
             </div>
         </li>
