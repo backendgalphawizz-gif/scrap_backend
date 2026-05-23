@@ -20,6 +20,7 @@ use App\Models\UserLevel;
 use App\Models\BrandCategory;
 use App\Models\CampaignTransaction;
 use Illuminate\Support\Str;
+use GuzzleHttp\Client;
 
 class UserProfileController extends Controller
 {
@@ -641,6 +642,115 @@ class UserProfileController extends Controller
                 'can_post_more'     => $canPostMore,
             ],
         ]);
+    }
+
+    public function verifySocialOauth(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'platform'     => 'required|in:facebook,instagram',
+            'access_token' => 'required|string',
+            'provider_id'  => 'required_if:platform,facebook|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $platform      = $request->platform;
+        $statusField   = $platform . '_status';
+        $usernameField = $platform . '_username';
+
+        if ($user->$statusField === SocialVerificationTransaction::STATUS_VERIFIED) {
+            return response()->json([
+                'status'  => false,
+                'message' => ucfirst($platform) . ' account is already verified.',
+            ], 422);
+        }
+
+        $client   = new Client(['timeout' => 10]);
+        $token    = $request->access_token;
+        $username = null;
+
+        try {
+            if ($platform === 'facebook') {
+                $providerId = $request->provider_id;
+
+                $res  = $client->request('GET', 'https://graph.facebook.com/' . $providerId . '?fields=id,name,link&access_token=' . $token);
+                $data = json_decode($res->getBody()->getContents(), true);
+
+                // Verify the token actually belongs to this provider_id
+                if (!isset($data['id']) || $data['id'] !== $providerId) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Invalid Facebook access token.',
+                    ], 401);
+                }
+
+                // Extract username from profile link
+                // e.g. https://www.facebook.com/john.doe  =>  john.doe
+                // e.g. https://www.facebook.com/profile.php?id=123  =>  null (no username)
+                if (isset($data['link'])) {
+                    $path     = parse_url($data['link'], PHP_URL_PATH);
+                    $segments = array_filter(explode('/', trim($path, '/')));
+                    $last     = end($segments);
+                    if ($last && !str_starts_with((string) $last, 'profile.php') && !is_numeric($last)) {
+                        $username = $last;
+                    }
+                }
+
+            } elseif ($platform === 'instagram') {
+                // Instagram API via Facebook Login (instagram_basic + pages_show_list permissions)
+                // Walk: /me/accounts -> each page's instagram_business_account -> username
+                $res  = $client->request('GET', 'https://graph.facebook.com/me/accounts?fields=instagram_business_account{id,username}&access_token=' . $token);
+                $data = json_decode($res->getBody()->getContents(), true);
+
+                foreach ($data['data'] ?? [] as $page) {
+                    if (!empty($page['instagram_business_account']['username'])) {
+                        $username = $page['instagram_business_account']['username'];
+                        break;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Could not reach ' . ucfirst($platform) . ' API. Please try again.',
+            ], 502);
+        }
+
+        if ($username) {
+            $user->$statusField   = SocialVerificationTransaction::STATUS_VERIFIED;
+            $user->$usernameField = $username;
+            $user->save();
+
+            return response()->json([
+                'status'  => true,
+                'message' => ucfirst($platform) . ' account verified successfully.',
+                'data'    => [
+                    'platform'   => $platform,
+                    'username'   => $username,
+                    'new_status' => 'verified',
+                ],
+            ]);
+        } else {
+            $user->$statusField = SocialVerificationTransaction::STATUS_NOT_VERIFIED;
+            $user->save();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'No public username found on your ' . ucfirst($platform) . ' account.',
+                'data'    => [
+                    'platform'   => $platform,
+                    'username'   => null,
+                    'new_status' => 'not_verified',
+                ],
+            ]);
+        }
     }
 
     public function updateInterest(Request $request)

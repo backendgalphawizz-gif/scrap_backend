@@ -186,9 +186,7 @@ class UserAuthController extends Controller
                 'city' => $request->city,
                 'state' => $request->state,
                 'post_slots' => '10', // Default post slots, can be updated later based on user level
-                'instagram_username' => $request->instagram_username,
                 'instagram_status' =>  'not_submitted',
-                'facebook_username' => $request->facebook_username,
                 'facebook_status' => 'not_submitted',
             ]);
 

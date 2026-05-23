@@ -174,6 +174,7 @@ Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->gr
     // User Notifications related routes
     Route::get('notifications', [UserProfileController::class, 'notifications']);
     Route::post('verify-social', [UserProfileController::class, 'verifySocial']);
+    Route::post('verify-social-oauth', [UserProfileController::class, 'verifySocialOauth']);
     Route::get('social-verification-status', [UserProfileController::class, 'socialVerificationStatus']);
     Route::get('delete-account', [UserProfileController::class, 'deleteAccount']);
     Route::get('support-tickets', [UserSupportTicketController::class, 'index']);
