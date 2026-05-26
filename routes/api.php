@@ -221,7 +221,7 @@ Route::group(['prefix' => 'brand'], function () {
         Route::get('campaign/delete/{id}', [SellerDashboardController::class, 'deleteCampaign']);
         Route::post('campaign-transaction/{id}/report-violation', [SellerDashboardController::class, 'reportViolation']);
 
-        // Seller Wallet
+        // Seller Wallet 
         Route::get('/wallet', [SellerWalletController::class, 'index']);
         Route::post('/wallet/create', [SellerWalletController::class, 'createWalletTransaction']);
         Route::get('/wallet/transactions', [SellerWalletController::class, 'walletTransactionList']);
