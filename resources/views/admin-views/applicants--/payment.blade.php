@@ -41,7 +41,7 @@
                                        -- 
                                     @endif
                                 </td>
-                                <td>{{($payment['application_fee_date']) ? \Carbon\Carbon::parse($payment['application_fee_date'])->format('d-M-Y h:i:A') : '--'}}</td>
+                                <td>{{($payment['application_fee_date']) ? \App\CPU\Helpers::formatAdminDateTime($payment['application_fee_date']) : '--'}}</td>
                                 <td>
                                     @if($payment['application_fee_status'] != '')
                                         <select name="status" data-type="application_fee" class="form-control feeStatus">
@@ -66,7 +66,7 @@
                                        -- 
                                     @endif
                                 </td>
-                                <td>{{($payment['document_fee_date']) ? \Carbon\Carbon::parse($payment['document_fee_date'])->format('d-M-Y h:i:A') : '--'}}</td>
+                                <td>{{($payment['document_fee_date']) ? \App\CPU\Helpers::formatAdminDateTime($payment['document_fee_date']) : '--'}}</td>
                                 <td>
                                     @if($payment['document_fee_status'] != '')
                                         <select name="status" data-type="document_fee" class="form-control feeStatus">
@@ -91,7 +91,7 @@
                                        -- 
                                     @endif
                                 </td>
-                                <td>{{($payment['assessment_fee_date']) ? \Carbon\Carbon::parse($payment['assessment_fee_date'])->format('d-M-Y h:i:A') : '--'}}</td>
+                                <td>{{($payment['assessment_fee_date']) ? \App\CPU\Helpers::formatAdminDateTime($payment['assessment_fee_date']) : '--'}}</td>
                                 <td>
                                     @if($payment['assessment_fee_status'] != '')
                                         <select name="status" data-type="assessment_fee" class="form-control feeStatus">
@@ -116,7 +116,7 @@
                                        -- 
                                     @endif
                                 </td>
-                                <td>{{($payment['technical_assessment_fee_date']) ? \Carbon\Carbon::parse($payment['technical_assessment_fee_date'])->format('d-M-Y h:i:A') : '--'}}</td>
+                                <td>{{($payment['technical_assessment_fee_date']) ? \App\CPU\Helpers::formatAdminDateTime($payment['technical_assessment_fee_date']) : '--'}}</td>
                                 <td>
                                     @if($payment['technical_assessment_fee_status'] != '')
                                         <select name="status" data-type="technical_assessment_fee" class="form-control feeStatus">

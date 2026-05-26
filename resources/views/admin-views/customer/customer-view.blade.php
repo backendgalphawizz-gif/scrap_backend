@@ -26,7 +26,7 @@
                     <div class="d-sm-flex align-items-sm-center">
                         <h3 class="page-header-title">{{\App\CPU\translate('Customer ID')}} #{{$customer['id']}}</h3>
                         <span class="{{Session::get('direction') === "rtl" ? 'mr-2 mr-sm-3' : 'ml-2 ml-sm-3'}}">
-                            <i class="tio-date-range"></i> {{\App\CPU\translate('Joined At')}} : {{date('d M Y H:i:s',strtotime($customer['created_at']))}}
+                            <i class="tio-date-range"></i> {{\App\CPU\translate('Joined At')}} : {{ \App\CPU\Helpers::formatAdminDateTime($customer['created_at']) }}
                         </span>
 
                         <!-- <span class="d-none {{Session::get('direction') === "rtl" ? 'mr-2 mr-sm-3' : 'ml-2 ml-sm-3'}}">
@@ -193,8 +193,8 @@
                                             <td>{{ $subscription->transaction_id }}</td>
                                             <td>{{ $subscription->plan->title }}</td>
                                             <td>{{\App\CPU\Helpers::set_symbol(\App\CPU\BackEndHelper::usd_to_currency(($subscription->plan->price))) }}</td>
-                                            <td>{{ date('d M, Y', strtotime($subscription->created_at)) }}</td>
-                                            <td>{{ date('d M, Y', strtotime($subscription->expiry_date)) }}</td>
+                                            <td>{{ \App\CPU\Helpers::formatAdminDate($subscription->created_at) }}</td>
+                                            <td>{{ \App\CPU\Helpers::formatAdminDate($subscription->expiry_date) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

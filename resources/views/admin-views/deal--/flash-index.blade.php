@@ -146,7 +146,7 @@
                             <tr>
                                 <td>{{$flash_deal->firstItem()+ $k}}</td>
                                 <td><span class="font-weight-semibold">{{$deal['title']}}</span></td>
-                                <td>{{date('d-M-y',strtotime($deal['start_date']))}} - {{date('d-M-y',strtotime($deal['end_date']))}}</td>
+                                <td>{{ \App\CPU\Helpers::formatAdminDate($deal['start_date']) }} - {{ \App\CPU\Helpers::formatAdminDate($deal['end_date']) }}</td>
                                 <!-- <td>{{date('d-M-y',strtotime($deal['end_date']))}}</td> -->
                                 <td>
                                     @if(\Carbon\Carbon::parse($deal['end_date'])->endOfDay()->isPast())

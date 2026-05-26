@@ -57,7 +57,7 @@
                         </span>
                         @endif
                         <span class="{{Session::get('direction') === "rtl" ? 'mr-2 mr-sm-3' : 'ml-2 ml-sm-3'}}">
-                                <i class="tio-date-range"></i> {{date('d M Y H:i:s',strtotime($order['created_at']))}}
+                                <i class="tio-date-range"></i> {{ \App\CPU\Helpers::formatAdminDateTime($order['created_at']) }}
                         </span>
                         @if(\App\CPU\Helpers::get_business_settings('order_verification'))
                             <span class="ml-2 ml-sm-3">

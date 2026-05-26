@@ -229,7 +229,7 @@
             <tr>
                 <th class="content-position-y text-left">
                     <h2>{{\App\CPU\translate('Admin_Earning_Report')}}</h2>
-                    <p class="fz-14">{{\App\CPU\translate('date')}} : <span style="font-weight: normal">{{ date('d/m/Y') }}</span></p>
+                    <p class="fz-14">{{\App\CPU\translate('date')}} : <span style="font-weight: normal">{{ \App\CPU\Helpers::formatAdminDate(now()) }}</span></p>
                 </th>
                 <th class="content-position-y text-right">
                      <img height="50" src="{{asset("storage/app/public/company/$company_web_logo")}}" alt="">

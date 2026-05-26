@@ -56,9 +56,6 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.voucher-brand.index') }}" class="row g-2">
-                <div class="col-md-2">
-                    <input type="text" name="id" value="{{ request('id') }}" class="form-control" placeholder="ID">
-                </div>
                 <div class="col-md-4">
                     <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Name">
                 </div>

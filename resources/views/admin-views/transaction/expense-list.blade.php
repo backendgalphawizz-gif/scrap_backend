@@ -222,7 +222,7 @@
                         <tr>
                             <td>{{ $expense_transactions_table->firstItem()+$key }}</td>
                             <td>{{ $transaction->order_transaction->transaction_id }}</td>
-                            <td>{{ date_format($transaction->order_transaction->updated_at, 'd F Y h:i:s a') }}</td>
+                            <td>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->order_transaction->updated_at) }}</td>
                             <td>
                                 <a class="title-color" href="{{route('admin.orders.details',['id'=>$transaction->id])}}">
                                     {{$transaction->id}}

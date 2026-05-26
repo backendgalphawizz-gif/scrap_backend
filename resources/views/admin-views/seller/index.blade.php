@@ -67,9 +67,6 @@
                     <form method="GET" action="{{ route('admin.brand') }}">
                         <div class="row g-2 align-items-end">
                             <div class="col-6 col-sm-4 col-md-2">
-                                <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID">
-                            </div>
-                            <div class="col-6 col-sm-4 col-md-2">
                                 <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name">
                             </div>
                             <div class="col-6 col-sm-4 col-md-2">
@@ -146,7 +143,7 @@
                                     <a class="title-color hover-c1" href="tel:{{$seller->phone}}">{{$seller->phone}}</a>
                                 </td>
                                 <td>
-                                    <a href="javascript:void(0)" class="title-color hover-c1">{{date('d/m/Y', strtotime($seller->created_at))}}</a>
+                                    <a href="javascript:void(0)" class="title-color hover-c1">{{ \App\CPU\Helpers::formatAdminDate($seller->created_at) }}</a>
                                 </td>
                                 <td>
                                     <span class="update-account-status" data-id="{{ $seller->id }}">{!! $seller->status=='approved'?'<label class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</label>':'<label class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</label>' !!}</span>

@@ -126,7 +126,7 @@
                                             </span>
                                         </a>
                                     </td>
-                                    <td>{{ date('d M Y', $data['created_at'] ? strtotime($data['created_at']) : null) }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($data['created_at'] ?? null) }}</td>
                                     <td class="text-center">{{ $data->wish_list_count }}</td>
                                 </tr>
                             @endforeach

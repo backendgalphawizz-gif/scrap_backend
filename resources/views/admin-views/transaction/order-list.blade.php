@@ -244,7 +244,7 @@
                             </td>
                             <td>
                                 <b>Amount : </b>{{'$'.$transaction->application_fee ?? '-'}}<br />
-                                <b>Date : </b>{{\Carbon\Carbon::parse($transaction->application_fee_date)->format('Y-m-d H:i A') ?? '-'}}<br />
+                                <b>Date : </b>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->application_fee_date) }}<br />
                                 <p>
                                     <b>Status : </b>
                                     @if($transaction->application_fee_status == 0)
@@ -267,7 +267,7 @@
                             </td>
                             <td>
                                 <b>Amount : </b>{{'$'.$transaction->document_fee ?? '-'}}<br />
-                                <b>Date : </b>{{\Carbon\Carbon::parse($transaction->document_fee_date)->format('Y-m-d H:i A') ?? '-'}}<br />
+                                <b>Date : </b>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->document_fee_date) }}<br />
                                 <p>
                                     <b>Status : </b>
                                     @if($transaction->document_fee_status == 0)
@@ -290,7 +290,7 @@
                             </td>
                             <td>
                                 <b>Amount : </b>{{'$'.$transaction->assessment_fee ?? '-'}}<br />
-                                <b>Date : </b>{{\Carbon\Carbon::parse($transaction->assessment_fee_date)->format('Y-m-d H:i A') ?? '-'}}<br />
+                                <b>Date : </b>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->assessment_fee_date) }}<br />
                                 <p>
                                     <b>Status : </b>
                                     @if($transaction->assessment_fee_status == 0)
@@ -313,7 +313,7 @@
                             </td>
                             <td>
                                 <b>Amount : </b>{{'$'.$transaction->technical_assessment_fee ?? '-'}}<br />
-                                <b>Date : </b>{{\Carbon\Carbon::parse($transaction->technical_assessment_fee_date)->format('Y-m-d H:i A') ?? '-'}}<br />
+                                <b>Date : </b>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->technical_assessment_fee_date) }}<br />
                                 <p>
                                     <b>Status : </b>
                                     @if($transaction->technical_assessment_fee_status == 0)

@@ -182,7 +182,7 @@
                                 <td>{{ $transaction->description }}</td>
                                 <td>{{ $transaction->transaction_type ?? '-' }}</td>
                                 <td>{{ $transaction->value ?? '-' }}</td>
-                                <td>{{ $transaction->created_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ \App\CPU\Helpers::formatAdminDateTime($transaction->created_at) }}</td>
                                 <td>
                                     @if($transaction->status == 'completed')
                                         <span class="badge badge-gradient-success">{{ ucfirst($transaction->status) }}</span>

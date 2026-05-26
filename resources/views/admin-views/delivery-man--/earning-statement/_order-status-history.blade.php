@@ -37,8 +37,8 @@
                             {{\App\CPU\translate('Canceled')}}
                         @endif
                     </p>
-                    <p class="timeline-text">{{$history->created_at->format('d/m/y')}} {{$history->created_at->format('h:i A')}}</p>
-                    <p class="timeline-text">{{ \App\CPU\translate('Service_Time') }} : {{$history->created_at->format('d/m/y')}} {{$history->created_at->format('h:i A')}}</p>
+                    <p class="timeline-text">{{ \App\CPU\Helpers::formatAdminDateTime($history->created_at) }}</p>
+                    <p class="timeline-text">{{ \App\CPU\translate('Service_Time') }} : {{ \App\CPU\Helpers::formatAdminDateTime($history->created_at) }}</p>
                 </div>
             </div>
             @empty

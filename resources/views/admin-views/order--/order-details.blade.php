@@ -27,7 +27,7 @@
                             <div class="d-flex flex-column gap-10">
                                 <h4 class="text-capitalize">{{\App\CPU\translate('Order_ID')}} #{{$order['id']}}</h4>
                                 <div class="">
-                                    <i class="tio-date-range"></i> {{date('d M Y H:i:s',strtotime($order['created_at']))}}
+                                    <i class="tio-date-range"></i> {{ \App\CPU\Helpers::formatAdminDateTime($order['created_at']) }}
                                 </div>
                                 <!-- <div class="d-flex flex-wrap gap-10">
                                     <div class="badge-soft-info font-weight-bold d-flex align-items-center rounded py-1 px-2"> {{\App\CPU\translate('linked_orders')}} ({{$linked_orders->count()}}) : </div>

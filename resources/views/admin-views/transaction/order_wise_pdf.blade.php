@@ -283,7 +283,7 @@
                             <table>
                                 <tr>
                                     <th class="bold black p-0 text-left" style="padding: 3px 0">{{\App\CPU\translate('date')}}</th>
-                                    <td class="p-0" style="padding: 3px 0">: {{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y') }}</td>
+                                    <td class="p-0" style="padding: 3px 0">: {{ \App\CPU\Helpers::formatAdminDate($transaction->created_at) }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bold black p-0 text-left" style="padding: 3px 0">{{\App\CPU\translate('Seller_Info')}}</th>

@@ -4,6 +4,7 @@ namespace App\CPU;
 use App\Models\User;
 use App\Models\Sale;
 use App\Models\Seller;
+use App\Models\CoinTransaction;
 use App\Models\SellerWallet;
 use App\Models\BusinessSetting;
 use App\Providers\FirebaseService;
@@ -350,8 +351,51 @@ class Helpers
         ];
     }
 
-    public static function setDateTime($data) {
-        return $data->created_at->timezone(self::get_business_settings('timezone'))->format('d M, Y h:i A');
+    public static function adminTimezone(): string
+    {
+        return self::get_business_settings('timezone') ?: config('app.timezone', 'UTC');
+    }
+
+    public static function parseAdminDate($value): ?\Carbon\Carbon
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof \Carbon\CarbonInterface) {
+            return $value->copy()->timezone(self::adminTimezone());
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return \Carbon\Carbon::instance($value)->timezone(self::adminTimezone());
+        }
+
+        return \Carbon\Carbon::parse($value)->timezone(self::adminTimezone());
+    }
+
+    /** Admin display: dd-mm-yyyy */
+    public static function formatAdminDate($value, string $default = '-'): string
+    {
+        $date = self::parseAdminDate($value);
+
+        return $date ? $date->format('d-m-Y') : $default;
+    }
+
+    /** Admin display: dd-mm-yyyy 10:30AM */
+    public static function formatAdminDateTime($value, string $default = '-'): string
+    {
+        $date = self::parseAdminDate($value);
+
+        return $date ? $date->format('d-m-Y h:iA') : $default;
+    }
+
+    public static function setDateTime($data)
+    {
+        if (is_object($data) && isset($data->created_at)) {
+            return self::formatAdminDateTime($data->created_at);
+        }
+
+        return self::formatAdminDateTime($data);
     }
 
     public static function currency_to_usd($amount)
@@ -489,6 +533,39 @@ class Helpers
             ->event($event)
             ->log($description);
         return true;
+    }
+
+    /**
+     * Log user coin-wallet activity to the admin Activity Logs (Spatie).
+     */
+    public static function logUserWalletTransaction(string $event, CoinTransaction $transaction, $causer = null, ?string $description = null): void
+    {
+        try {
+            if ($description === null) {
+                $type = str_replace('_', ' ', $transaction->transaction_type ?? 'transaction');
+                $coins = number_format((float) ($transaction->coin ?? 0), 2);
+                $description = ucfirst($type) . " ({$transaction->type}, {$transaction->status}) — {$coins} coins";
+                if (! empty($transaction->description)) {
+                    $description .= ': ' . $transaction->description;
+                }
+            }
+
+            if ($causer === null) {
+                $transaction->loadMissing('wallet.user');
+                $causer = $transaction->wallet?->user ?? auth()->user();
+            }
+
+            if ($causer === null) {
+                return;
+            }
+
+            self::systemActivity('user_wallet_transaction', $causer, $event, $description, $transaction);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to log user wallet activity', [
+                'transaction_id' => $transaction->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
 }

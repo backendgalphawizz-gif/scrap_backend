@@ -21,7 +21,7 @@ class AuthController extends Controller
         ];
 
         if ($request->type === 'signup') {
-            $rules['mobile'] = 'required|unique:sales,phone';
+            $rules['mobile'] = 'required|digits:10|unique:sales,mobile';
         }
 
         $validator = Validator::make($request->all(), $rules);

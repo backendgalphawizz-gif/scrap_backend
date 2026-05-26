@@ -118,6 +118,17 @@
             line-height: 1;
         }
 
+        .user-status-switch .form-check-input {
+            width: 2.75em;
+            height: 1.4em;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .user-status-switch .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+        }
+
         .premium-pagination-wrap {
             border-top: 1px solid #e8ebef;
             margin-top: 28px;
@@ -254,7 +265,6 @@
                 <div class="premium-table-card">
                     <div class="px-3 pt-3 pb-3 d-flex justify-content-end">
                         <form method="GET" action="{{ route('admin.user') }}" class="d-flex flex-wrap align-items-center justify-content-end gap-2">
-                            <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="max-width: 120px;">
                             <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="max-width: 220px;">
                             <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="max-width: 180px;">
                             <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="max-width: 220px;">
@@ -281,11 +291,7 @@
 
                         <tbody>
                         @foreach($customers as $key=>$customer)
-                            @php($customerImage = blank($customer->image)
-                                ? asset('public/assets/front-end/img/image-place-holder.png')
-                                : (\Illuminate\Support\Str::startsWith($customer->image, ['http://', 'https://'])
-                                    ? $customer->image
-                                    : asset('storage/profile/' . ltrim($customer->image, '/'))))
+                            @php($customerImage = $customer->profileImageUrl())
                             <tr id="data-{{ $customer->id }}">
                                 <td>
                                     {{$customers->firstItem()+$key}}
@@ -321,19 +327,15 @@
                                         </label>
                                     @endif
                                 </td>
-                                <td>
-                                    @if($customer->coinWallet)
-                                        <button type="button" class="btn btn-sm border-0 update-wallet-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
-                                            {!! $customer->coinWallet?->status==1
-                                                ? '<span class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</span>'
-                                                : '<span class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</span>'
-                                            !!}
-                                        </button>
-                                    @else
-                                        <button type="button" class="btn btn-sm border-0 update-wallet-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
-                                            <span class="badge badge-gradient-danger">In-Active</span>
-                                        </button>
-                                    @endif
+                                <td class="text-center">
+                                    <div class="form-check form-switch user-status-switch d-inline-flex justify-content-center mb-0">
+                                        <input class="form-check-input update-wallet-status"
+                                            type="checkbox"
+                                            role="switch"
+                                            aria-label="{{ \App\CPU\translate('Wallet Status') }}"
+                                            data-id="{{ $customer->id }}"
+                                            {{ $customer->coinWallet && (int) $customer->coinWallet->status === 1 ? 'checked' : '' }}>
+                                    </div>
                                 </td>
                                 <td>
                                     <a href="{{ route('admin.campaigns-transactions.list', ['user_id' => $customer->id]) }}"
@@ -344,13 +346,15 @@
                                     </a>
                                 </td>
 
-                                <td>
-                                    <button type="button" class="btn btn-sm border-0 update-account-status" data-id="{{ $customer->id }}" style="cursor:pointer;min-width:90px;">
-                                        {!! $customer->status==1
-                                            ? '<span class="badge badge-gradient-success">'.\App\CPU\translate('Active').'</span>'
-                                            : '<span class="badge badge-gradient-danger">'.\App\CPU\translate('In-Active').'</span>'
-                                        !!}
-                                    </button>
+                                <td class="text-center">
+                                    <div class="form-check form-switch user-status-switch d-inline-flex justify-content-center mb-0">
+                                        <input class="form-check-input update-account-status"
+                                            type="checkbox"
+                                            role="switch"
+                                            aria-label="{{ \App\CPU\translate('block') }} / {{ \App\CPU\translate('unblock') }}"
+                                            data-id="{{ $customer->id }}"
+                                            {{ (int) $customer->status === 1 ? 'checked' : '' }}>
+                                    </div>
                                 </td>
 
                                 <td>
@@ -407,51 +411,63 @@
 @push('script_2')
     
     <script>
-        $(document).on('click', '.update-wallet-status', function () {
-            let id = $(this).attr("data-id");
-
-            let status = 0;
-            if (jQuery(this).prop("checked") === true) {
-                status = 1;
+        function notifySuccess(message) {
+            if (typeof toastr !== 'undefined' && toastr.success) {
+                toastr.success(message);
+                return;
             }
-
             Swal.fire({
-                title: '{{\App\CPU\translate('Are you sure')}}?',
-                text: '{{\App\CPU\translate('want_to_change_status')}}',
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                        }
-                    });
-                    $.ajax({
-                        url: "{{ route('admin.user.update-wallet-status') }}",
-                        method: 'POST',
-                        data: {
-                            id: id,
-                            status: status
-                        },
-                        dataType:'json',
-                        success: function (response) {
-                            if(response.status){
-                                swal.fire('', '{{\App\CPU\translate('Status updated successfully')}}', 'success').then((result) => {
-                                    location.reload();
-                                });
-                            } else {
-                                swal.fire('', response.message, 'error');
-                            }
-                        }
-                    });
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+
+        function notifyError(message) {
+            if (typeof toastr !== 'undefined' && toastr.error) {
+                toastr.error(message);
+                return;
+            }
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: message,
+                showConfirmButton: false,
+                timer: 2500
+            });
+        }
+
+        $(document).on('change', '.update-wallet-status', function () {
+            let $toggle = $(this);
+            let id = $toggle.data('id');
+            let status = $toggle.prop('checked') ? 1 : 0;
+
+            $.ajax({
+                url: "{{ route('admin.user.update-wallet-status') }}",
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content') },
+                data: { id: id, status: status },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status) {
+                        notifySuccess(response.message || '{{ \App\CPU\translate('Status updated successfully') }}');
+                    } else {
+                        notifyError(response.message || '{{ \App\CPU\translate('Failed to update status') }}');
+                        $toggle.prop('checked', status !== 1);
+                    }
+                },
+                error: function (xhr) {
+                    let message = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message
+                        : '{{ \App\CPU\translate('Failed to update status') }}';
+                    notifyError(message);
+                    $toggle.prop('checked', status !== 1);
                 }
-            })
+            });
         });
 
         $(document).on('click', 'a.delete', function(e) {
@@ -471,51 +487,33 @@
             });
         });
 
-        $(document).on('click', '.update-account-status', function () {
-            let id = $(this).attr("data-id");
+        $(document).on('change', '.update-account-status', function () {
+            let $toggle = $(this);
+            let id = $toggle.data('id');
+            let status = $toggle.prop('checked') ? 1 : 0;
 
-            let status = 0;
-            if (jQuery(this).prop("checked") === true) {
-                status = 1;
-            }
-
-            Swal.fire({
-                title: '{{\App\CPU\translate('Are you sure')}}?',
-                text: '{{\App\CPU\translate('want_to_change_status')}}',
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                        }
-                    });
-                    $.ajax({
-                        url: "{{ route('admin.user.update-user-status') }}",
-                        method: 'POST',
-                        data: {
-                            id: id,
-                            status: status
-                        },
-                        dataType:'json',
-                        success: function (response) {
-                            if(response.status){
-                                swal.fire('', '{{\App\CPU\translate('Status updated successfully')}}', 'success').then((result) => {
-                                    location.reload();
-                                });
-                            } else {
-                                swal.fire('', response.message, 'error');
-                            }
-                        }
-                    });
+            $.ajax({
+                url: "{{ route('admin.user.update-user-status') }}",
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content') },
+                data: { id: id, status: status },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status) {
+                        notifySuccess(response.message || '{{ \App\CPU\translate('Status updated successfully') }}');
+                    } else {
+                        notifyError(response.message || '{{ \App\CPU\translate('Failed to update status') }}');
+                        $toggle.prop('checked', status !== 1);
+                    }
+                },
+                error: function (xhr) {
+                    let message = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message
+                        : '{{ \App\CPU\translate('Failed to update status') }}';
+                    notifyError(message);
+                    $toggle.prop('checked', status !== 1);
                 }
-            })
+            });
         });
     </script>
 @endpush

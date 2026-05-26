@@ -25,7 +25,7 @@
                     <div class="d-sm-flex align-items-sm-center">
                         <h3 class="page-header-title">{{ \App\CPU\translate('Name') }} #{{ $seller['f_name'] }} ({{ $seller['l_name'] }})</h3>
                         <span class="{{Session::get('direction') === "rtl" ? 'mr-2 mr-sm-3' : 'ml-2 ml-sm-3'}}">
-                            <i class="tio-date-range"></i> {{ \App\CPU\translate('Joined At')}} : {{date('d M Y H:i:s',strtotime($seller['created_at'])) }}
+                            <i class="tio-date-range"></i> {{ \App\CPU\translate('Joined At')}} : {{ \App\CPU\Helpers::formatAdminDateTime($seller['created_at']) }}
                         </span>
                     </div>
                 </div>

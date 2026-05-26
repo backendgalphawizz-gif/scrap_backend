@@ -109,7 +109,7 @@
                             </span>
                         </td>
 
-                        <td>{{ $row->created_at ? $row->created_at->format('d M Y, h:i A') : '—' }}</td>
+                        <td>{{ \App\CPU\Helpers::formatAdminDateTime($row->created_at, '—') }}</td>
 
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">

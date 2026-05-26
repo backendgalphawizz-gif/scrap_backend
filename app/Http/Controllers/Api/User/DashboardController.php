@@ -314,7 +314,7 @@ class DashboardController extends Controller
 
         $coins = $campaign->coins ?? 0;
 
-        CoinTransaction::create([
+        $rewardTransaction = CoinTransaction::create([
             'coin_wallet_id'   => $wallet->id,
             'transaction_id'   => 'TXN-' . $transaction->id,
             'campaign_id'      => $campaign->id,
@@ -327,6 +327,9 @@ class DashboardController extends Controller
             'transaction_type' => 'campaign_reward',
             'description'      => 'Pending campaign reward for ' . ($campaign->title ?? 'campaign'),
         ]);
+
+        $user = \App\Models\User::find($userId);
+        Helpers::logUserWalletTransaction('created', $rewardTransaction, $user, 'Pending campaign reward on join');
     }
 
     public function updateScrappedPosts(Request $request)

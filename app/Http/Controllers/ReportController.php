@@ -460,7 +460,7 @@ class ReportController extends Controller
                     $post->likes,
                     $post->comments,
                     $post->post_url,
-                    date('d M, Y', strtotime($post->created_at)),
+                    \App\CPU\Helpers::formatAdminDateTime($post->created_at),
                 ]);
             }
             fclose($handle);
@@ -709,8 +709,8 @@ class ReportController extends Controller
         return [
             'brand' => $campaign->brand->username ?? '-',
             'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
-            'start_date' => $campaign->start_date ? date('d-M-y', strtotime($campaign->start_date)) : '-',
-            'end_date' => $campaign->end_date ? date('d-M-y', strtotime($campaign->end_date)) : '-',
+            'start_date' => Helpers::formatAdminDate($campaign->start_date),
+            'end_date' => Helpers::formatAdminDate($campaign->end_date),
             'amount_with_gst' => $amountWithGst,
             'amount_without_gst' => $amountWithoutGst,
             'per_post_cost' => $perPostCost,

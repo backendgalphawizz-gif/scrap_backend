@@ -240,8 +240,8 @@
                                         <td class="pl-xl-5">
                                             ₹ {{  @$campaign->reward_per_user }}
                                         </td>
-                                        <td class="pl-xl-5">{{$campaign->start_date}}</td>
-                                        <td class="pl-xl-5">{{$campaign->end_date}}</td>
+                                        <td class="pl-xl-5">{{ \App\CPU\Helpers::formatAdminDate($campaign->start_date) }}</td>
+                                        <td class="pl-xl-5">{{ \App\CPU\Helpers::formatAdminDate($campaign->end_date) }}</td>
                                         <td class="pl-xl-5">{{$campaign->city}}</td>
                                         <td class="pl-xl-5">{{$campaign->state}}</td>
                                         <td class="pl-xl-5">{{$campaign->gender}}</td>

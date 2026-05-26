@@ -300,7 +300,7 @@
                                     <label class="badge badge-gradient-warning">{{ strtoupper($campaign->status) }}</label>
                                     @endif
                                 </td>
-                                <td>{{ date('d/m/Y', strtotime($campaign->start_date)) }}</td>
+                                <td>{{ \App\CPU\Helpers::formatAdminDate($campaign->start_date) }}</td>
                             </tr>
                             @empty
                             <tr>

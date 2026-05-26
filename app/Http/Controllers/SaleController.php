@@ -11,15 +11,13 @@ use App\Models\SaleCommissionLedger;
 use App\Services\PanValidationService;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
     function list(Request $request)
     {
         $sales = Sale::query()
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where('name', 'like', '%' . trim($request->name) . '%');
             })
@@ -46,12 +44,14 @@ class SaleController extends Controller
         $request->validate([
             'name'     => ['required', 'string', 'max:40', 'regex:/^[a-zA-Z ]+$/', 'regex:/^(?!.*(.)(\1{3,})).*/'],
             'email'    => ['required', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:150', 'unique:sales,email'],
-            'mobile'   => ['required', 'digits:10'],
+            // Unique among sales persons only — may match an existing user or brand contact number.
+            'mobile'   => ['required', 'digits:10', Rule::unique('sales', 'mobile')],
             'password' => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
             'image'    => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ], [
             'name.regex'   => 'Name must contain only letters and spaces, with no repeated characters.',
             'mobile.digits' => 'Mobile number must be exactly 10 digits.',
+            'mobile.unique' => 'This mobile number is already registered for another sales person.',
             'email.regex'  => 'Please enter a valid email address with a proper domain (e.g. user@example.com).',
             'email.unique' => 'This email is already registered.',
         ]);

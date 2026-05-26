@@ -170,8 +170,8 @@
                                         <td>{{ $key + 1 }}</td>
                                         <td>{{ $transaction->plan->title }}</td>
                                         <td>{{ $transaction->transaction_id }}</td>
-                                        <td>{{ date('d M, Y', strtotime($transaction->created_at)) }}</td>
-                                        <td>{{ date('d M, Y', strtotime($transaction->expiry_date)) }}</td>
+                                        <td>{{ \App\CPU\Helpers::formatAdminDate($transaction->created_at) }}</td>
+                                        <td>{{ \App\CPU\Helpers::formatAdminDate($transaction->expiry_date) }}</td>
                                     </tr>
                                 @endforeach
                                 </tbody>

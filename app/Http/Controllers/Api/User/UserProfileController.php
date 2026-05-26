@@ -271,6 +271,8 @@ class UserProfileController extends Controller
                 'description' => $request->input('description'),
             ]);
 
+            Helpers::logUserWalletTransaction('created', $transaction, $user, 'Wallet withdrawal request');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Debit request created successfully',
@@ -497,7 +499,7 @@ class UserProfileController extends Controller
             $wallet->balance += $feedbackCoin;
             $wallet->save();
 
-            $wallet->transactions()->create([
+            $feedbackTransaction = $wallet->transactions()->create([
                 'coin' => $feedbackCoin,
                 'amount' => 0,
                 'tds' => 0,
@@ -510,6 +512,8 @@ class UserProfileController extends Controller
                 'value' => 'Campaign Feedback',
                 'description' => 'Coins earned for submitting feedback on campaign: ' . $campaign->title,
             ]);
+
+            Helpers::logUserWalletTransaction('created', $feedbackTransaction, $user, 'Campaign feedback reward');
         }
 
         return response()->json([
@@ -598,6 +602,8 @@ class UserProfileController extends Controller
             'end_date'     => now()->addDays(1)->toDateString(),
         ]);
 
+        $usernameField = $platform . '_username';
+        $user->$usernameField = $request->username;
         $user->$statusField = SocialVerificationTransaction::STATUS_PENDING;
         $user->save();
 
@@ -653,13 +659,13 @@ class UserProfileController extends Controller
             'message' => 'Social verification status retrieved successfully',
             'data'    => [
                 'instagram' => [
-                    'status'       => $user->instagram_status,
-                    'username'     => $user->instagram_username,
+                    'status'       => $user->adminDisplaySocialStatus('instagram'),
+                    'username'     => $user->adminDisplaySocialUsername('instagram'),
                     'submitted_at' => $instagramTx?->submitted_at,
                 ],
                 'facebook' => [
-                    'status'       => $user->facebook_status,
-                    'username'     => $user->facebook_username,
+                    'status'       => $user->adminDisplaySocialStatus('facebook'),
+                    'username'     => $user->adminDisplaySocialUsername('facebook'),
                     'submitted_at' => $facebookTx?->submitted_at,
                 ],
                 'level'             => $level ? $level->name : null,

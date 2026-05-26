@@ -104,9 +104,6 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-2">
-                <div class="col-md-1">
-                    <input type="text" name="id" value="{{ request('id') }}" class="form-control" placeholder="ID">
-                </div>
                 <div class="col-md-2">
                     <input type="text" name="title" value="{{ request('title') }}" class="form-control" placeholder="Title">
                 </div>
@@ -177,9 +174,9 @@
                                 <span class="badge {{ $voucher->status === 'purchased' ? 'badge-warning' : 'badge-info' }}">{{ ucfirst($voucher->status) }}</span>
                             </td>
                             <td>
-                                {{ optional($voucher->valid_from)->format('d/m/Y') ?? 'N/A' }}
+                                {{ \App\CPU\Helpers::formatAdminDate($voucher->valid_from, 'N/A') }}
                                 to
-                                {{ optional($voucher->valid_to)->format('d/m/Y') ?? 'N/A' }}
+                                {{ \App\CPU\Helpers::formatAdminDate($voucher->valid_to, 'N/A') }}
                             </td>
                             <td>
                                 {{ (int) $voucher->used_count }} / {{ $voucher->max_uses ?: 'Unlimited' }}

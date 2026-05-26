@@ -187,8 +187,8 @@
                                     <td class="text-capitalize">{{\App\CPU\translate(str_replace('_',' ',$c['coupon_type']))}}</td>
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
-                                            <span>{{date('d M, y',strtotime($c['start_date']))}} - </span>
-                                            <span>{{date('d M, y',strtotime($c['expire_date']))}}</span>
+                                            <span>{{ \App\CPU\Helpers::formatAdminDate($c['start_date']) }} - </span>
+                                            <span>{{ \App\CPU\Helpers::formatAdminDate($c['expire_date']) }}</span>
                                         </div>
                                     </td>
                                     <td>

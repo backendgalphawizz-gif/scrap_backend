@@ -283,6 +283,8 @@ class VoucherController extends Controller
 
             DB::commit();
 
+            Helpers::logUserWalletTransaction('created', $transaction, $user, 'Voucher purchase');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Voucher purchased successfully.',

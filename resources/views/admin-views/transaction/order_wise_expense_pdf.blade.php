@@ -283,7 +283,7 @@
                             <table>
                                 <tr>
                                     <th class="bold black p-0 text-left" style="padding: 3px 0">{{\App\CPU\translate('Transaction_Date')}}</th>
-                                    <td class="p-0" style="padding: 3px 0">: {{ date_format($transaction->order_transaction->updated_at, 'd F Y') }}</td>
+                                    <td class="p-0" style="padding: 3px 0">: {{ \App\CPU\Helpers::formatAdminDate($transaction->order_transaction->updated_at) }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bold black p-0 text-left" style="padding: 3px 0">{{\App\CPU\translate('Order_ID')}}</th>

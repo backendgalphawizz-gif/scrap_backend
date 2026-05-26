@@ -154,7 +154,7 @@
                                             <span class="badge badge-{{ $txn->status == 'success' ? 'gradient-success' : 'gradient-danger' }}">
                                             {{ $txn->status }}</span>
                                         </td>
-                                        <td>{{ date('d M, Y', strtotime($txn->created_at)) }}</td>
+                                        <td>{{ \App\CPU\Helpers::formatAdminDateTime($txn->created_at) }}</td>
                                     </tr>
                                 @empty
                                     <tr>

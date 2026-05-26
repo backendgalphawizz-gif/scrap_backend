@@ -204,7 +204,7 @@
                                 @endforeach
                             </td>
                             <td>
-                                {{date('d M Y H:i:s',strtotime($review['created_at']))}}
+                                {{ \App\CPU\Helpers::formatAdminDateTime($review['created_at']) }}
                             </td>
                         </tr>
                     @endforeach

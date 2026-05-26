@@ -64,9 +64,13 @@ class ProcessSocialVerifications extends Command
         $transaction->save();
 
         $statusField = $transaction->platform . '_status';
+        $usernameField = $transaction->platform . '_username';
         if ($transaction->user_id) {
-            User::where('id', $transaction->user_id)
-                ->update([$statusField => SocialVerificationTransaction::STATUS_VERIFIED]);
+            $updates = [$statusField => SocialVerificationTransaction::STATUS_VERIFIED];
+            if (filled($transaction->username)) {
+                $updates[$usernameField] = $transaction->username;
+            }
+            User::where('id', $transaction->user_id)->update($updates);
         }
         if ($transaction->seller_id) {
             Seller::where('id', $transaction->seller_id)

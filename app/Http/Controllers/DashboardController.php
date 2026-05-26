@@ -232,9 +232,6 @@ class DashboardController extends Controller
 
     public function users(Request $request) {
         $customers = User::query()
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where('name', 'like', '%' . trim($request->name) . '%');
             })
@@ -252,11 +249,13 @@ class DashboardController extends Controller
     }
 
      public function viewUser(Request $request, $id) {
-        $user = User::with(['coinWallet'])->withCount('campaigns')->findOrFail($id);
+        $user = User::with(['coinWallet', 'socialVerifications'])
+            ->withCount('campaigns')
+            ->findOrFail($id);
         return view('admin-views.customer.view-user', compact('user'));
     }
     public function editUser(Request $request, $id) {
-        $user = User::find($id);
+        $user = User::with('socialVerifications')->findOrFail($id);
         return view('admin-views.customer.edit-customer', compact('user'));
     }
 
@@ -371,8 +370,18 @@ class DashboardController extends Controller
         $user->dob = $request->dob;
         $user->gender = $request->gender;
         $user->profession = $request->profession;
-        $user->instagram_username = $request->instagram_username;
-        $user->facebook_username = $request->facebook_username;
+        if ($request->has('instagram_username')) {
+            $user->instagram_username = trim((string) $request->instagram_username) ?: null;
+            if (! $user->instagram_username && ($user->instagram_status ?? 'not_submitted') !== 'not_submitted') {
+                $user->instagram_status = 'not_submitted';
+            }
+        }
+        if ($request->has('facebook_username')) {
+            $user->facebook_username = trim((string) $request->facebook_username) ?: null;
+            if (! $user->facebook_username && ($user->facebook_status ?? 'not_submitted') !== 'not_submitted') {
+                $user->facebook_status = 'not_submitted';
+            }
+        }
         $user->instagram_status = $request->instagram_status ?? $user->instagram_status;
         $user->facebook_status = $request->facebook_status ?? $user->facebook_status;
         $user->name = $request->name;
@@ -400,9 +409,6 @@ class DashboardController extends Controller
 }
     public function brands(Request $request) {
         $sellers = Seller::query()
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $name = trim($request->name);
                 $query->where(function ($q) use ($name) {
@@ -677,20 +683,31 @@ class DashboardController extends Controller
 
     public function updateUserWalletStatus(Request $request)
     {
+        $request->validate([
+            'id' => 'required|integer|exists:users,id',
+            'status' => 'required|in:0,1',
+        ]);
+
         $user = User::find($request->id);
-        if ($user && $user->coinWallet) {
-            $user->coinWallet->status = !$user->coinWallet->status; // toggle status
-            $user->coinWallet->save();
+        if (! $user) {
             return response()->json([
-                'status' => true,
-                'message' => 'Wallet status updated successfully',
-                'data' => new CommonResource($user->coinWallet)
+                'status' => false,
+                'message' => 'User not found',
+                'data' => [],
             ]);
         }
+
+        $wallet = CoinWallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+        $wallet->status = (int) $request->status;
+        $wallet->save();
+
         return response()->json([
-            'status' => false,
-            'message' => 'User or wallet not found',
-            'data' => []
+            'status' => true,
+            'message' => 'Wallet status updated successfully',
+            'data' => new CommonResource($wallet->fresh()),
         ]);
     }
 
@@ -724,10 +741,15 @@ class DashboardController extends Controller
 
     public function updateUserStatus(Request $request)
     {
+        $request->validate([
+            'id' => 'required|integer|exists:users,id',
+            'status' => 'required|in:0,1',
+        ]);
+
         $user = User::find($request->id);
         if ($user) {
-            $user->status = !$user->status; // toggle status
-             $user->save();
+            $user->status = (int) $request->status;
+            $user->save();
             return response()->json([
                 'status' => true,
                 'message' => 'User status updated successfully',
@@ -1024,6 +1046,13 @@ class DashboardController extends Controller
 
         $transaction->status = 'completed';
         $transaction->save();
+
+        Helpers::logUserWalletTransaction(
+            'approved',
+            $transaction,
+            auth()->user(),
+            'Withdrawal approved — ' . number_format((float) $transaction->coin, 2) . ' coins'
+        );
         
         // Send FCM notification to user about payout approval
         $user = \App\Models\User::find($wallet->user_id);
@@ -1077,6 +1106,14 @@ class DashboardController extends Controller
             }
             $transaction->save();
         });
+
+        $transaction->refresh();
+        Helpers::logUserWalletTransaction(
+            'rejected',
+            $transaction,
+            auth()->user(),
+            'Withdrawal rejected — ' . number_format((float) $transaction->coin, 2) . ' coins refunded'
+        );
 
         $user = \App\Models\User::find($wallet->user_id);
         if ($user && $user->fcm_id) {

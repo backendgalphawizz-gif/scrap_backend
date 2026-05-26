@@ -77,6 +77,25 @@
 <script src="{{ asset('assets/js/todolist.js') }}"></script>
 <script src="{{ asset('assets/js/jquery.cookie.js') }}"></script>
 <!-- endinject -->
+<script>
+window.adminFormatDate = function (datetime) {
+    if (!datetime) return '-';
+    const date = new Date(datetime);
+    if (isNaN(date.getTime())) return datetime;
+    const pad = (n) => String(n).padStart(2, '0');
+    return pad(date.getDate()) + '-' + pad(date.getMonth() + 1) + '-' + date.getFullYear();
+};
+window.adminFormatDateTime = function (datetime) {
+    if (!datetime) return '-';
+    const date = new Date(datetime);
+    if (isNaN(date.getTime())) return datetime;
+    const pad = (n) => String(n).padStart(2, '0');
+    let hours = date.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return pad(date.getDate()) + '-' + pad(date.getMonth() + 1) + '-' + date.getFullYear() + ' ' + hours + ':' + pad(date.getMinutes()) + ampm;
+};
+</script>
 <script src="{{ asset('assets/vendors/sweetalert2/sweetalert2.all.min.js') }}"></script>
 @stack('script')
 

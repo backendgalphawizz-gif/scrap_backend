@@ -194,10 +194,49 @@ class CampaignController extends Controller
         return redirect()->route('admin.campaign.list');
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $campaign = Campaign::with(['brand'])->where('id', $id)->first();
-        return view('admin-views.campaign.show', compact('campaign'));
+        $campaign = Campaign::with(['brand', 'category', 'subCategory', 'sale'])
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $participantStatuses = [
+            CampaignTransaction::STATUS_PENDING,
+            CampaignTransaction::STATUS_ACTIVE,
+            CampaignTransaction::STATUS_APPROVED,
+            CampaignTransaction::STATUS_COMPLETED,
+            CampaignTransaction::STATUS_REJECTED,
+            CampaignTransaction::STATUS_FLAGGED,
+            CampaignTransaction::STATUS_DELETED,
+        ];
+
+        $statusCounts = CampaignTransaction::where('campaign_id', $id)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $participantStatus = $request->get('participant_status', 'all');
+        if ($participantStatus !== 'all' && !in_array($participantStatus, $participantStatuses, true)) {
+            $participantStatus = 'all';
+        }
+
+        $participants = CampaignTransaction::with('user')
+            ->where('campaign_id', $id)
+            ->when($participantStatus !== 'all', fn ($q) => $q->where('status', $participantStatus))
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        $totalParticipants = (int) $statusCounts->sum();
+
+        return view('admin-views.campaign.show', compact(
+            'campaign',
+            'participants',
+            'statusCounts',
+            'participantStatuses',
+            'participantStatus',
+            'totalParticipants'
+        ));
     }
 
     public function status(Request $request)

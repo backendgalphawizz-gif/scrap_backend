@@ -80,7 +80,7 @@
                                         <span>{{\App\CPU\translate('not_found')}}</span>
                                         @endif
                                     </td>
-                                    <td>{{ date_format( $wr->created_at, 'd-M-Y, h:i:s A') }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDateTime($wr->created_at) }}</td>
                                     <td class="text-center">
                                         @if($wr->approved==0)
                                             <label class="badge badge-soft-primary">{{\App\CPU\translate('Pending')}}</label>

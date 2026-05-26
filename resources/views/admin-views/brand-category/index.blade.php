@@ -89,9 +89,6 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.brand-category.index') }}" class="row g-2 align-items-center">
-                <div class="col-6 col-md-1">
-                    <input type="text" name="id" value="{{ request('id') }}" class="form-control" placeholder="ID">
-                </div>
                 <div class="col-6 col-md-2">
                     <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Name">
                 </div>

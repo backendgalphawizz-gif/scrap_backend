@@ -35,6 +35,17 @@
         font-size: 18px;
         line-height: 1;
     }
+
+    .sale-status-switch .form-check-input {
+        width: 2.75em;
+        height: 1.4em;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .sale-status-switch .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+    }
 </style>
 @endpush
 
@@ -70,7 +81,6 @@
             <div class="d-flex justify-content-end mb-3">
                 <div class="sale-filter-scroll">
                     <form method="GET" action="{{ route('admin.sale.list') }}" class="sale-filter-form d-flex align-items-center justify-content-end gap-2">
-                        <input type="text" class="form-control" name="id" value="{{ request('id') }}" placeholder="ID" style="width: 110px;">
                         <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Name" style="width: 180px;">
                         <input type="text" class="form-control" name="mobile" value="{{ request('mobile') }}" placeholder="Mobile" style="width: 160px;">
                         <input type="text" class="form-control" name="email" value="{{ request('email') }}" placeholder="Email" style="width: 220px;">
@@ -95,7 +105,7 @@
                                         <th>{{\App\CPU\translate('mobile')}}</th>
                                         <th>{{\App\CPU\translate('brands')}}</th>
                                         <th>{{\App\CPU\translate('campaigns')}}</th>
-                                        <th>{{\App\CPU\translate('published')}}</th>
+                                        <th class="text-center">{{\App\CPU\translate('published')}}</th>
                                         <th class="text-center">{{\App\CPU\translate('action')}}</th>
                                     </tr>
                                 </thead>
@@ -113,12 +123,15 @@
                                         <td class="pl-xl-5">{{$sale->mobile}}</td>
                                         <td class="pl-xl-5">{{$sale->brand_count}}</td>
                                         <td class="pl-xl-5">{{$sale->campaign_count}}</td>
-                                        <td>
-                                            <label class="switcher">
-                                                <input type="checkbox" class="switcher_input status"
-                                                    id="{{$sale->id}}" <?php if ($sale->status == 'active') echo "checked" ?>>
-                                                <span class="switcher_control"></span>
-                                            </label>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch sale-status-switch d-inline-flex justify-content-center mb-0">
+                                                <input class="form-check-input sale-published-status"
+                                                    type="checkbox"
+                                                    role="switch"
+                                                    aria-label="{{ \App\CPU\translate('published') }}"
+                                                    data-id="{{ $sale->id }}"
+                                                    {{ $sale->status === 'active' ? 'checked' : '' }}>
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
@@ -185,29 +198,59 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
-    $(document).on('change', '.status', function() {
-        var id = $(this).attr("id");
-        var status = $(this).prop("checked") == true ? 1 : 0;
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-            }
+    function notifySuccess(message) {
+        if (typeof toastr !== 'undefined' && toastr.success) {
+            toastr.success(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
         });
+    }
+
+    function notifyError(message) {
+        if (typeof toastr !== 'undefined' && toastr.error) {
+            toastr.error(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: message,
+            showConfirmButton: false,
+            timer: 2500
+        });
+    }
+
+    $(document).on('change', '.sale-published-status', function() {
+        var $toggle = $(this);
+        var id = $toggle.data('id');
+        var status = $toggle.prop('checked') ? 1 : 0;
+
         $.ajax({
-            url: "{{route('admin.sale.status')}}",
+            url: "{{ route('admin.sale.status') }}",
             method: 'POST',
-            data: {
-                id: id,
-                status: status
-            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content') },
+            data: { id: id, status: status },
             success: function(data) {
-                if (data == 1) {
-                    swal.fire('', '{{ \App\CPU\translate('
-                        sale user active successfully!')}}', 'success')
+                if (parseInt(data, 10) === 1) {
+                    notifySuccess('{{ \App\CPU\translate('sale user active successfully!') }}');
                 } else {
-                    swal.fire('', '{{ \App\CPU\translate('
-                        sale user inactive successfully!')}}', 'success')
+                    notifySuccess('{{ \App\CPU\translate('sale user inactive successfully!') }}');
                 }
+            },
+            error: function(xhr) {
+                var message = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : '{{ \App\CPU\translate('Failed to update status') }}';
+                notifyError(message);
+                $toggle.prop('checked', status !== 1);
             }
         });
     });

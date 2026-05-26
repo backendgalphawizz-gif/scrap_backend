@@ -247,7 +247,7 @@
                                         @endforeach
                                         @endif
                                     </td>
-                                    <td>{{date('d-M-y',strtotime($r['created_at']))}}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($r['created_at']) }}</td>
                                     <td class="text-center">
                                         <div class="form-check form-switch custom-role-status-switch d-inline-flex justify-content-center mb-0">
                                             <input class="form-check-input custom-role-status"
