@@ -238,7 +238,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td>{{ date('d M Y', strtotime($review->created_at)) }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($review->created_at) }}</td>
                                     <td>
                                         <label class="switcher mx-auto">
                                             <input type="checkbox"

@@ -327,7 +327,7 @@
                         </tr>
                         <tr class="tablerowdiv">
                             <td class="tablerowdiv">Dated</td>
-                            <td class="tablerowdiv">{{ $order->created_at->format('d-m-Y') }}</td>
+                            <td class="tablerowdiv">{{ \App\CPU\Helpers::formatAdminDate($order->created_at) }}</td>
                         </tr>
                         <tr class="tablerowdiv">
                             <td class="tablerowdiv">Mode/Terms of Payment</td>

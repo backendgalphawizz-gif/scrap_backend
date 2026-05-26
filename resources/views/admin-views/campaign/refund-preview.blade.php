@@ -66,7 +66,7 @@
                         <dd class="col-sm-7"><span class="badge bg-danger">{{ ucfirst($campaign->status) }}</span></dd>
 
                         <dt class="col-sm-5 text-muted">{{ \App\CPU\translate('Stopped At') }}</dt>
-                        <dd class="col-sm-7">{{ $campaign->stopped_at ? \Carbon\Carbon::parse($campaign->stopped_at)->format('d/m/Y H:i') : 'N/A' }}</dd>
+                        <dd class="col-sm-7">{{ \App\CPU\Helpers::formatAdminDateTime($campaign->stopped_at, 'N/A') }}</dd>
 
                         <dt class="col-sm-5 text-muted">{{ \App\CPU\translate('Total Slots') }}</dt>
                         <dd class="col-sm-7">{{ $campaign->total_user_required }}</dd>
@@ -258,7 +258,7 @@
                     <i class="mdi mdi-check-circle me-1"></i>
                     {{ \App\CPU\translate('Refund of') }} <strong>₹{{ number_format($refundEntry->refunded_amount, 2) }}</strong>
                     {{ \App\CPU\translate('was completed on') }}
-                    <strong>{{ $refundEntry->completed_at ? $refundEntry->completed_at->format('d/m/Y H:i') : 'N/A' }}</strong>.
+                    <strong>{{ \App\CPU\Helpers::formatAdminDateTime($refundEntry->completed_at, 'N/A') }}</strong>.
                     @if($refundEntry->admin_note)
                         <hr class="my-2">
                         <small><strong>{{ \App\CPU\translate('Note:') }}</strong> {{ $refundEntry->admin_note }}</small>

@@ -13,9 +13,6 @@ class BrandCategoryController extends Controller
     {
         $brandCategories = BrandCategory::query()
             ->with('parent:id,name')
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where('name', 'like', '%' . trim($request->name) . '%');
             })

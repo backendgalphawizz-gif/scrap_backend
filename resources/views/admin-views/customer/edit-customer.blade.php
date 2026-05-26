@@ -9,11 +9,9 @@
 @section('content')
 
 <div class="content-wrapper">
-    @php($userImage = blank($user->image)
-    ? asset('public/assets/front-end/img/image-place-holder.png')
-    : (\Illuminate\Support\Str::startsWith($user->image, ['http://', 'https://'])
-    ? $user->image
-    : asset('storage/profile/' . ltrim($user->image, '/'))))
+    @php($userImage = $user->profileImageUrl())
+    @php($igPendingTx = $user->latestSocialVerification('instagram'))
+    @php($fbPendingTx = $user->latestSocialVerification('facebook'))
 
     <!-- Page Header -->
     <div class="page-header">
@@ -153,8 +151,14 @@
                                     <label class="form-label">Instagram Username</label>
                                     <input type="text"
                                         name="instagram_username"
-                                        value="{{ $user->instagram_username ?? old('instagram_username') }}"
-                                        class="form-control">
+                                        value="{{ old('instagram_username', $user->hasSubmittedSocial('instagram') ? $user->resolvedSocialUsername('instagram') : '') }}"
+                                        class="form-control"
+                                        placeholder="Not submitted by user">
+                                    @if($igPendingTx && $igPendingTx->status === 'pending')
+                                        <small class="text-muted d-block mt-1">Pending verification request: {{ '@' . ltrim($igPendingTx->username, '@') }}</small>
+                                    @elseif(!$user->hasSubmittedSocial('instagram'))
+                                        <small class="text-muted d-block mt-1">User has not submitted Instagram details in the app yet.</small>
+                                    @endif
                                 </div>
                             </div>
 
@@ -176,8 +180,14 @@
                                     <label class="form-label">Facebook Username</label>
                                     <input type="text"
                                         name="facebook_username"
-                                        value="{{ $user->facebook_username ?? old('facebook_username') }}"
-                                        class="form-control">
+                                        value="{{ old('facebook_username', $user->hasSubmittedSocial('facebook') ? $user->resolvedSocialUsername('facebook') : '') }}"
+                                        class="form-control"
+                                        placeholder="Not submitted by user">
+                                    @if($fbPendingTx && $fbPendingTx->status === 'pending')
+                                        <small class="text-muted d-block mt-1">Pending verification request: {{ '@' . ltrim($fbPendingTx->username, '@') }}</small>
+                                    @elseif(!$user->hasSubmittedSocial('facebook'))
+                                        <small class="text-muted d-block mt-1">User has not submitted Facebook details in the app yet.</small>
+                                    @endif
                                 </div>
                             </div>
 

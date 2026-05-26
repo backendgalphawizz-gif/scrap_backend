@@ -225,7 +225,7 @@
                                 </span>
                             </td>
                             <td>{{ str_replace('_',' ',$wt->reference) }}</td>
-                            <td class="text-center">{{date('Y/m/d '.config('timeformat'), strtotime($wt->created_at))}}</td>
+                            <td class="text-center">{{ \App\CPU\Helpers::formatAdminDateTime($wt->created_at) }}</td>
                         </tr>
                     @endforeach
                     </tbody>

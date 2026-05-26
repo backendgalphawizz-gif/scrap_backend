@@ -304,19 +304,7 @@ $(document).on('click', '.historyButton', function () {
                             return lines;
                         };
 
-                        const formatDateTime = (datetime) => {
-                            if (!datetime) return '-';
-                            const date = new Date(datetime);
-                            if (isNaN(date)) return datetime; 
-                            const options = { day: '2-digit', month: 'short', year: 'numeric' };
-                            const formattedDate = date.toLocaleDateString('en-GB', options);
-                            const formattedTime = date.toLocaleTimeString('en-GB', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                            });
-                            return `${formattedDate.replace(/ /g, '-')} ${formattedTime}`;
-                        };
+                        const formatDateTime = (datetime) => window.adminFormatDateTime(datetime);
 
                         html += `
                             <tr>

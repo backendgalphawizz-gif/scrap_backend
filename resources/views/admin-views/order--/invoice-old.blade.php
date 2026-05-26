@@ -320,7 +320,7 @@
                         </tr>
                         <tr class="tablerowdiv">
                             <td class="tablerowdiv">Dated</td>
-                            <td class="tablerowdiv">{{ $order->created_at->format('d-m-Y') }}</td>
+                            <td class="tablerowdiv">{{ \App\CPU\Helpers::formatAdminDate($order->created_at) }}</td>
                         </tr>
                         <tr class="tablerowdiv">
                             <td class="tablerowdiv">Mode/Terms of Payment</td>
@@ -424,7 +424,7 @@
                     @endif
                 </th>
                 <th class="content-position-y text-right">
-                    <h4 class="fz-14">{{\App\CPU\translate('date')}} : {{date('d-m-Y h:i:s a',strtotime($order['created_at']))}}</h4>
+                    <h4 class="fz-14">{{\App\CPU\translate('date')}} : {{ \App\CPU\Helpers::formatAdminDateTime($order['created_at']) }}</h4>
                 </th>
             </tr>
         </table> -->

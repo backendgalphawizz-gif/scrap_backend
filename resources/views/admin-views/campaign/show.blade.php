@@ -133,11 +133,11 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('Start Date') }}</small>
-                                    <strong>{{ $campaign->start_date ? \Carbon\Carbon::parse($campaign->start_date)->format('d/m/Y') : 'N/A' }}</strong>
+                                    <strong>{{ \App\CPU\Helpers::formatAdminDate($campaign->start_date, 'N/A') }}</strong>
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('End Date') }}</small>
-                                    <strong>{{ $campaign->end_date ? \Carbon\Carbon::parse($campaign->end_date)->format('d/m/Y') : 'N/A' }}</strong>
+                                    <strong>{{ \App\CPU\Helpers::formatAdminDate($campaign->end_date, 'N/A') }}</strong>
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">{{ \App\CPU\translate('Left Days') }}</small>
@@ -191,7 +191,7 @@
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign User Budget') }}</small><strong>{{ $campaign->campaign_user_budget ?? '0' }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign Budget With GST') }}</small><strong>{{ $campaign->compign_budget_with_gst ?? '0' }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Generate GST Invoice') }}</small><strong>{{ $campaign->generate_gst_invoice ? \App\CPU\translate('Yes') : \App\CPU\translate('No') }}</strong></div>
-                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Shared') }}</small><strong>{{ $campaign->campaign_transactions->count() }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Shared') }}</small><strong>{{ $totalParticipants ?? 0 }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Occupied Slots') }}</small><strong>{{ $campaign->occupied_slots }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Available Slots') }}</small><strong>{{ $campaign->available_slots }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Slot Full') }}</small><strong>{{ $campaign->is_slot_full ? 'Yes' : 'No' }}</strong></div>
@@ -201,9 +201,106 @@
                             </div>
                         </div>
 
-                       
+                        <div class="col-12">
+                            <hr class="my-0">
+                        </div>
 
-                        
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">{{ \App\CPU\translate('Participants') }}</h5>
+                            <p class="text-muted small mb-3">
+                                {{ \App\CPU\translate('Click a status to show users with that participation status.') }}
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <a href="{{ route('admin.campaign.show', $campaign->id) }}"
+                                   class="badge text-decoration-none {{ ($participantStatus ?? 'all') === 'all' ? 'bg-primary' : 'badge-soft-primary text-dark' }} px-3 py-2">
+                                    {{ \App\CPU\translate('All') }} ({{ $totalParticipants ?? 0 }})
+                                </a>
+                                @foreach($participantStatuses ?? [] as $status)
+                                    @php($count = ($statusCounts[$status] ?? 0))
+                                    <a href="{{ route('admin.campaign.show', ['id' => $campaign->id, 'participant_status' => $status]) }}"
+                                       class="badge text-decoration-none px-3 py-2 participant-status-badge participant-status-{{ $status }} {{ ($participantStatus ?? 'all') === $status ? 'active' : '' }}">
+                                        {{ ucfirst($status) }} ({{ $count }})
+                                    </a>
+                                @endforeach
+                                @foreach(($statusCounts ?? collect()) as $status => $count)
+                                    @if(!in_array($status, $participantStatuses ?? [], true))
+                                        <a href="{{ route('admin.campaign.show', ['id' => $campaign->id, 'participant_status' => $status]) }}"
+                                           class="badge text-decoration-none px-3 py-2 participant-status-badge participant-status-other {{ ($participantStatus ?? 'all') === $status ? 'active' : '' }}">
+                                            {{ ucfirst($status) }} ({{ $count }})
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="text-capitalize">
+                                        <tr>
+                                            <th>{{ \App\CPU\translate('SL') }}</th>
+                                            <th>{{ \App\CPU\translate('User') }}</th>
+                                            <th>{{ \App\CPU\translate('Email') }}</th>
+                                            <th>{{ \App\CPU\translate('Platform') }}</th>
+                                            <th>{{ \App\CPU\translate('Coins') }}</th>
+                                            <th>{{ \App\CPU\translate('Post URL') }}</th>
+                                            <th>{{ \App\CPU\translate('Start Date') }}</th>
+                                            <th>{{ \App\CPU\translate('End Date') }}</th>
+                                            <th>{{ \App\CPU\translate('Status') }}</th>
+                                            <th>{{ \App\CPU\translate('Joined') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($participants as $key => $participant)
+                                            <tr>
+                                                <td>{{ $participants->firstItem() + $key }}</td>
+                                                <td>
+                                                    @if($participant->user)
+                                                        <a href="{{ route('admin.user.view', $participant->user_id) }}" class="title-color hover-c1">
+                                                            {{ $participant->user->name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">{{ \App\CPU\translate('User not found') }} (#{{ $participant->user_id }})</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $participant->user->email ?? '—' }}</td>
+                                                <td>{{ $participant->shared_on ?: '—' }}</td>
+                                                <td>{{ $participant->earning ?? '0' }}</td>
+                                                <td>
+                                                    @if($participant->post_url)
+                                                        <a href="{{ $participant->post_url }}" target="_blank" rel="noopener noreferrer" class="text-truncate d-inline-block" style="max-width:160px;">
+                                                            {{ \App\CPU\translate('View') }}
+                                                        </a>
+                                                    @else
+                                                        —
+                                                    @endif
+                                                </td>
+                                                <td>{{ \App\CPU\Helpers::formatAdminDate($participant->start_date) }}</td>
+                                                <td>{{ \App\CPU\Helpers::formatAdminDate($participant->end_date) }}</td>
+                                                <td>
+                                                    <span class="badge participant-row-status participant-status-{{ $participant->status }}">
+                                                        {{ ucfirst($participant->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ \App\CPU\Helpers::formatAdminDateTime($participant->created_at) }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="10" class="text-center text-muted py-4">
+                                                    @if(($participantStatus ?? 'all') !== 'all')
+                                                        {{ \App\CPU\translate('No participants found for this status.') }}
+                                                    @else
+                                                        {{ \App\CPU\translate('No participants yet.') }}
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            @if($participants->hasPages())
+                                <div class="d-flex justify-content-end">
+                                    {!! $participants->onEachSide(1)->links('vendor.pagination.premium') !!}
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -272,8 +369,8 @@
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('User Percentage (%)') }}</small><strong>{{ $campaign->user_percentage ?? '0' }}</strong></div>
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Sales Percentage (%)') }}</small><strong>{{ $campaign->sales_percentage ?? '0' }}</strong></div>
                                 <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Feedback Percentage (%)') }}</small><strong>{{ $campaign->feedback_percentage ?? '0' }}</strong></div>
-                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Created Date') }}</small><strong>{{ $campaign->created_at ? $campaign->created_at->format('d/m/Y \a\t g:i A') : 'N/A' }}</strong></div>
-                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Updated Date') }}</small><strong>{{ $campaign->updated_at ? $campaign->updated_at->format('d/m/Y \a\t g:i A') : 'N/A' }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Created Date') }}</small><strong>{{ \App\CPU\Helpers::formatAdminDateTime($campaign->created_at, 'N/A') }}</strong></div>
+                                <div class="col-md-12"><small class="text-muted d-block">{{ \App\CPU\translate('Updated Date') }}</small><strong>{{ \App\CPU\Helpers::formatAdminDateTime($campaign->updated_at, 'N/A') }}</strong></div>
                             </div>
                 </div>
             </div>
@@ -382,5 +479,34 @@
     .campaign-zoom-trigger {
         display: block;
     }
+
+    .participant-status-badge {
+        background: #eef2f6;
+        color: #4a5568;
+        border: 1px solid #dde3ea;
+        cursor: pointer;
+    }
+
+    .participant-status-badge.active {
+        color: #fff !important;
+        border-color: transparent;
+    }
+
+    .participant-status-badge.participant-status-pending.active { background: #f59e0b; }
+    .participant-status-badge.participant-status-active.active { background: #3b82f6; }
+    .participant-status-badge.participant-status-approved.active { background: #10b981; }
+    .participant-status-badge.participant-status-completed.active { background: #059669; }
+    .participant-status-badge.participant-status-rejected.active { background: #ef4444; }
+    .participant-status-badge.participant-status-flagged.active { background: #8b5cf6; }
+    .participant-status-badge.participant-status-deleted.active { background: #6b7280; }
+    .participant-status-badge.participant-status-other.active { background: #64748b; }
+
+    .participant-row-status.participant-status-pending { background: #fef3c7; color: #92400e; }
+    .participant-row-status.participant-status-active { background: #dbeafe; color: #1e40af; }
+    .participant-row-status.participant-status-approved { background: #d1fae5; color: #065f46; }
+    .participant-row-status.participant-status-completed { background: #a7f3d0; color: #047857; }
+    .participant-row-status.participant-status-rejected { background: #fee2e2; color: #991b1b; }
+    .participant-row-status.participant-status-flagged { background: #ede9fe; color: #5b21b6; }
+    .participant-row-status.participant-status-deleted { background: #f3f4f6; color: #374151; }
 </style>
 @endpush

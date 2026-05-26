@@ -264,7 +264,7 @@ class ProcessScrapeResults extends Command
             ['balance' => 0]
         );
 
-        return CoinTransaction::firstOrCreate([
+        $rewardTransaction = CoinTransaction::firstOrCreate([
             'coin_wallet_id'   => $wallet->id,
             'campaign_id'      => $transaction->campaign_id,
             'transaction_type' => 'campaign_reward',
@@ -282,6 +282,13 @@ class ProcessScrapeResults extends Command
             'transaction_type' => 'campaign_reward',
             'description'      => 'Pending campaign reward for ' . ($transaction->campaign->title ?? 'campaign'),
         ]);
+
+        if ($rewardTransaction->wasRecentlyCreated) {
+            $user = User::find($transaction->user_id);
+            Helpers::logUserWalletTransaction('created', $rewardTransaction, $user, 'Pending campaign reward created');
+        }
+
+        return $rewardTransaction;
     }
 
     private function markFlagged(CampaignTransaction $transaction): void
@@ -309,6 +316,9 @@ class ProcessScrapeResults extends Command
             $rewardTransaction->status = 'rejected';
             $rewardTransaction->description = 'Campaign reward cancelled for ' . ($transaction->campaign->title ?? 'campaign');
             $rewardTransaction->save();
+
+            $user = User::find($transaction->user_id);
+            Helpers::logUserWalletTransaction('rejected', $rewardTransaction, $user, 'Campaign reward cancelled');
         }
         
         // Send FCM notification to user about post being deleted
@@ -348,6 +358,9 @@ class ProcessScrapeResults extends Command
         $rewardTransaction->description = 'Campaign reward released for ' . ($transaction->campaign->title ?? 'campaign');
         $rewardTransaction->save();
 
+        $postOwner = User::find($transaction->user_id);
+        Helpers::logUserWalletTransaction('completed', $rewardTransaction, $postOwner, 'Campaign reward released');
+
         // Referral bonus: reward the user who referred this user when their post is approved
         $referralCoin = $transaction->campaign->referral_coin ?? 0;
         if ($referralCoin > 0) {
@@ -362,7 +375,7 @@ class ProcessScrapeResults extends Command
                     $referrerWallet->balance += $referralCoin;
                     $referrerWallet->save();
 
-                    CoinTransaction::create([
+                    $referralTransaction = CoinTransaction::create([
                         'coin_wallet_id'   => $referrerWallet->id,
                         'transaction_id'   => 'REF-' . $transaction->id,
                         'campaign_id'      => $transaction->campaign_id,
@@ -375,6 +388,8 @@ class ProcessScrapeResults extends Command
                         'transaction_type' => 'referral_reward',
                         'description'      => 'Referral bonus for campaign: ' . ($transaction->campaign->title ?? ''),
                     ]);
+
+                    Helpers::logUserWalletTransaction('created', $referralTransaction, $referrer, 'Referral bonus credited');
                 }
             }
         }

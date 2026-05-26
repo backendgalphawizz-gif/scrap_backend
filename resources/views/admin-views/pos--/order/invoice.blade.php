@@ -87,7 +87,7 @@
         </div>
         <div class="col-6">
             <h5 style="font-weight: lighter">
-                {{date('d/M/Y h:i a',strtotime($order['created_at']))}}
+                {{ \App\CPU\Helpers::formatAdminDateTime($order['created_at']) }}
             </h5>
         </div>
         @if($order->customer)

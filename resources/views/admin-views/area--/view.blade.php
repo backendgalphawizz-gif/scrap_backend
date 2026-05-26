@@ -122,7 +122,7 @@
                                     <td>{{$category['name']}}</td>
                                     <td>{{$category['city']}}</td>
                                     <td>
-                                        {{ \Carbon\carbon::parse($category['created_at'])->format('Y-m-d')}}
+                                        {{ \App\CPU\Helpers::formatAdminDate($category['created_at']) }}
                                     </td>
                                    
                                     <td>

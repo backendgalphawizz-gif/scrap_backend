@@ -121,11 +121,11 @@
                                 </tr>
                                 <tr>
                                     <th>{{ \App\CPU\translate('created_at') }}</th>
-                                    <td>{{ $sale->created_at ?? '-' }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDateTime($sale->created_at) }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ \App\CPU\translate('updated_at') }}</th>
-                                    <td>{{ $sale->updated_at ?? '-' }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDateTime($sale->updated_at) }}</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="flex-start flex-wrap">
                                     <div><h5>{{\App\CPU\translate('request_time')}} : </h5></div>
-                                    <div class="mx-1">{{ date_format( $details->created_at, 'd-M-Y, h:i:s A') }}</div>
+                                    <div class="mx-1">{{ \App\CPU\Helpers::formatAdminDateTime($details->created_at) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-2 mb-md-0">

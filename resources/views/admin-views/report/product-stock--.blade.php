@@ -134,7 +134,7 @@
                                         </a>
                                     </div>
                                 </td>
-                                <td>{{ date('d M Y, h:i:s a', $data['updated_at'] ? strtotime($data['updated_at']) : null) }}</td>
+                                <td>{{ \App\CPU\Helpers::formatAdminDateTime($data['updated_at'] ?? null) }}</td>
                                 <td class="text-center">{{$data['current_stock']}}</td>
                                 <td>
                                     <div class="text-center">

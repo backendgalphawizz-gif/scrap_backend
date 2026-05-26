@@ -97,7 +97,7 @@
                                         {{ \App\CPU\BackEndHelper::set_symbol(\App\CPU\BackEndHelper::usd_to_currency($transaction->credit)) }}
                                     </td>
                                     <td>
-                                        {{ date_format( $transaction->created_at, 'd-M-Y, h:i:s A') }}
+                                        {{ \App\CPU\Helpers::formatAdminDateTime($transaction->created_at) }}
                                     </td>
 
                                 </tr>

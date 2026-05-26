@@ -63,7 +63,7 @@
                         </td>
                         <td><span class="badge badge-warning">{{ $a->total_attempt ?? 0 }}</span></td>
 
-                        <td>{{ $a->created_at->format('d M Y') }}</td>
+                        <td>{{ \App\CPU\Helpers::formatAdminDate($a->created_at) }}</td>
                     </tr>
                 @endforeach
                 </tbody>

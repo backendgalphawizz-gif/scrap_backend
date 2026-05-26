@@ -91,6 +91,79 @@ class User extends Authenticatable
         return $this->hasMany(SocialVerificationTransaction::class, 'user_id');
     }
 
+    public function latestSocialVerification(string $platform): ?SocialVerificationTransaction
+    {
+        return $this->socialVerifications()
+            ->where('platform', $platform)
+            ->latest()
+            ->first();
+    }
+
+    /** Raw DB value — avoids the image accessor always returning a default URL. */
+    public function rawImagePath(): ?string
+    {
+        $value = $this->attributes['image'] ?? null;
+
+        return filled($value) ? $value : null;
+    }
+
+    public function profileImageUrl(): string
+    {
+        $value = $this->rawImagePath();
+        if (! $value) {
+            return asset('public/assets/front-end/img/image-place-holder.png');
+        }
+
+        return str_starts_with($value, 'http://') || str_starts_with($value, 'https://')
+            ? $value
+            : asset('storage/profile/' . ltrim($value, '/'));
+    }
+
+    public function resolvedSocialUsername(string $platform): ?string
+    {
+        $field = $platform . '_username';
+        $value = trim((string) ($this->{$field} ?? ''));
+        if ($value !== '') {
+            return $value;
+        }
+
+        $fromVerification = trim((string) ($this->latestSocialVerification($platform)?->username ?? ''));
+
+        return $fromVerification !== '' ? $fromVerification : null;
+    }
+
+    /** User started verification or has a non–not_submitted status. */
+    public function hasSubmittedSocial(string $platform): bool
+    {
+        $statusField = $platform . '_status';
+        $status = (string) ($this->{$statusField} ?? 'not_submitted');
+
+        if ($status !== 'not_submitted') {
+            return true;
+        }
+
+        return $this->latestSocialVerification($platform) !== null;
+    }
+
+    /** Username shown in admin only when the user actually submitted social details. */
+    public function adminDisplaySocialUsername(string $platform): ?string
+    {
+        if (! $this->hasSubmittedSocial($platform)) {
+            return null;
+        }
+
+        return $this->resolvedSocialUsername($platform);
+    }
+
+    public function adminDisplaySocialStatus(string $platform): string
+    {
+        if (! $this->hasSubmittedSocial($platform)) {
+            return 'not_submitted';
+        }
+
+        return (string) ($this->{$platform . '_status'} ?? 'not_submitted');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

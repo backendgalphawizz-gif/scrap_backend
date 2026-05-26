@@ -15,9 +15,6 @@ class VoucherController extends Controller
     public function index(Request $request)
     {
         $vouchers = Voucher::with(['voucherBrand', 'sale'])
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('title'), function ($query) use ($request) {
                 $query->where('title', 'like', '%' . trim($request->title) . '%');
             })

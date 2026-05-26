@@ -56,7 +56,7 @@
                                     <td>{{$subscription_list->firstItem()+$key}}</td>
                                     <td>{{$item->email}}</td>
                                     <td>
-                                        {{date('d M Y, h:i A',strtotime($item->created_at))}}
+                                        {{ \App\CPU\Helpers::formatAdminDateTime($item->created_at) }}
                                     </td>
                                 </tr>
                             @endforeach

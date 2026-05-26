@@ -672,7 +672,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
       </div>
       </td>
       <td>
-      {{date('d M Y H:i:s',strtotime($review['updated_at']))}}
+      {{ \App\CPU\Helpers::formatAdminDateTime($review['updated_at']) }}
       </td>
       </tr>
       @endif

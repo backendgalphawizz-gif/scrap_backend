@@ -23,11 +23,11 @@
             @endif
             <div class="coupon-info-item">
                 <span>{{\App\CPU\translate('start_date')}} : </span>
-                <span id="start_date">{{ \Carbon\Carbon::parse($coupon->start_date)->format('dS M Y') }}</span>
+                <span id="start_date">{{ \App\CPU\Helpers::formatAdminDate($coupon->start_date) }}</span>
             </div>
             <div class="coupon-info-item">
                 <span>{{\App\CPU\translate('expire_date')}} : </span>
-                <span id="expire_date">{{ \Carbon\Carbon::parse($coupon->expire_date)->format('dS M Y') }}</span>
+                <span id="expire_date">{{ \App\CPU\Helpers::formatAdminDate($coupon->expire_date) }}</span>
             </div>
             <div class="coupon-info-item">
                 <span>{{\App\CPU\translate('discount_bearer')}} : </span>

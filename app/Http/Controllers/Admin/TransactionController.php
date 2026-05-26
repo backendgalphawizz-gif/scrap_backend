@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\CPU\Helpers;
 use App\Http\Controllers\Controller;
 use App\Models\CampaignTransaction;
 use App\Models\CoinTransaction;
@@ -212,7 +213,7 @@ class TransactionController extends Controller
             'flow' => $row->type,
             'status' => $row->status,
             'details' => $row->description ?: ($row->transaction_type ?? '-'),
-            'date' => $row->created_at?->format('d M Y, h:i A') ?? '-',
+            'date' => Helpers::formatAdminDateTime($row->created_at),
             'sort_at' => $row->created_at ?? Carbon::now(),
             'link' => route('admin.user.wallet', ['search' => $row->transaction_id]),
         ];
@@ -230,7 +231,7 @@ class TransactionController extends Controller
             'flow' => $row->type,
             'status' => $row->status,
             'details' => $row->remarks ?? '-',
-            'date' => $row->created_at?->format('d M Y, h:i A') ?? '-',
+            'date' => Helpers::formatAdminDateTime($row->created_at),
             'sort_at' => $row->created_at ?? Carbon::now(),
             'link' => route('admin.sale.wallet-transactions', ['search' => $row->id]),
         ];
@@ -248,7 +249,7 @@ class TransactionController extends Controller
             'flow' => $row->reference_type ?? '-',
             'status' => $row->status,
             'details' => ($row->campaign->title ?? 'N/A') . ' / ' . ($row->brand->username ?? 'N/A'),
-            'date' => $row->created_at?->format('d M Y, h:i A') ?? '-',
+            'date' => Helpers::formatAdminDateTime($row->created_at),
             'sort_at' => $row->created_at ?? Carbon::now(),
             'link' => route('admin.sale.ledger-transactions', ['search' => $row->id]),
         ];
@@ -266,7 +267,7 @@ class TransactionController extends Controller
             'flow' => $row->shared_on ?? '-',
             'status' => $row->status,
             'details' => ($row->campaign->title ?? 'N/A') . ' / ' . ($row->campaign->brand->username ?? 'N/A'),
-            'date' => $row->created_at?->format('d M Y, h:i A') ?? '-',
+            'date' => Helpers::formatAdminDateTime($row->created_at),
             'sort_at' => $row->created_at ?? Carbon::now(),
             'link' => route('admin.campaigns-transactions.list', ['search' => $row->unique_code, 'user_id' => $row->user_id]),
         ];

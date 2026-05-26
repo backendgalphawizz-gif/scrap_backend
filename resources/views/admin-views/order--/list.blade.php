@@ -287,8 +287,7 @@
                                                 <a class="title-color" href="{{route('admin.orders.details',['id'=>$order['id']])}}">{{$order['id']}}</a>
                                             </td>
                                             <td>
-                                                <div>{{date('d M Y',strtotime($order['created_at']))}},</div>
-                                                <div>{{ date("h:i A",strtotime($order['created_at'])) }}</div>
+                                                <div>{{ \App\CPU\Helpers::formatAdminDateTime($order['created_at']) }}</div>
                                             </td>
                                             <td>
                                                 @if($order->customer_id == 0)

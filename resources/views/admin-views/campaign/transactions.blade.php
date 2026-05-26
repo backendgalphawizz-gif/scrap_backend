@@ -102,14 +102,14 @@
                                     <td>{{ $txn->user->name ?? '' }}</td>
                                     <td>{{ $txn->shared_on }}</td>
                                     <td>{{ $txn->earning }}</td>
-                                    <td>{{ $txn->start_date }}</td>
-                                    <td>{{ $txn->end_date }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($txn->start_date) }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($txn->end_date) }}</td>
                                     <td>
                                         <span class="badge badge-{{ ($txn->status == 'active' || $txn->status == 'completed') ? 'gradient-success' : 'gradient-danger' }}">
                                             {{ ucwords($txn->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ date('d/m/Y', strtotime($txn->created_at)) }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDateTime($txn->created_at) }}</td>
                                 </tr>
                                 @empty
                                 <tr>

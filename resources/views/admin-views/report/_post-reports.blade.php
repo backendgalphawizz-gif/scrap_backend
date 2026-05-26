@@ -230,7 +230,7 @@
                                         -
                                     @endif
                                 </td>
-                                <td>{{ date('d M, Y', strtotime($post->created_at)) }}</td>
+                                <td>{{ \App\CPU\Helpers::formatAdminDateTime($post->created_at) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

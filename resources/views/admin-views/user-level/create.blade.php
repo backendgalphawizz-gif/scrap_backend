@@ -29,9 +29,11 @@
                     <div class="col">
                         <label for="range_min" class="form-label">Level Range Min</label>
                         <input type="number" class="form-control" id="range_min" name="range_min"
-                               value="{{ old('range_min', $nextMin) }}" min="0" required>
+                               value="{{ old('range_min', $nextMin) }}" min="0" required readonly>
                         @if($nextMin > 0)
-                            <small class="text-muted">Starts from {{ $nextMin }} (after previous level's max)</small>
+                            <small class="text-muted">Must start at {{ $nextMin }} (e.g. {{ $nextMin }} - 1000, not {{ $nextMin - 1 }} - 1000)</small>
+                        @else
+                            <small class="text-muted">First level must start at 0 (e.g. 0 - 500)</small>
                         @endif
                     </div>
                     <div class="col">

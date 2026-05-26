@@ -188,7 +188,7 @@
                                                 <a href="{{route('admin.sellers.order-details',['order_id'=>$order['id'],'seller_id'=>$order['seller_id']])}}"
                                                    class="title-color hover-c1">{{$order['id']}}</a>
                                             </td>
-                                            <td>{{date('d M Y',strtotime($order['created_at']))}}</td>
+                                            <td>{{ \App\CPU\Helpers::formatAdminDate($order['created_at']) }}</td>
                                             <td>
                                                 @if($order->customer)
                                                     <a class="text-body text-capitalize"

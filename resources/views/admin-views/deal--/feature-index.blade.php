@@ -138,8 +138,8 @@
                                 <tr>
                                     <th>{{$k+1}}</th>
                                     <td>{{$deal['title']}}</td>
-                                    <td>{{date('d-M-y',strtotime($deal['start_date']))}}</td>
-                                    <td>{{date('d-M-y',strtotime($deal['end_date']))}}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($deal['start_date']) }}</td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDate($deal['end_date']) }}</td>
                                     <td>
                                         @if(\Carbon\Carbon::parse($deal['end_date'])->endOfDay()->isPast())
                                         <span class="badge badge-soft-danger"> {{ \App\CPU\translate('expired')}} </span>

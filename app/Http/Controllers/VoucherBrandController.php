@@ -11,9 +11,6 @@ class VoucherBrandController extends Controller
     public function index(Request $request)
     {
         $voucherBrands = VoucherBrand::query()
-            ->when($request->filled('id'), function ($query) use ($request) {
-                $query->where('id', $request->id);
-            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where('name', 'like', '%' . trim($request->name) . '%');
             })

@@ -61,8 +61,7 @@
                             <tr>
                                 <td>{{ $logs->firstItem() + $key }}</td>
                                 <td>
-                                    <div>{{ optional($log->created_at)->format('d M Y') }}</div>
-                                    <small class="text-muted">{{ optional($log->created_at)->format('h:i A') }}</small>
+                                    {{ \App\CPU\Helpers::formatAdminDateTime($log->created_at) }}
                                 </td>
                                 <td>
                                     <div class="fw-bold">#{{ $log->campaigns_id }}</div>

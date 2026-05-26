@@ -68,7 +68,7 @@
                                         maxlength="10"
                                         inputmode="numeric"
                                         required>
-                                    <small class="text-muted">Exactly 10 digits.</small>
+                                    <small class="text-muted">Exactly 10 digits. May match an existing user or brand contact number.</small>
                                     @error('mobile') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>

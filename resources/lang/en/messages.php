@@ -682,4 +682,10 @@
   'Role deleted successfully' => 'Role deleted successfully',
   'Failed to delete banner' => 'Failed to delete banner',
   'notification management' => 'Notification management',
+  'Participants' => 'Participants',
+  'Click a status to show users with that participation status.' => 'Click a status to show users with that participation status.',
+  'Platform' => 'Platform',
+  'Post URL' => 'Post URL',
+  'Joined' => 'Joined',
+  'No participants yet.' => 'No participants yet.',
 );

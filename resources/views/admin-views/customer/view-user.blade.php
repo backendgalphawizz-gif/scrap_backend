@@ -161,6 +161,35 @@
         display: inline-block;
     }
 
+    .social-status-pill {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        text-transform: capitalize;
+    }
+
+    .social-status-pill.is-verified {
+        background: #e8f8ef;
+        color: #1e7e45;
+    }
+
+    .social-status-pill.is-pending {
+        background: #fff6e5;
+        color: #9a6700;
+    }
+
+    .social-status-pill.is-not-verified {
+        background: #fdecec;
+        color: #b42318;
+    }
+
+    .social-status-pill.is-neutral {
+        background: #eef2f6;
+        color: #64748b;
+    }
+
     .staff-actions {
         display: flex;
         justify-content: flex-end;
@@ -222,11 +251,11 @@
 
 
 @section('content')
-@php($userImage = blank($user->image)
-    ? asset('public/assets/front-end/img/image-place-holder.png')
-    : (\Illuminate\Support\Str::startsWith($user->image, ['http://', 'https://'])
-        ? $user->image
-        : asset('storage/profile/' . ltrim($user->image, '/'))))
+@php($userImage = $user->profileImageUrl())
+@php($igUsername = $user->adminDisplaySocialUsername('instagram'))
+@php($fbUsername = $user->adminDisplaySocialUsername('facebook'))
+@php($igStatus = $user->adminDisplaySocialStatus('instagram'))
+@php($fbStatus = $user->adminDisplaySocialStatus('facebook'))
 
 <div class="content-wrapper">
     <div class="page-header">
@@ -346,10 +375,38 @@
                     <div class="staff-card-h">Instagram & Facebook <i class="mdi mdi-share-variant-outline"></i></div>
                     <div class="staff-card-b">
                         <div class="staff-info-grid">
-                            <div class="staff-info"><div class="k">Instagram username</div><div class="v">{{ $user->instagram_username ?? 'N/A' }}</div></div>
-                            <div class="staff-info"><div class="k">Instagram status</div><div class="v">{{ $user->instagram_status ?? 'N/A' }}</div></div>
-                            <div class="staff-info"><div class="k">Facebook username</div><div class="v">{{ $user->facebook_username ?? 'N/A' }}</div></div>
-                            <div class="staff-info"><div class="k">Facebook status</div><div class="v">{{ $user->facebook_status ?? 'N/A' }}</div></div>
+                            <div class="staff-info">
+                                <div class="k">Instagram username</div>
+                                <div class="v">{{ $igUsername ? '@' . ltrim($igUsername, '@') : 'Not provided by user' }}</div>
+                            </div>
+                            <div class="staff-info">
+                                <div class="k">Instagram verification</div>
+                                <div class="v">
+                                    @php($igPill = match($igStatus) {
+                                        'verified' => 'is-verified',
+                                        'pending' => 'is-pending',
+                                        'not_verified' => 'is-not-verified',
+                                        default => 'is-neutral',
+                                    })
+                                    <span class="social-status-pill {{ $igPill }}">{{ str_replace('_', ' ', $igStatus) }}</span>
+                                </div>
+                            </div>
+                            <div class="staff-info">
+                                <div class="k">Facebook username</div>
+                                <div class="v">{{ $fbUsername ? '@' . ltrim($fbUsername, '@') : 'Not provided by user' }}</div>
+                            </div>
+                            <div class="staff-info">
+                                <div class="k">Facebook verification</div>
+                                <div class="v">
+                                    @php($fbPill = match($fbStatus) {
+                                        'verified' => 'is-verified',
+                                        'pending' => 'is-pending',
+                                        'not_verified' => 'is-not-verified',
+                                        default => 'is-neutral',
+                                    })
+                                    <span class="social-status-pill {{ $fbPill }}">{{ str_replace('_', ' ', $fbStatus) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

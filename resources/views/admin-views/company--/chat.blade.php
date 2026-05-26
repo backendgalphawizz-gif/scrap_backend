@@ -102,7 +102,7 @@
                                                                 <p class="bg-chat rounded px-3 py-2 mb-1">
                                                                     {{$message->message}}
                                                                 </p>
-                                                                <span class="time_date fz-12"> {{$message->created_at->format('h:i A')}}    |    {{$message->created_at->format('M d')}} </span>
+                                                                <span class="time_date fz-12"> {{ \App\CPU\Helpers::formatAdminDateTime($message->created_at) }} </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -112,7 +112,7 @@
                                                             <p class="bg-c1 text-white rounded px-3 py-2 mb-1">
                                                                 {{$message->message}}
                                                             </p>
-                                                            <span class="time_date fz-12 d-flex justify-content-end"> {{$message->created_at->format('h:i A')}}    |    {{$message->created_at->format('M d')}} </span>
+                                                            <span class="time_date fz-12 d-flex justify-content-end"> {{ \App\CPU\Helpers::formatAdminDateTime($message->created_at) }} </span>
                                                         </div>
                                                     </div>
                                             @endif
