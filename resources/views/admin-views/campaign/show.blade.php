@@ -190,6 +190,7 @@
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Campaign Budget') }}</small><strong>{{ $campaign->total_campaign_budget ?? '0' }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign User Budget') }}</small><strong>{{ $campaign->campaign_user_budget ?? '0' }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Campaign Budget With GST') }}</small><strong>{{ $campaign->compign_budget_with_gst ?? '0' }}</strong></div>
+                                <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Generate GST Invoice') }}</small><strong>{{ $campaign->generate_gst_invoice ? \App\CPU\translate('Yes') : \App\CPU\translate('No') }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Total Shared') }}</small><strong>{{ $campaign->campaign_transactions->count() }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Occupied Slots') }}</small><strong>{{ $campaign->occupied_slots }}</strong></div>
                                 <div class="col-md-4"><small class="text-muted d-block">{{ \App\CPU\translate('Available Slots') }}</small><strong>{{ $campaign->available_slots }}</strong></div>
@@ -207,7 +208,17 @@
                 </div>
             </div>
             <div class="mt-3 d-flex justify-content-between align-items-center">
-                <div>
+                <div class="d-flex flex-wrap gap-2">
+                    @if($campaign->invoice_available)
+                        <a href="{{ route('admin.campaign.invoice', $campaign->id) }}" class="btn btn-primary" target="_blank">
+                            <i class="mdi mdi-file-document-outline me-1"></i>
+                            @if($campaign->generate_gst_invoice)
+                                {{ \App\CPU\translate('Download GST Invoice') }}
+                            @else
+                                {{ \App\CPU\translate('Download Invoice') }}
+                            @endif
+                        </a>
+                    @endif
                     @if($campaign->status === 'stopped')
                         @if($campaign->refund_status === 'processed')
                             <span class="badge bg-success fs-6">

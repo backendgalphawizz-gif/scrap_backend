@@ -21,6 +21,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use function App\CPU\translate;
 use App\Http\Resources\CommonResource;
+use App\Services\CampaignInvoiceService;
 use App\Services\PanValidationService;
 
 
@@ -509,6 +510,15 @@ class SellerDashboardController extends Controller
                 }
             }
 
+            $generateGstInvoice = $request->boolean('generate_gst_invoice');
+            if ($generateGstInvoice && empty(trim((string) ($shop->gst_number ?? '')))) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please add your GST number in profile before creating a campaign with GST invoice.',
+                    'data' => [],
+                ], 422);
+            }
+
             $campaign = new Campaign;
             if ($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
@@ -571,6 +581,7 @@ class SellerDashboardController extends Controller
                 $campaign->sale_id = $saleRecord?->id;
             }
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+            $campaign->generate_gst_invoice = $generateGstInvoice;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
             if ($paymentSplit->feedback_percentage) {
@@ -634,6 +645,41 @@ class SellerDashboardController extends Controller
             'message' => 'Campaign created successfully',
             'data' => []
         ], 200);
+    }
+
+    public function downloadCampaignInvoice(Request $request, $id, CampaignInvoiceService $invoiceService)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => [],
+            ], 401);
+        }
+
+        $seller = $data['data'];
+        $campaign = Campaign::where('id', $id)->where('brand_id', $seller['id'])->first();
+
+        if (!$campaign) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Campaign not found or you do not have permission to access this campaign.',
+                'data' => [],
+            ], 404);
+        }
+
+        $validation = $invoiceService->validateDownload($campaign, (int) $seller['id']);
+        if (!$validation['ok']) {
+            return response()->json([
+                'status' => false,
+                'message' => $validation['message'],
+                'data' => [],
+            ], $validation['code']);
+        }
+
+        return $invoiceService->downloadResponse($campaign);
     }
 
     public function detailCampaign(Request $request, $id)

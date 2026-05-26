@@ -215,6 +215,8 @@ Route::group(['prefix' => 'brand'], function () {
         Route::post('campaign/update/{id}', [SellerDashboardController::class, 'updateCampaign']);
         Route::post('campaign/update-status/{id}', [SellerDashboardController::class, 'updateCampaignStatus']);
         Route::get('campaign/detail/{id}', [SellerDashboardController::class, 'detailCampaign']);
+        Route::get('campaign/{id}/invoice', [SellerDashboardController::class, 'downloadCampaignInvoice']);
+        Route::get('campaign/{id}/gst-invoice', [SellerDashboardController::class, 'downloadCampaignInvoice']);
         Route::get('campaign/list', [SellerDashboardController::class, 'listCampaign']);
         Route::get('campaign/delete/{id}', [SellerDashboardController::class, 'deleteCampaign']);
         Route::post('campaign-transaction/{id}/report-violation', [SellerDashboardController::class, 'reportViolation']);

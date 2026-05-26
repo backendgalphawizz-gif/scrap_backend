@@ -152,6 +152,7 @@ class CampaignController extends Controller
         $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
         $compign_budget_with_gst = $request->total_campaign_budget + ($request->total_campaign_budget * $gst_percentage / 100);
         $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+        $campaign->generate_gst_invoice = $request->boolean('generate_gst_invoice');
         
         $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
@@ -337,6 +338,9 @@ class CampaignController extends Controller
         $campaign->feedback_percentage = $request->feedback_percentage ?? $campaign->feedback_percentage;
         $campaign->campaign_user_budget = $request->campaign_user_budget ?? $campaign->campaign_user_budget;
         $campaign->compign_budget_with_gst = $request->compign_budget_with_gst ?? $campaign->compign_budget_with_gst;
+        if ($request->has('generate_gst_invoice')) {
+            $campaign->generate_gst_invoice = $request->boolean('generate_gst_invoice');
+        }
         $campaign->final_reward_for_user = $request->final_reward_for_user ?? $campaign->final_reward_for_user;
         $campaign->feedback_coin = $request->feedback_coin ?? $campaign->feedback_coin;
         $campaign->save();

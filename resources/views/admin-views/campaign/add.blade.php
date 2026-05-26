@@ -201,6 +201,11 @@
                                         &nbsp;&nbsp;|&nbsp;&nbsp;
                                         <span class="text-secondary">Total Payable:</span> <strong id="gst_total" class="text-success">₹0</strong>
                                     </div>
+                                    <div class="form-check mt-2">
+                                        <input type="hidden" name="generate_gst_invoice" value="0">
+                                        <input class="form-check-input" type="checkbox" name="generate_gst_invoice" id="generate_gst_invoice" value="1" {{ old('generate_gst_invoice') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="generate_gst_invoice">{{ \App\CPU\translate('Generate GST Invoice') }} <span class="text-muted">({{ \App\CPU\translate('Uncheck for normal invoice') }})</span></label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
