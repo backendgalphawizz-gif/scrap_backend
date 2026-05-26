@@ -76,6 +76,11 @@ class UserLevelController extends Controller
     {
         $level = UserLevel::findOrFail($id);
         $level->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'User level deleted successfully.']);
+        }
+
         return redirect()->route('admin.user-level.index')->with('success', 'User level deleted successfully.');
     }
 }

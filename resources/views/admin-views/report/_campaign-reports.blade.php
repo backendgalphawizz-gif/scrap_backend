@@ -210,8 +210,16 @@
                         <tbody>
                             @foreach($campaigns as $campaign)
                             <tr>
-                                <td>{{ $campaign->title }}</td>
-                                <td>{{ $campaign->brand->username }}</td>
+                                <td>
+                                    <a href="{{ route('admin.campaign.show', $campaign->id) }}" class="title-color hover-c1">{{ $campaign->title }}</a>
+                                </td>
+                                <td>
+                                    @if($campaign->brand_id)
+                                        <a href="{{ route('admin.brand.view', $campaign->brand_id) }}" class="title-color hover-c1">{{ $campaign->brand->username ?? '-' }}</a>
+                                    @else
+                                        {{ $campaign->brand->username ?? '-' }}
+                                    @endif
+                                </td>
                                 <td>{{ $campaign->total_campaign_budget }}</td>
                                 <td>{{ $campaign->participants }}</td>
                                 <td>{{ $campaign->approved_posts }}</td>

@@ -17,6 +17,7 @@ use App\Http\Controllers\VoucherBrandController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\Admin\PaymentSplitController;
 use App\Http\Controllers\Admin\BrandCategoryController;
+use App\Http\Controllers\Admin\TransactionController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -52,6 +53,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/delete-user/{id}', [DashboardController::class, 'deleteUser'])->name('admin.user.delete');
     Route::get('/user-wallet', [DashboardController::class, 'userWallet'])->name('admin.user.wallet');
     Route::get('/user-wallet-transactions', [DashboardController::class, 'userWalletTransactions'])->name('admin.user-wallet-transactions');
+
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('admin.transactions.index');
     Route::get('/feedback-questions', [FeedbackQuestionController::class, 'index'])->name('admin.feedback-questions.index');
     Route::post('/feedback-questions', [FeedbackQuestionController::class, 'store'])->name('admin.feedback-questions.store');
     Route::post('/feedback-questions/update/{id}', [FeedbackQuestionController::class, 'update'])->name('admin.feedback-questions.update');
@@ -159,6 +162,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');
     Route::post('/update-wallet-status', [DashboardController::class, 'updateUserWalletStatus'])->name('admin.user.update-wallet-status');
     Route::post('/approve-withdrawal', [DashboardController::class, 'approveWithdrawal'])->name('admin.user.approve-withdrawal');
+    Route::post('/reject-withdrawal', [DashboardController::class, 'rejectWithdrawal'])->name('admin.user.reject-withdrawal');
     Route::post('/update-wallet-withdrawal-freeze', [DashboardController::class, 'updateUserWalletWithdrawalFreeze'])->name('admin.user.update-wallet-withdrawal-freeze');
     Route::post('/update-user-status', [DashboardController::class, 'updateUserStatus'])->name('admin.user.update-user-status');
 

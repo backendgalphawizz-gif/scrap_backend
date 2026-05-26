@@ -13,6 +13,9 @@ class Campaign extends Model
 {
     // use LogsActivity;
 
+    public const CREATED_BY_BRAND = 'brand';
+    public const CREATED_BY_SALES_PERSON = 'sales_person';
+
     protected $fillable = [
         'title',
         'descriptions',
@@ -28,7 +31,7 @@ class Campaign extends Model
         'share_on',
         'category_id',
         'sub_category_id',
-        'unique_code','used_post','total_user_required','sale_id','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst',
+        'unique_code','used_post','total_user_required','sale_id','created_by','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst',
         'repeat_brand_percentage','user_referral_percentage','referral_coin',
         'refund_status',
         'refunded_amount',
@@ -130,11 +133,20 @@ class Campaign extends Model
 
     public function getSalePersonNameAttribute()
     {
-        return $this->sale()->name ?? '';
+        if (!$this->sale_id) {
+            return '';
+        }
+
+        return $this->sale?->name ?? '';
     }
+
     public function getSalePersonImageAttribute()
     {
-        return $this->sale()->image ?? '';
+        if (!$this->sale_id) {
+            return '';
+        }
+
+        return $this->sale?->image ?? '';
     }
 
     public function getEngagementAttribute() {

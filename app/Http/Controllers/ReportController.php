@@ -80,6 +80,8 @@ class ReportController extends Controller
             $amountWithoutGst = $baseAmount - $discountAmount;
 
             return [
+                'brand_id' => $campaign->brand_id,
+                'campaign_id' => $campaign->id,
                 'brand' => $campaign->brand->username ?? '-',
                 'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
                 'amount_with_gst' => $amountWithGst,

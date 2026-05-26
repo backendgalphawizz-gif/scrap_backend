@@ -142,12 +142,19 @@ class EmployeeController extends Controller
 
     public function status(Request $request)
     {
-        $employee = Admin::find($request->id);
-    
-        $employee->status = $request->status;
+        $request->validate([
+            'id' => 'required|integer|exists:admins,id',
+            'status' => 'required|boolean',
+        ]);
+
+        $employee = Admin::findOrFail($request->id);
+        $employee->status = (bool) $request->status;
         $employee->save();
-    
-        // Toastr::success('Employee status updated!');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Employee status updated successfully.']);
+        }
+
         return back();
     }
 

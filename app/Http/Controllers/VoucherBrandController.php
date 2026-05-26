@@ -91,6 +91,10 @@ class VoucherBrandController extends Controller
 
         $voucherBrand->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Voucher brand deleted successfully.']);
+        }
+
         return redirect()->route('admin.voucher-brand.index')->with('success', 'Voucher brand deleted successfully.');
     }
 
@@ -104,6 +108,10 @@ class VoucherBrandController extends Controller
         $voucherBrand = VoucherBrand::findOrFail($request->id);
         $voucherBrand->is_active = (bool) $request->is_active;
         $voucherBrand->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Voucher brand status updated successfully.']);
+        }
 
         return redirect()->route('admin.voucher-brand.index')->with('success', 'Voucher brand status updated successfully.');
     }

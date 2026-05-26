@@ -347,15 +347,19 @@ class CampaignController extends Controller
 
     public function delete(Request $request)
     {
-        $br = Campaign::query()->where('id', '=', $request->id, 'and')->first();
-        if ($br) {
-            $thumbnailName = $br->getRawOriginal('thumbnail');
-            if (!empty($thumbnailName)) {
-                ImageManager::delete('profile/' . ltrim($thumbnailName, '/'));
-            }
-            Campaign::query()->where('id', '=', $request->id, 'and')->delete();
+        $br = Campaign::query()->where('id', '=', $request->id)->first();
+        if (!$br) {
+            return response()->json(['status' => false, 'message' => 'Campaign not found'], 404);
         }
-        return response()->json();
+        if ($br->status !== 'pending') {
+            return response()->json(['status' => false, 'message' => 'Only pending campaigns can be deleted'], 403);
+        }
+        $thumbnailName = $br->getRawOriginal('thumbnail');
+        if (!empty($thumbnailName)) {
+            ImageManager::delete('profile/' . ltrim($thumbnailName, '/'));
+        }
+        $br->delete();
+        return response()->json(['status' => true, 'message' => 'Campaign deleted successfully']);
     }
 
     public function campaignTransctions(Request $request)

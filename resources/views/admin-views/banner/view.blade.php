@@ -4,6 +4,33 @@
 
 @push('css_or_js')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .banner-action-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .banner-action-btn i {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .banner-status-switch .form-check-input {
+        width: 2.75em;
+        height: 1.4em;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .banner-status-switch .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+    }
+</style>
 @endpush
 
 @section('content')
@@ -122,9 +149,8 @@
                                     <tr>
                                         <th class="pl-xl-5">{{\App\CPU\translate('SL')}}</th>
                                         <th>{{\App\CPU\translate('image')}}</th>
-                                        <!-- <th>{{\App\CPU\translate('resource_type')}}</th> -->
-                                        <!-- <th>{{\App\CPU\translate('banner_type')}}</th> -->
-                                        <th>{{\App\CPU\translate('published')}}</th>
+                                       
+                                        <th class="text-center">{{\App\CPU\translate('published')}}</th>
                                         <th class="text-center">{{\App\CPU\translate('action')}}</th>
                                     </tr>
                                 </thead>
@@ -133,28 +159,31 @@
                                     <tr id="data-{{$banner->id}}">
                                         <td class="pl-xl-5">{{$banners->firstItem()+$key}}</td>
                                         <td>
-                                            <img class="ratio-4:1" width="300" height="100"
+                                            <img class="ratio-4:1" width="250" height="100"
                                                 onerror="this.src='{{asset('assets/logo/logo-1.png')}}'"
                                                 src="{{$banner->image}}">
                                         </td>
-                                        <td>
-                                            <label class="switcher">
-                                                <input type="checkbox" class="switcher_input status"
-                                                    id="{{$banner->id}}" <?php if ($banner->status == 1) echo "checked" ?>>
-                                                <span class="switcher_control"></span>
-                                            </label>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch banner-status-switch d-inline-flex justify-content-center mb-0">
+                                                <input class="form-check-input banner-status"
+                                                    type="checkbox"
+                                                    role="switch"
+                                                    aria-label="{{ \App\CPU\translate('Activate or deactivate') }}"
+                                                    data-id="{{ $banner->id }}"
+                                                    {{ (int) $banner->status === 1 ? 'checked' : '' }}>
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
-                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit"
-                                                    title="{{ \App\CPU\translate('Edit')}}"
-                                                    href="{{route('admin.banner.edit',[$banner['id']])}}">
-                                                    Edit
+                                                <a class="btn btn-outline-primary btn-sm cursor-pointer banner-action-btn"
+                                                    title="{{ \App\CPU\translate('Edit') }}"
+                                                    href="{{ route('admin.banner.edit', $banner->id) }}">
+                                                    <i class="mdi mdi-pencil-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete"
-                                                    title="{{ \App\CPU\translate('Delete')}}"
-                                                    id="{{$banner['id']}}">
-                                                    Delete
+                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete banner-action-btn"
+                                                    title="{{ \App\CPU\translate('Delete') }}"
+                                                    id="{{ $banner->id }}">
+                                                    <i class="mdi mdi-delete-outline"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -189,6 +218,36 @@
 
 @push('script')
 <script>
+    function notifySuccess(message) {
+        if (typeof toastr !== 'undefined' && toastr.success) {
+            toastr.success(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    function notifyError(message) {
+        if (typeof toastr !== 'undefined' && toastr.error) {
+            toastr.error(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: message,
+            showConfirmButton: false,
+            timer: 2500
+        });
+    }
+
     $('#mbimageFileUploader').change(function() {
         readURL(this);
     });
@@ -204,65 +263,57 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
-    $(document).on('change', '.status', function() {
-        var id = $(this).attr("id");
-        var status = $(this).prop("checked") == true ? 1 : 0;
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-            }
-        });
+
+    $(document).on('change', '.banner-status', function() {
+        var id = $(this).data('id');
+        var status = $(this).prop('checked') ? 1 : 0;
+        var $toggle = $(this);
+
         $.ajax({
-            url: "{{route('admin.banner.status')}}",
+            url: "{{ route('admin.banner.status') }}",
             method: 'POST',
-            data: {
-                id: id,
-                status: status
-            },
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            data: { id: id, status: status },
             success: function(data) {
-                if (data == 1) {
-                    toastr.success('{{ \App\CPU\translate('
-                        Banner published successfully!')}}');
+                if (parseInt(data, 10) === 1) {
+                    notifySuccess('{{ \App\CPU\translate('Banner published successfully!') }}');
                 } else {
-                    toastr.success('{{ \App\CPU\translate('
-                        Banner unpublished successfully!')}}');
+                    notifySuccess('{{ \App\CPU\translate('Banner unpublished successfully!') }}');
                 }
+            },
+            error: function() {
+                notifyError('{{ \App\CPU\translate('Failed to update status') }}');
+                $toggle.prop('checked', !$toggle.prop('checked'));
             }
         });
     });
+
     $(document).on('click', '.delete', function() {
-        var id = $(this).attr("id");
+        var id = $(this).attr('id');
         Swal.fire({
-            title: '{{ \App\CPU\translate('
-            Are you sure ? ')}}',
-            text : "{{ \App\CPU\translate('You wont be able to revert this!')}}",
+            title: '{{ \App\CPU\translate('Are you sure ?') }}',
+            text: "{{ \App\CPU\translate('You wont be able to revert this!') }}",
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: '{{ \App\CPU\translate('
-            Yes,
-            delete it!')}}'
+            confirmButtonText: '{{ \App\CPU\translate('Yes, delete it!') }}'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                    }
-                });
                 $.ajax({
-                    url: "{{route('admin.banner.delete')}}",
+                    url: "{{ route('admin.banner.delete') }}",
                     method: 'POST',
-                    data: {
-                        id: id
-                    },
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { id: id },
                     success: function() {
                         $('#data-' + id).remove();
-                        toastr.success('{{ \App\CPU\translate('
-                            Banner deleted successfully!')}}');
+                        notifySuccess('{{ \App\CPU\translate('Banner deleted successfully!') }}');
+                    },
+                    error: function() {
+                        notifyError('{{ \App\CPU\translate('Failed to delete banner') }}');
                     }
                 });
             }
-        })
+        });
     });
 </script>
 @endpush

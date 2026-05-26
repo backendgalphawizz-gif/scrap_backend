@@ -6,6 +6,7 @@ use App\CPU\Helpers;
 use App\Http\Controllers\Controller;
 
 use App\Models\BrandFeedbackQuestion;
+use App\Models\Feedback;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -217,6 +218,53 @@ class FeedbackQuestionController extends Controller
         $question->delete();
 
         return response()->json(['status' => true, 'message' => 'Deleted successfully'], 200);
+    }
+
+    public function listFeedbacks(Request $request)
+    {
+        $data = Helpers::get_seller_by_token($request);
+        if ($data['success'] != 1) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $brandId = $data['data']->id;
+        $limit = (int) $request->input('limit', 20);
+        $search = trim((string) $request->input('search', ''));
+        $rating = $request->input('rating');
+
+        $feedbacks = Feedback::with(['user', 'campaign'])
+            ->where('brand_id', $brandId)
+            ->when($request->filled('campaign_id'), function ($query) use ($request) {
+                $query->where('campaign_id', (int) $request->campaign_id);
+            })
+            ->when($rating !== null && $rating !== '', function ($query) use ($rating) {
+                $query->where('ratings', $rating);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('user_feedback', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('campaign', function ($cq) use ($search) {
+                            $cq->where('title', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest()
+            ->paginate($limit > 0 ? $limit : 20);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Feedbacks retrieved successfully',
+            'data' => CommonResource::collection($feedbacks),
+            'meta' => [
+                'current_page' => $feedbacks->currentPage(),
+                'last_page' => $feedbacks->lastPage(),
+                'per_page' => $feedbacks->perPage(),
+                'total' => $feedbacks->total(),
+            ],
+        ], 200);
     }
 
 }

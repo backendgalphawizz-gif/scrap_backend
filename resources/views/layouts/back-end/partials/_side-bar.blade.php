@@ -20,6 +20,34 @@
                 <i class="mdi mdi-view-dashboard menu-icon"></i>
             </a>
         </li>
+        @php($transactionsMenuOpen = request()->routeIs('admin.transactions.*') || request()->routeIs('admin.user.wallet') || request()->routeIs('admin.sale.wallet-transactions') || request()->routeIs('admin.sale.ledger-transactions') || request()->routeIs('admin.campaigns-transactions.*'))
+        @if(\App\CPU\Helpers::module_permission_check('user_management') || \App\CPU\Helpers::module_permission_check('sale_management') || \App\CPU\Helpers::module_permission_check('brand_management'))
+        <li class="nav-item">
+            <a class="nav-link {{ $transactionsMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#transactions-menu" aria-expanded="{{ $transactionsMenuOpen ? 'true' : 'false' }}" aria-controls="transactions-menu">
+                <span class="menu-title">Transactions</span>
+                <i class="mdi mdi-swap-horizontal menu-icon"></i>
+            </a>
+            <div class="collapse {{ $transactionsMenuOpen ? 'show' : '' }}" id="transactions-menu">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.transactions.index') && request('type', 'all') === 'all' ? 'active' : '' }}" href="{{ route('admin.transactions.index') }}">All Transactions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.user.wallet') ? 'active' : '' }}" href="{{ route('admin.user.wallet') }}">User Wallet</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.sale.wallet-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.wallet-transactions') }}">Sale Wallet</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.sale.ledger-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.campaigns-transactions.*') ? 'active' : '' }}" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participation</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        @endif
         @if(\App\CPU\Helpers::module_permission_check('user_management'))
         @php($userMenuOpen = request()->routeIs('admin.user*') || request()->routeIs('admin.user-level.*') || request()->routeIs('admin.business-settings.user-faq*'))
         <li class="nav-item">
@@ -31,9 +59,6 @@
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.user') ? 'active' : '' }}" href="{{ route('admin.user') }}">User Lists</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.user.wallet') ? 'active' : '' }}" href="{{ route('admin.user.wallet') }}">Wallet Transactions</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.user-level.*') ? 'active' : '' }}" href="{{route('admin.user-level.index')}}">User Levels</a>
@@ -61,12 +86,6 @@
                         <a class="nav-link {{ request()->routeIs('admin.sale.list') ? 'active' : '' }}" href="{{ route('admin.sale.list') }}">Sales User</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.sale.wallet-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.wallet-transactions') }}">Wallet Transaction</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.sale.ledger-transactions') ? 'active' : '' }}" href="{{ route('admin.sale.ledger-transactions') }}">Commission Ledger</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.business-settings.sale-faq*') ? 'active' : '' }}" href="{{ route('admin.business-settings.sale-faq') }}">Sale FAQ</a>
                     </li>
                    
@@ -91,9 +110,6 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.campaign.*') ? 'active' : '' }}" href="{{ route('admin.campaign.list') }}">Campaigns</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.campaigns-transactions.*') ? 'active' : '' }}" href="{{ route('admin.campaigns-transactions.list') }}">Campaign Participants</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.business-settings.campaign-guideline*') ? 'active' : '' }}" href="{{ route('admin.business-settings.campaign-guideline') }}">Campaign Guideline</a>

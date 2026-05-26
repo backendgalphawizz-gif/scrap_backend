@@ -1,8 +1,35 @@
 @extends('layouts.back-end.app')
 @section('title', \App\CPU\translate('Admin Role'))
 @push('css_or_js')
-<!-- Custom styles for this page -->
-<link href="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="{{asset('public/assets/back-end')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <style>
+        .custom-role-action-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .custom-role-action-btn i {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .custom-role-status-switch .form-check-input {
+            width: 2.75em;
+            height: 1.4em;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .custom-role-status-switch .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -35,8 +62,7 @@
                                     <label for="name" class="title-color">{{\App\CPU\translate('role_name')}} <span class="text-danger">*</span></label>
                                     <input type="text" name="name" class="form-control" id="name"
                                         aria-describedby="emailHelp"
-                                        placeholder="{{\App\CPU\translate('Ex')}} : {{\App\CPU\translate('Store')}}" required>
-                                </div>
+                                        placeholder="{{\App\CPU\translate('Ex')}} : {{\App\CPU\translate('Store')}}" required maxlength="28">          </div>
                             </div>
                         </div>
 
@@ -197,13 +223,13 @@
                                     <th>{{\App\CPU\translate('role_name')}}</th>
                                     <th>{{\App\CPU\translate('modules')}}</th>
                                     <th>{{\App\CPU\translate('created_at')}}</th>
-                                    <th>{{\App\CPU\translate('status')}}</th>
+                                    <th class="text-center">{{\App\CPU\translate('status')}}</th>
                                     <th class="text-center">{{\App\CPU\translate('action')}}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($rl as $k=>$r)
-                                <tr>
+                                <tr id="data-{{ $r['id'] }}">
                                     <td>{{$k+1}}</td>
                                     <td>{{$r['name']}}</td>
                                     <td class="text-capitalize">
@@ -222,24 +248,28 @@
                                         @endif
                                     </td>
                                     <td>{{date('d-M-y',strtotime($r['created_at']))}}</td>
-                                    <td>
-                                        <label class="switcher">
-                                            <input type="checkbox" class="switcher_input employee-role-status"
-                                                id="{{$r['id']}}" {{$r['status'] == 1?'checked':''}}>
-                                            <span class="switcher_control"></span>
-                                        </label>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch custom-role-status-switch d-inline-flex justify-content-center mb-0">
+                                            <input class="form-check-input custom-role-status"
+                                                type="checkbox"
+                                                role="switch"
+                                                aria-label="{{ \App\CPU\translate('Activate or deactivate') }}"
+                                                data-id="{{ $r['id'] }}"
+                                                {{ (int) $r['status'] === 1 ? 'checked' : '' }}>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="d-flex gap-2 justify-content-center">
-                                            <a href="{{route('admin.custom-role.update',[$r['id']])}}"
-                                                class="btn btn-outline-info btn-sm square-btn"
-                                                title="{{\App\CPU\translate('Edit') }}">
-                                                Edit
+                                            <a href="{{ route('admin.custom-role.update', [$r['id']]) }}"
+                                                class="btn btn-outline-primary btn-sm custom-role-action-btn"
+                                                title="{{ \App\CPU\translate('Edit') }}">
+                                                <i class="mdi mdi-pencil-outline"></i>
                                             </a>
                                             <a href="#"
-                                                class="btn btn-outline-danger btn-sm delete"
-                                                title="{{\App\CPU\translate('Delete') }}" id="{{$r['id']}}">
-                                                Delete
+                                                class="btn btn-outline-danger btn-sm custom-role-action-btn cursor-pointer delete"
+                                                title="{{ \App\CPU\translate('Delete') }}"
+                                                id="{{ $r['id'] }}">
+                                                <i class="mdi mdi-delete-outline"></i>
                                             </a>
                                         </div>
                                     </td>
@@ -272,85 +302,109 @@
         $('#dataTable').DataTable();
     });
 
-    $(document).on('click', '.delete', function() {
-        var id = $(this).attr("id");
+    function notifySuccess(message) {
+        if (typeof toastr !== 'undefined' && toastr.success) {
+            toastr.success(message);
+            return;
+        }
         Swal.fire({
-            title: '{{ \App\CPU\translate('
-            Are_you_sure_delete_this_role ')}}?',
-            text: "{{ \App\CPU\translate('You_will_not_be_able_to_revert_this')}}!",
-            type: 'warning',
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    function notifyError(message) {
+        if (typeof toastr !== 'undefined' && toastr.error) {
+            toastr.error(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: message,
+            showConfirmButton: false,
+            timer: 2500
+        });
+    }
+
+    $(document).on('click', '.delete', function() {
+        var id = $(this).attr('id');
+        Swal.fire({
+            title: '{{ \App\CPU\translate('Are you sure ?') }}',
+            text: "{{ \App\CPU\translate('You won\'t be able to revert this!') }}",
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: '{{ \App\CPU\translate('
-            Yes ')}}, {{ \App\CPU\translate('
-            delete_it ')}}!',
-            cancelButtonText: "{{ \App\CPU\translate('cancel')}}",
-            reverseButtons: true
+            confirmButtonText: '{{ \App\CPU\translate('Yes, delete it!') }}',
+            cancelButtonText: '{{ \App\CPU\translate('cancel') }}'
         }).then((result) => {
-            if (result.value) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                    }
-                });
+            if (result.isConfirmed) {
                 $.ajax({
-                    url: "{{route('admin.custom-role.delete')}}",
+                    url: "{{ route('admin.custom-role.delete') }}",
                     method: 'POST',
-                    data: {
-                        id: id
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { id: id },
+                    success: function(response) {
+                        if (response && response.status === false) {
+                            notifyError(response.message || '{{ \App\CPU\translate('Failed to delete role') }}');
+                            return;
+                        }
+                        $('#data-' + id).remove();
+                        notifySuccess('{{ \App\CPU\translate('Role deleted successfully') }}');
                     },
-                    success: function() {
-                        toastr.success('{{ \App\CPU\translate('
-                            Role_deleted_successfully ')}}');
-                        location.reload();
+                    error: function(xhr) {
+                        var message = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : '{{ \App\CPU\translate('Failed to delete role') }}';
+                        notifyError(message);
                     }
                 });
             }
-        })
+        });
     });
 </script>
 <script>
     $('#submit-create-role').on('submit', function(e) {
-
         var fields = $("input[name='modules[]']").serializeArray();
         if (fields.length === 0) {
-            toastr.warning('{{ \App\CPU\translate('
-                select_minimum_one_selection_box ') }}', {
-                    CloseButton: true,
-                    ProgressBar: true
-                });
+            toastr.warning('{{ \App\CPU\translate('select_minimum_one_selection_box') }}', {
+                CloseButton: true,
+                ProgressBar: true
+            });
             return false;
-        } else {
-            $('#submit-create-role').submit();
         }
     });
 </script>
 <script>
-    $(document).on('change', '.employee-role-status', function() {
-        var id = $(this).attr("id");
-        if ($(this).prop("checked") == true) {
-            var status = 1;
-        } else if ($(this).prop("checked") == false) {
-            var status = 0;
-        }
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-            }
-        });
+    $(document).on('change', '.custom-role-status', function() {
+        var id = $(this).data('id');
+        var status = $(this).prop('checked') ? 1 : 0;
+        var $toggle = $(this);
+
         $.ajax({
-            url: "{{route('admin.custom-role.employee-role-status')}}",
+            url: "{{ route('admin.custom-role.employee-role-status') }}",
             method: 'POST',
-            data: {
-                id: id,
-                status: status
-            },
-            success: function(data) {
-                if (data.success == true) {
-                    toastr.success('{{\App\CPU\translate('
-                        Status updated successfully ')}}');
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            data: { id: id, status: status },
+            success: function(response) {
+                if (response.status) {
+                    notifySuccess(response.message || '{{ \App\CPU\translate('Status updated successfully') }}');
+                } else {
+                    notifyError(response.message || '{{ \App\CPU\translate('Failed to update status') }}');
+                    $toggle.prop('checked', !$toggle.prop('checked'));
                 }
+            },
+            error: function(xhr) {
+                var message = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : '{{ \App\CPU\translate('Failed to update status') }}';
+                notifyError(message);
+                $toggle.prop('checked', !$toggle.prop('checked'));
             }
         });
     });

@@ -173,6 +173,10 @@ class VoucherController extends Controller
 
         Voucher::where('id', '=', $request->id, 'and')->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Voucher deleted successfully.']);
+        }
+
         return redirect()->route('admin.voucher.index')->with('success', 'Voucher deleted successfully.');
     }
 
@@ -186,6 +190,10 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($request->id);
         $voucher->is_active = (bool) $request->is_active;
         $voucher->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Voucher active status updated successfully.']);
+        }
 
         return redirect()->route('admin.voucher.index')->with('success', 'Voucher active status updated successfully.');
     }

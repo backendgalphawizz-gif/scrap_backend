@@ -3,6 +3,7 @@
 @section('title', \App\CPU\translate('Voucher List'))
 
 @push('css_or_js')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
     .premium-pagination-wrap {
         border-top: 1px solid #e8ebef;
@@ -55,6 +56,17 @@
     .voucher-action-btn i {
         font-size: 17px;
         line-height: 1;
+    }
+
+    .voucher-status-switch .form-check-input {
+        width: 2.75em;
+        height: 1.4em;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .voucher-status-switch .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
     }
 
     @media (max-width: 767px) {
@@ -147,13 +159,13 @@
                         <th>Status</th>
                         <th>Validity</th>
                         <th>Usage</th>
-                        <th>Active</th>
-                        <th class="text-right" style="width: 220px;">Action</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($vouchers as $key => $voucher)
-                        <tr>
+                        <tr id="data-{{ $voucher->id }}">
                             <td>{{ $vouchers->firstItem() + $key }}</td>
                             <td>{{ optional($voucher->sale)->name ?? 'N/A' }}</td>
                             <td>{{ optional($voucher->voucherBrand)->name ?? 'N/A' }}</td>
@@ -174,44 +186,30 @@
                                 <br>
                                 <small class="text-muted">Per user: {{ (int) ($voucher->max_uses_per_user ?? 1) }}</small>
                             </td>
-                            <td>
-                                @if($voucher->is_active)
-                                    <span class="badge badge-success">Active</span>
-                                @else
-                                    <span class="badge badge-danger">Inactive</span>
-                                @endif
+                            <td class="text-center">
+                                <div class="form-check form-switch voucher-status-switch d-inline-flex justify-content-center mb-0">
+                                    <input class="form-check-input voucher-active-status"
+                                        type="checkbox"
+                                        role="switch"
+                                        aria-label="{{ \App\CPU\translate('Activate or deactivate') }}"
+                                        data-id="{{ $voucher->id }}"
+                                        {{ (int) $voucher->is_active === 1 ? 'checked' : '' }}>
+                                </div>
                             </td>
-                            <td class="text-right" style="width: 220px; white-space: nowrap;">
-                                <div class="voucher-action-group">
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
                                     <a href="{{ route('admin.voucher.edit', $voucher->id) }}"
                                        class="btn btn-outline-primary btn-sm voucher-action-btn"
-                                       title="Edit"
-                                       aria-label="Edit">
+                                       title="{{ \App\CPU\translate('Edit') }}"
+                                       aria-label="{{ \App\CPU\translate('Edit') }}">
                                         <i class="mdi mdi-pencil-outline"></i>
                                     </a>
-
-                                    <form action="{{ route('admin.voucher.active-status') }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $voucher->id }}">
-                                        <input type="hidden" name="is_active" value="{{ $voucher->is_active ? 0 : 1 }}">
-                                        <button type="submit"
-                                                class="btn btn-outline-warning btn-sm voucher-action-btn"
-                                                title="{{ $voucher->is_active ? 'Deactivate' : 'Activate' }}"
-                                                aria-label="{{ $voucher->is_active ? 'Deactivate' : 'Activate' }}">
-                                            <i class="mdi {{ $voucher->is_active ? 'mdi-toggle-switch-off-outline' : 'mdi-toggle-switch' }}"></i>
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ route('admin.voucher.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this voucher?');">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $voucher->id }}">
-                                        <button type="submit"
-                                                class="btn btn-outline-danger btn-sm voucher-action-btn"
-                                                title="Delete"
-                                                aria-label="Delete">
-                                            <i class="mdi mdi-delete-outline"></i>
-                                        </button>
-                                    </form>
+                                    <a class="btn btn-outline-danger btn-sm voucher-action-btn cursor-pointer delete"
+                                       title="{{ \App\CPU\translate('Delete') }}"
+                                       aria-label="{{ \App\CPU\translate('Delete') }}"
+                                       id="{{ $voucher->id }}">
+                                        <i class="mdi mdi-delete-outline"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -235,3 +233,100 @@
     </div>
 </div>
 @endsection
+
+@push('script')
+<script>
+    function notifySuccess(message) {
+        if (typeof toastr !== 'undefined' && toastr.success) {
+            toastr.success(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    function notifyError(message) {
+        if (typeof toastr !== 'undefined' && toastr.error) {
+            toastr.error(message);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: message,
+            showConfirmButton: false,
+            timer: 2500
+        });
+    }
+
+    $(document).on('change', '.voucher-active-status', function() {
+        var id = $(this).data('id');
+        var isActive = $(this).prop('checked') ? 1 : 0;
+        var $toggle = $(this);
+
+        $.ajax({
+            url: "{{ route('admin.voucher.active-status') }}",
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            data: { id: id, is_active: isActive },
+            success: function(response) {
+                if (response.status) {
+                    notifySuccess(response.message || '{{ \App\CPU\translate('Status updated successfully') }}');
+                } else {
+                    notifyError(response.message || '{{ \App\CPU\translate('Failed to update status') }}');
+                    $toggle.prop('checked', !$toggle.prop('checked'));
+                }
+            },
+            error: function(xhr) {
+                var message = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : '{{ \App\CPU\translate('Failed to update status') }}';
+                notifyError(message);
+                $toggle.prop('checked', !$toggle.prop('checked'));
+            }
+        });
+    });
+
+    $(document).on('click', '.delete', function() {
+        var id = $(this).attr('id');
+        Swal.fire({
+            title: '{{ \App\CPU\translate('Are you sure ?') }}',
+            text: "{{ \App\CPU\translate('You won\'t be able to revert this!') }}",
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '{{ \App\CPU\translate('Yes, delete it!') }}'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ route('admin.voucher.delete') }}",
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { id: id },
+                    success: function(response) {
+                        if (response && response.status === false) {
+                            notifyError(response.message || '{{ \App\CPU\translate('Failed to delete voucher') }}');
+                            return;
+                        }
+                        $('#data-' + id).remove();
+                        notifySuccess('{{ \App\CPU\translate('Voucher deleted successfully') }}');
+                    },
+                    error: function(xhr) {
+                        var message = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : '{{ \App\CPU\translate('Failed to delete voucher') }}';
+                        notifyError(message);
+                    }
+                });
+            }
+        });
+    });
+</script>
+@endpush
