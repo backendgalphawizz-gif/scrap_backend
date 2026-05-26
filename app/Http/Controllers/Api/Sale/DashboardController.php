@@ -263,6 +263,14 @@ class DashboardController extends Controller
                 }
             }
 
+            $generateGstInvoice = $request->boolean('generate_gst_invoice');
+            if ($generateGstInvoice && empty(trim((string) ($brand->gst_number ?? '')))) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Brand must have a GST number on file before creating a campaign with GST invoice.',
+                    'data' => [],
+                ], 422);
+            }
 
             // Logic to create campaign
 
@@ -319,6 +327,7 @@ class DashboardController extends Controller
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
             $campaign->sales_referal_code = $data['referral_code'] ?? null;
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
+            $campaign->generate_gst_invoice = $generateGstInvoice;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
 
             if($paymentSplit->feedback_percentage){

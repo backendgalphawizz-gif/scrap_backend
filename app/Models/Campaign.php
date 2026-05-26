@@ -31,12 +31,16 @@ class Campaign extends Model
         'share_on',
         'category_id',
         'sub_category_id',
-        'unique_code','used_post','total_user_required','sale_id','created_by','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst',
+        'unique_code','used_post','total_user_required','sale_id','created_by','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst','generate_gst_invoice',
         'repeat_brand_percentage','user_referral_percentage','referral_coin',
         'refund_status',
         'refunded_amount',
         'refund_note',
         'stopped_at',
+    ];
+
+    protected $casts = [
+        'generate_gst_invoice' => 'boolean',
     ];
 
     protected $appends = [
@@ -49,7 +53,11 @@ class Campaign extends Model
         'budget',
         'occupied_slots',
         'available_slots',
-        'is_slot_full'
+        'is_slot_full',
+        'invoice_available',
+        'invoice_type',
+        'gst_invoice_available',
+        'normal_invoice_available',
     ];
 
     // public function getActivitylogOptions(): LogOptions
@@ -197,6 +205,26 @@ class Campaign extends Model
         }
 
         return $this->occupied_slots >= $requiredSlots;
+    }
+
+    public function getInvoiceAvailableAttribute(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    public function getInvoiceTypeAttribute(): string
+    {
+        return (bool) $this->generate_gst_invoice ? 'gst' : 'normal';
+    }
+
+    public function getGstInvoiceAvailableAttribute(): bool
+    {
+        return $this->invoice_available && (bool) $this->generate_gst_invoice;
+    }
+
+    public function getNormalInvoiceAvailableAttribute(): bool
+    {
+        return $this->invoice_available && !(bool) $this->generate_gst_invoice;
     }
 
 }

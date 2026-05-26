@@ -69,6 +69,16 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                @php($company_gst_number=\App\CPU\Helpers::get_business_settings('company_gst_number'))
+                                <div class="form-group">
+                                    <label class="title-color d-flex">{{\App\CPU\translate('Company GSTIN')}}</label>
+                                    <input type="text" value="{{ $company_gst_number ?? '' }}"
+                                        name="company_gst_number" class="form-control"
+                                        placeholder="{{\App\CPU\translate('Company GSTIN')}}"
+                                        maxlength="15">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 @php($shop_address=\App\CPU\Helpers::get_business_settings('shop_address'))
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('company_address')}}</label>
