@@ -35,6 +35,21 @@
         white-space: nowrap;
     }
 
+    .campaign-action-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .campaign-action-btn i {
+        font-size: 18px;
+        line-height: 1;
+    }
+
     .premium-pagination-wrap {
         border-top: 1px solid #e8ebef;
         margin-top: 22px;
@@ -244,21 +259,23 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2 justify-content-center">
-                                                <a class="btn btn-outline-info btn-sm cursor-pointer edit"
-                                                    title="{{ \App\CPU\translate('Edit')}}"
+                                                <a class="btn btn-outline-info btn-sm cursor-pointer campaign-action-btn"
+                                                    title="{{ \App\CPU\translate('View')}}"
                                                     href="{{route('admin.campaign.show',[$campaign['id']])}}">
-                                                    View
+                                                    <i class="mdi mdi-eye-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-primary btn-sm cursor-pointer edit"
+                                                <a class="btn btn-outline-primary btn-sm cursor-pointer campaign-action-btn"
                                                     title="{{ \App\CPU\translate('Edit')}}"
                                                     href="{{route('admin.campaign.edit',[$campaign['id']])}}">
-                                                    Edit
+                                                    <i class="mdi mdi-pencil-outline"></i>
                                                 </a>
-                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete"
+                                                @if($campaign->status === 'pending')
+                                                <a class="btn btn-outline-danger btn-sm cursor-pointer delete campaign-action-btn"
                                                     title="{{ \App\CPU\translate('Delete')}}"
                                                     id="{{$campaign['id']}}">
-                                                    Delete
+                                                    <i class="mdi mdi-delete-outline"></i>
                                                 </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -420,9 +437,19 @@
                     data: {
                         id: id
                     },
-                    success: function() {
+                    success: function(response) {
+                        if (response && response.status === false) {
+                            notifyError(response.message || '{{ \App\CPU\translate('Failed to delete campaign')}}');
+                            return;
+                        }
                         $('#data-' + id).remove();
-                        // toastr.success('{{ \App\CPU\translate('campaign deleted successfully!')}}');
+                        notifySuccess('{{ \App\CPU\translate('Campaign deleted successfully')}}');
+                    },
+                    error: function(xhr) {
+                        var message = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : '{{ \App\CPU\translate('Failed to delete campaign')}}';
+                        notifyError(message);
                     }
                 });
             }

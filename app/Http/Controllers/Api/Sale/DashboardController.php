@@ -286,6 +286,8 @@ class DashboardController extends Controller
             $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
 
             $campaign->brand_id = $request->brand_id;
+            $campaign->sale_id = $salesId;
+            $campaign->created_by = Campaign::CREATED_BY_SALES_PERSON;
             $caption = (string) ($request->caption ?? '');
             $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
             $campaign->post_type = $request->post_type ?? 'post';

@@ -230,6 +230,7 @@ Route::group(['prefix' => 'brand'], function () {
         Route::get('/feedback-questions/{id}', [FeedbackQuestionController::class, 'show']);
         Route::put('/feedback-questions/{id}', [FeedbackQuestionController::class, 'update']);
         Route::delete('/feedback-questions/{id}', [FeedbackQuestionController::class, 'destroy']);
+        Route::get('/feedbacks', [FeedbackQuestionController::class, 'listFeedbacks']);
 
         Route::get('delete-account', [SellerDashboardController::class, 'deleteAccount']);
 
@@ -247,6 +248,7 @@ Route::group(['prefix' => 'brand'], function () {
 
         Route::get('campaign/has-campaign-last-100-days', [SellerDashboardController::class, 'hasCampaignInLast100Days']);
         Route::get('refunds', [SellerDashboardController::class, 'listRefunds']);
+        
     });
 });
 

@@ -147,6 +147,10 @@ class BrandCategoryController extends Controller
 
         $brandCategory->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Brand category deleted successfully.']);
+        }
+
         return redirect()->route('admin.brand-category.index')->with('success', 'Brand category deleted successfully.');
     }
 
@@ -165,6 +169,10 @@ class BrandCategoryController extends Controller
             BrandCategory::query()
                 ->where('parent_id', $brandCategory->id)
                 ->update(['status' => false]);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => true, 'message' => 'Brand category status updated successfully.']);
         }
 
         return redirect()->route('admin.brand-category.index')->with('success', 'Brand category status updated successfully.');

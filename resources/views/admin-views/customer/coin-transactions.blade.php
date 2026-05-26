@@ -169,6 +169,7 @@
                                 <th>{{\App\CPU\translate('Value')}}</th>
                                 <th>{{\App\CPU\translate('Date')}}</th>
                                 <th>{{\App\CPU\translate('Status')}}</th>
+                                <th class="text-center">{{\App\CPU\translate('Action')}}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,17 +184,34 @@
                                 <td>{{ $transaction->value ?? '-' }}</td>
                                 <td>{{ $transaction->created_at->format('Y-m-d H:i') }}</td>
                                 <td>
-                                    <span class="badge badge-{{ $transaction->status == 'completed' ? 'gradient-success' : 'gradient-danger' }}">
-                                        {{ ucfirst($transaction->status) }}
-                                    </span>
+                                    @if($transaction->status == 'completed')
+                                        <span class="badge badge-gradient-success">{{ ucfirst($transaction->status) }}</span>
+                                    @elseif($transaction->status == 'pending')
+                                        <span class="badge badge-gradient-warning">{{ ucfirst($transaction->status) }}</span>
+                                    @elseif($transaction->status == 'rejected')
+                                        <span class="badge badge-gradient-danger">{{ ucfirst($transaction->status) }}</span>
+                                    @else
+                                        <span class="badge badge-gradient-danger">{{ ucfirst($transaction->status) }}</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
                                     @if($transaction->type == 'debit' && $transaction->status == 'pending')
-                                        <button class="btn btn-sm btn-success approve-withdrawal-btn mt-1" data-id="{{ $transaction->id }}">Approve</button>
+                                        <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                            <button type="button" class="btn btn-sm btn-success approve-withdrawal-btn" data-id="{{ $transaction->id }}">
+                                                {{ \App\CPU\translate('Approve') }}
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger reject-withdrawal-btn" data-id="{{ $transaction->id }}">
+                                                {{ \App\CPU\translate('Reject') }}
+                                            </button>
+                                        </div>
+                                    @else
+                                        <span class="text-muted">—</span>
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">{{\App\CPU\translate('No transactions found')}}</td>
+                                <td colspan="10" class="text-center">{{\App\CPU\translate('No transactions found')}}</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -217,40 +235,65 @@
 @push('script_2')
 
 <script>
+    function postWithdrawalAction(url, id, extraData) {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+            }
+        });
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: Object.assign({ id: id }, extraData || {}),
+            dataType: 'json',
+            success: function(response) {
+                if (response.status) {
+                    Swal.fire('Success', response.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                Swal.fire('Error', xhr.responseJSON?.message || 'Something went wrong.', 'error');
+            }
+        });
+    }
+
     $(document).on('click', '.approve-withdrawal-btn', function() {
         let id = $(this).data('id');
         Swal.fire({
-            title: 'Are you sure?',
-            text: 'Do you want to approve this withdrawal request?',
+            title: '{{ \App\CPU\translate('Are you sure?') }}',
+            text: '{{ \App\CPU\translate('Do you want to approve this withdrawal request?') }}',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, approve it!'
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '{{ \App\CPU\translate('Yes, approve it!') }}'
         }).then((result) => {
-            if (result.value) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                    }
-                });
-                $.ajax({
-                    url: "{{ route('admin.user.approve-withdrawal') }}",
-                    method: 'POST',
-                    data: { id: id },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status) {
-                            Swal.fire('Success', response.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Something went wrong.', 'error');
-                    }
+            if (result.isConfirmed || result.value) {
+                postWithdrawalAction("{{ route('admin.user.approve-withdrawal') }}", id);
+            }
+        });
+    });
+
+    $(document).on('click', '.reject-withdrawal-btn', function() {
+        let id = $(this).data('id');
+        Swal.fire({
+            title: '{{ \App\CPU\translate('Reject withdrawal?') }}',
+            text: '{{ \App\CPU\translate('Coins will be refunded to the user wallet.') }}',
+            input: 'text',
+            inputPlaceholder: '{{ \App\CPU\translate('Rejection reason (optional)') }}',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '{{ \App\CPU\translate('Yes, reject it!') }}'
+        }).then((result) => {
+            if (result.isConfirmed || result.value) {
+                postWithdrawalAction("{{ route('admin.user.reject-withdrawal') }}", id, {
+                    reason: result.value || ''
                 });
             }
         });

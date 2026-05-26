@@ -220,9 +220,15 @@
                                 <td>{{ $post->likes }}</td>
                                 <td>{{ $post->comments }}</td>
                                 <td>
-                                    <a href="{{ $post->post_url }}">
+                                    @if(!empty($post->post_url))
+                                        <a href="{{ $post->post_url }}" target="_blank" rel="noopener noreferrer" title="{{ $post->post_url }}">
+                                            <i class="fa fa-{{ $post->shared_on }}"></i>
+                                        </a>
+                                    @elseif($post->shared_on)
                                         <i class="fa fa-{{ $post->shared_on }}"></i>
-                                    </a>
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                                 <td>{{ date('d M, Y', strtotime($post->created_at)) }}</td>
                             </tr>

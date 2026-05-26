@@ -103,92 +103,19 @@
             min-width: 74px;
         }
 
-        .premium-user-table .action-icon-group {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 7px;
-            border-radius: 16px;
-            background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
-            border: 1px solid #d7e5f4;
-            box-shadow: 0 6px 16px rgba(16, 42, 67, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-        }
-
-        .premium-user-table .action-icon-btn {
-            width: 42px;
-            height: 42px;
-            min-width: 42px;
+        .customer-action-btn {
+            width: 36px;
+            height: 36px;
             padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 13px;
-            border: none;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-            transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+            border-radius: 10px;
         }
 
-        .premium-user-table .action-icon-btn i {
-            font-size: 19px;
+        .customer-action-btn i {
+            font-size: 18px;
             line-height: 1;
-            transition: transform .18s ease;
-        }
-
-        .premium-user-table .action-icon-btn:hover {
-            transform: translateY(-1px);
-            text-decoration: none;
-        }
-
-        .premium-user-table .action-icon-btn:hover i {
-            transform: scale(1.05);
-        }
-
-        .premium-user-table .action-icon-btn:focus {
-            box-shadow: 0 0 0 0.18rem rgba(19, 103, 173, 0.16);
-        }
-
-        .premium-user-table .action-icon-btn:focus-visible {
-            outline: none;
-            box-shadow: 0 0 0 0.22rem rgba(19, 103, 173, 0.2);
-        }
-
-        .premium-user-table .action-icon-btn.view-btn {
-            background: linear-gradient(135deg, #f0f7ff 0%, #e4f0fb 100%);
-            color: #0f4c81;
-            box-shadow: 0 7px 14px rgba(15, 76, 129, 0.1);
-        }
-
-        .premium-user-table .action-icon-btn.view-btn:hover {
-            background: linear-gradient(135deg, #0f4c81 0%, #1367ad 100%);
-            color: #ffffff;
-            box-shadow: 0 11px 20px rgba(15, 76, 129, 0.24);
-        }
-
-        .premium-user-table .action-icon-btn.log-btn {
-            background: linear-gradient(135deg, #f3fff3 0%, #e9fbe9 100%);
-            color: #177a3f;
-            box-shadow: 0 7px 14px rgba(23, 122, 63, 0.12);
-        }
-
-        .premium-user-table .action-icon-btn.log-btn:hover {
-            background: linear-gradient(135deg, #177a3f 0%, #239a52 100%);
-            color: #ffffff;
-            box-shadow: 0 11px 20px rgba(23, 122, 63, 0.24);
-        }
-
-        .premium-user-table .action-icon-btn.delete-btn {
-            background: linear-gradient(135deg, #fff4f6 0%, #ffe9ee 100%);
-            color: #c73a57;
-            box-shadow: 0 7px 14px rgba(199, 58, 87, 0.1);
-        }
-
-        .premium-user-table .action-icon-btn.delete-btn:hover {
-            background: linear-gradient(135deg, #c73a57 0%, #de5a74 100%);
-            color: #ffffff;
-            box-shadow: 0 11px 20px rgba(199, 58, 87, 0.24);
         }
 
         .premium-pagination-wrap {
@@ -359,7 +286,7 @@
                                 : (\Illuminate\Support\Str::startsWith($customer->image, ['http://', 'https://'])
                                     ? $customer->image
                                     : asset('storage/profile/' . ltrim($customer->image, '/'))))
-                            <tr>
+                            <tr id="data-{{ $customer->id }}">
                                 <td>
                                     {{$customers->firstItem()+$key}}
                                 </td>
@@ -427,39 +354,27 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="action-icon-group">
-                                        <a title="{{\App\CPU\translate('View')}}"
-                                        class="btn btn-sm action-icon-btn view-btn"
-                                        aria-label="{{\App\CPU\translate('View')}}"
-                                        target="_self"
-                                        href="{{ route('admin.user.view',[$customer['id']]) }}">
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a class="btn btn-outline-info btn-sm cursor-pointer customer-action-btn"
+                                            title="{{ \App\CPU\translate('View') }}"
+                                            href="{{ route('admin.user.view', [$customer['id']]) }}">
                                             <i class="mdi mdi-eye-outline"></i>
                                         </a>
-
-                                         <a title="{{\App\CPU\translate('View')}}"
-                                        class="btn btn-sm action-icon-btn view-btn"
-                                        aria-label="{{\App\CPU\translate('View')}}"
-                                        target="_self"
-                                        href="{{ route('admin.user.edit',[$customer['id']]) }}">
+                                        <a class="btn btn-outline-primary btn-sm cursor-pointer customer-action-btn"
+                                            title="{{ \App\CPU\translate('Edit') }}"
+                                            href="{{ route('admin.user.edit', [$customer['id']]) }}">
                                             <i class="mdi mdi-pencil-outline"></i>
                                         </a>
-
-                                        <a title="User Activity Logs"
-                                        class="btn btn-sm action-icon-btn log-btn"
-                                        aria-label="User Activity Logs"
-                                        target="_self"
-                                        href="{{ route('admin.user.activity.logs',[$customer['id']]) }}">
+                                        <a class="btn btn-outline-secondary btn-sm cursor-pointer customer-action-btn"
+                                            title="{{ \App\CPU\translate('User Activity Logs') }}"
+                                            href="{{ route('admin.user.activity.logs', [$customer['id']]) }}">
                                             <i class="mdi mdi-timeline-text-outline"></i>
                                         </a>
-                                        <a title="{{\App\CPU\translate('Delete')}}"
-                                        class="btn btn-sm delete action-icon-btn delete-btn"
-                                        aria-label="{{\App\CPU\translate('Delete')}}"
-                                        onclick="return confirm('{{\App\CPU\translate('Are you sure you want to delete this customer?')}}');"
-                                        href="{{ route('admin.user.delete',[$customer['id']]) }}">
+                                        <a class="btn btn-outline-danger btn-sm cursor-pointer delete customer-action-btn"
+                                            title="{{ \App\CPU\translate('Delete') }}"
+                                            href="{{ route('admin.user.delete', [$customer['id']]) }}">
                                             <i class="mdi mdi-delete-outline"></i>
                                         </a>
-                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -537,6 +452,23 @@
                     });
                 }
             })
+        });
+
+        $(document).on('click', 'a.delete', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            Swal.fire({
+                title: '{{ \App\CPU\translate('Are you sure ?') }}',
+                text: "{{ \App\CPU\translate('Are you sure you want to delete this customer?') }}",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '{{ \App\CPU\translate('Yes, delete it!') }}'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
         });
 
         $(document).on('click', '.update-account-status', function () {

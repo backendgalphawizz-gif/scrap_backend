@@ -71,14 +71,19 @@ class CustomRoleController extends Controller
 
     public function employee_role_status_update(Request $request)
     {
-        $admin_role = AdminRole::find($request->id);
-        $admin_role->status = $request->status;
+        $request->validate([
+            'id' => 'required|integer|exists:admin_roles,id',
+            'status' => 'required|boolean',
+        ]);
+
+        $admin_role = AdminRole::findOrFail($request->id);
+        $admin_role->status = (bool) $request->status;
         $admin_role->save();
 
         return response()->json([
-            'success' => 1,
-        ], 200);
-
+            'status' => true,
+            'message' => 'Role status updated successfully.',
+        ]);
     }
 
 
@@ -101,8 +106,15 @@ class CustomRoleController extends Controller
 
     public function delete(Request $request)
     {
-        $role = AdminRole::find($request->id);
-        $role->delete();
-        return response()->json();
+        $request->validate([
+            'id' => 'required|integer|exists:admin_roles,id',
+        ]);
+
+        AdminRole::findOrFail($request->id)->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Role deleted successfully.',
+        ]);
     }
 }

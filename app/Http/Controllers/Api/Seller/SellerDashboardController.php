@@ -535,6 +535,7 @@ class SellerDashboardController extends Controller
             $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
 
             $campaign->brand_id = $seller['id'];
+            $campaign->created_by = Campaign::CREATED_BY_BRAND;
             $caption = (string) ($request->caption ?? '');
             $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
             $campaign->post_type = $request->post_type ?? 'post';
@@ -816,21 +817,16 @@ class SellerDashboardController extends Controller
         $data = Helpers::get_seller_by_token($request);
         if ($data['success'] == 1) {
             $seller = $data['data'];
-
-            $campaigns = Campaign::where('brand_id', $seller['id'])
+            $campaigns = Campaign::with('sale')
+                ->where('brand_id', $seller['id'])
                 ->when($request->has('status'), function ($query) use ($request) {
-                    // pending, active, completed
                     $query->where('status', $request->input('status'));
-                    // if ($request->status == 'active') {
-                    //     $query->whereDate('start_date', '<=', Carbon::now())->whereDate('end_date', '>=', Carbon::now());
-                    // } elseif ($request->status == 'upcoming') {
-                    //     $query->whereDate('start_date', '>', Carbon::now());
-                    // } elseif ($request->status == 'completed') {
-                    //     $query->whereDate('end_date', '<', Carbon::now());
-                    // }
                 })
                 ->orderBy('id', 'DESC')
-                ->get();
+                ->get()
+                ->each(function ($campaign) {
+                    $campaign->makeHidden('sale');
+                });
             return response()->json([
                 'status' => true,
                 'message' => 'Campaign list retrieved successfully',

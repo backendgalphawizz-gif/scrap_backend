@@ -740,12 +740,12 @@ class DashboardController extends Controller
 
     public function deleteUser(Request $request, $id)
     {
-        $user = User::find($request->id);
+        $user = User::find($id);
         if ($user) {
             $user->delete();
             return redirect()->back()->with('success', 'User deleted successfully');
         }
-        return redirect()->back()->with('success', 'Something went wrong');
+        return redirect()->back()->with('error', 'Something went wrong');
     }
 
     public function logout(Request $request) {
@@ -1034,6 +1034,60 @@ class DashboardController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Withdrawal approved successfully.'
+        ]);
+    }
+
+    public function rejectWithdrawal(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:coin_transactions,id',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $transaction = CoinTransaction::with('wallet')->findOrFail($request->id);
+        if ($transaction->type !== 'debit' || $transaction->status !== 'pending') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Only pending debit withdrawals can be rejected.',
+            ], 422);
+        }
+
+        $wallet = $transaction->wallet;
+        if (!$wallet) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Wallet not found.',
+            ], 404);
+        }
+
+        \DB::transaction(function () use ($transaction, $wallet, $request) {
+            $wallet = CoinWallet::where('id', $wallet->id)->lockForUpdate()->first();
+            $wallet->balance += $transaction->coin;
+            $wallet->save();
+
+            $transaction->status = 'rejected';
+            if ($request->filled('reason')) {
+                $reason = trim($request->reason);
+                $transaction->description = trim(
+                    ($transaction->description ? $transaction->description . ' | ' : '') . 'Rejected: ' . $reason
+                );
+            }
+            $transaction->save();
+        });
+
+        $user = \App\Models\User::find($wallet->user_id);
+        if ($user && $user->fcm_id) {
+            $amount = number_format($transaction->coin, 2);
+            $body = "Your payout request of ₹{$amount} was rejected and the amount was returned to your wallet.";
+            if ($request->filled('reason')) {
+                $body .= ' Reason: ' . $request->reason;
+            }
+            Helpers::send_push_notif_to_topic($user->fcm_id, 'Payout Rejected', $body);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Withdrawal rejected and coins refunded to user wallet.',
         ]);
     }
 

@@ -246,8 +246,20 @@
                             @forelse($brands as $brand)
 
                             <tr>
-                                <td>{{ $brand['brand'] }}</td>
-                                <td>{{ $brand['campaign'] }}</td>
+                                <td>
+                                    @if(!empty($brand['brand_id']))
+                                        <a href="{{ route('admin.brand.view', $brand['brand_id']) }}" class="title-color hover-c1">{{ $brand['brand'] }}</a>
+                                    @else
+                                        {{ $brand['brand'] }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(!empty($brand['campaign_id']))
+                                        <a href="{{ route('admin.campaign.show', $brand['campaign_id']) }}" class="title-color hover-c1">{{ $brand['campaign'] }}</a>
+                                    @else
+                                        {{ $brand['campaign'] }}
+                                    @endif
+                                </td>
                                 <td>{{ rtrim(rtrim(number_format($brand['amount_with_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['amount_without_gst'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
