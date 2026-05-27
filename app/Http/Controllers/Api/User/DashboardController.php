@@ -37,9 +37,15 @@ class DashboardController extends Controller
                 $q->where('state', $state);
             })
             ->where('status', 'active')
+            ->where('start_date', '<=', now()->toDateString())
             ->whereNotIn('id', function ($sub) use ($user) {
                 $sub->select('campaign_id')
                     ->from('user_campaign_skips')
+                    ->where('user_id', $user->id);
+            })
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('campaign_transactions')
                     ->where('user_id', $user->id);
             })
             ->orderBy('campaign_transactions_count', 'DESC')
@@ -145,10 +151,16 @@ class DashboardController extends Controller
                 );
             })
             ->where(['status' => 'active'])
+            ->where('start_date', '<=', now()->toDateString())
             ->where('end_date', '>=', now()->toDateString())
             ->whereNotIn('id', function ($sub) use ($user) {
                 $sub->select('campaign_id')
                     ->from('user_campaign_skips')
+                    ->where('user_id', $user->id);
+            })
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('campaign_transactions')
                     ->where('user_id', $user->id);
             })
             ->paginate($request->input('limit', 10));
@@ -393,7 +405,9 @@ class DashboardController extends Controller
             $q->where('user_id', $user->id);
         }])->whereIn('id', $campaign_ids)->get();
 
-        $total_coins_earned = strval(0);
+        $total_coins_earned = strval(CampaignTransaction::where('user_id', $user->id)
+            ->where('status', CampaignTransaction::STATUS_COMPLETED)
+            ->sum('earning'));
         $total_campaigns = strval(CampaignTransaction::where('user_id', $user->id)->count());
 
         return response()->json([

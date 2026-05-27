@@ -57,9 +57,6 @@ class TdsCalculationService
         if ($user->pan_status !== 'Verified') {
             $missing[] = 'PAN';
         }
-        if ($user->aadhar_status !== 'Verified') {
-            $missing[] = 'Aadhaar';
-        }
         if ($user->upi_status !== 'Verified') {
             $missing[] = 'UPI';
         }
