@@ -387,22 +387,20 @@
                     </table>
                     </div>
 
-                    <div class="premium-pagination-wrap">
-                        <div class="premium-pagination-shell">
-                            <div class="premium-pagination-inline">
-                                {!! $customers->onEachSide(1)->links('vendor.pagination.premium') !!}
+                    @if($customers->hasPages())
+                        <div class="premium-pagination-wrap">
+                            <div class="premium-pagination-shell">
+                                <div class="premium-pagination-inline">
+                                    {!! $customers->onEachSide(1)->links('vendor.pagination.premium') !!}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    @endif
 
-                @if(count($customers)==0)
-                    <div class="text-center p-4">
-                        <img class="mb-3 w-160" src="{{ asset('assets/back-end/svg/illustrations/sorry.svg') }}"
-                            alt="Image Description">
-                        <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
-                    </div>
-                @endif
+                    @if(count($customers)==0)
+                        @include('admin-views.partials._empty-state')
+                    @endif
+                </div>
             </div>
         </div>
     </div>
