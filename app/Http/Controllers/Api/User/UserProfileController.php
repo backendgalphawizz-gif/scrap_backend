@@ -72,94 +72,153 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function updateKyc(Request $request)
+    public function updateKycPan(Request $request)
     {
         $user = $request->user();
-        
-        if ($request->has('pan_number') && $user->pan_status !== 'Verified') {
-            // Verify PAN with third-party API before accepting it
-            $panVerification = app(PanValidationService::class)->verifyPanNumber($request->pan_number);
 
-            if ($panVerification['error'] !== null) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => $panVerification['error'],
-                ], 502);
-            }
-
-            if (!$panVerification['valid']) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'PAN number is invalid. Please enter a valid PAN.',
-                    'data'    => [
-                        'pan_number' => $request->pan_number,
-                        'pan_status' => $panVerification['status'],
-                    ],
-                ], 422);
-            }
-
-            $panValidation = app(PanValidationService::class);
-            $assignError = $panValidation->validateAssignment(
-                $request->pan_number,
-                (string) $user->name,
-                $panVerification['name'] ?? null,
-                $user->id
-            );
-            if ($assignError !== null) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => $assignError,
-                ], 422);
-            }
-
-            $user->pan_number = $panValidation->normalizePan($request->pan_number);
-            $user->pan_status = 'Submitted';
-            if ($request->hasFile('pan_image')) {
-                $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
-            }
+        if ($user->pan_status === 'Verified') {
+            return response()->json([
+                'status'  => true,
+                'message' => 'PAN is already verified and cannot be changed.',
+                'data'    => new CommonResource($user),
+            ]);
         }
 
-        if ($request->has('aadhar_number') && $user->aadhar_status !== 'Verified') {
-            $user->aadhar_number = $request->aadhar_number;
-            $user->aadhar_status = 'Submitted';
-            $aadhar_images = [];
-            if ($request->hasFile('aadhar_image')) {
-                foreach ($request->file('aadhar_image') as $img) {
-                    $aadhar_images[] = ImageManager::upload('profile/', 'png', $img, $user->image);
-                }
-                $user->aadhar_image = implode(',', $aadhar_images);
-            }
+        $validator = Validator::make($request->all(), [
+            'pan_number' => 'required|string|size:10',
+            'pan_image'  => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
         }
 
-        if ($request->has('upi_id') && $user->upi_status !== 'Verified') {
-            $user->upi_id = $request->upi_id;
-            $user->upi_status = 'Submitted';
-        }
-        $bankFields = ['bank_name', 'ifsc_code', 'account_number', 'branch_name'];
-        $hasBankField = collect($bankFields)->some(fn ($f) => $request->has($f));
-        if ($hasBankField && $user->bank_status !== 'Verified') {
-            $decoded = json_decode($user->bank_detail ?? '{}', true);
-            $existing = is_array($decoded) ? $decoded : [];
-            $merged = array_merge($existing, array_filter(
-                $request->only($bankFields),
-                fn ($v) => $v !== null && $v !== ''
-            ));
-            $user->bank_detail = json_encode($merged);
-            $hasAnyValue = collect($merged)->some(fn ($v) => trim((string) $v) !== '');
-            $user->bank_status = $hasAnyValue ? 'Submitted' : 'Not Submitted';
+        $panVerification = app(PanValidationService::class)->verifyPanNumber($request->pan_number);
+
+        if ($panVerification['error'] !== null) {
+            return response()->json([
+                'status'  => false,
+                'message' => $panVerification['error'],
+            ], 502);
         }
 
-        $kycDirty = $user->isDirty();
-        if ($kycDirty) {
-            $user->save();
+        if (!$panVerification['valid']) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'PAN number is invalid. Please enter a valid PAN.',
+                'data'    => [
+                    'pan_number' => $request->pan_number,
+                    'pan_status' => $panVerification['status'],
+                ],
+            ], 422);
         }
+
+        $panValidation = app(PanValidationService::class);
+        $assignError = $panValidation->validateAssignment(
+            $request->pan_number,
+            (string) $user->name,
+            $panVerification['name'] ?? null,
+            $user->id
+        );
+        if ($assignError !== null) {
+            return response()->json([
+                'status'  => false,
+                'message' => $assignError,
+            ], 422);
+        }
+
+        $user->pan_number = $panValidation->normalizePan($request->pan_number);
+        $user->pan_status = 'Submitted';
+        if ($request->hasFile('pan_image')) {
+            $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
+        }
+        $user->save();
 
         return response()->json([
-            'status' => true,
-            'message' => $kycDirty
-                ? 'User KYC updated successfully'
-                : 'No KYC fields were updated (verified items cannot be changed).',
-            'data' => new CommonResource($user)
+            'status'  => true,
+            'message' => 'PAN details submitted successfully.',
+            'data'    => new CommonResource($user),
+        ]);
+    }
+
+    public function updateKycUpi(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->upi_status === 'Verified') {
+            return response()->json([
+                'status'  => true,
+                'message' => 'UPI is already verified and cannot be changed.',
+                'data'    => new CommonResource($user),
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'upi_id' => 'required|string|max:120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $user->upi_id = $request->upi_id;
+        $user->upi_status = 'Submitted';
+        $user->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'UPI details submitted successfully.',
+            'data'    => new CommonResource($user),
+        ]);
+    }
+
+    public function updateKycBank(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->bank_status === 'Verified') {
+            return response()->json([
+                'status'  => true,
+                'message' => 'Bank details are already verified and cannot be changed.',
+                'data'    => new CommonResource($user),
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'bank_name'      => 'required|string|max:100',
+            'branch_name'    => 'required|string|max:100',
+            'account_number' => 'required|string|max:20',
+            'ifsc_code'      => 'required|string|size:11',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        $bankFields = ['bank_name', 'ifsc_code', 'account_number', 'branch_name'];
+        $decoded = json_decode($user->bank_detail ?? '{}', true);
+        $existing = is_array($decoded) ? $decoded : [];
+        $merged = array_merge($existing, array_filter(
+            $request->only($bankFields),
+            fn ($v) => $v !== null && $v !== ''
+        ));
+        $user->bank_detail = json_encode($merged);
+        $user->bank_status = 'Submitted';
+        $user->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Bank details submitted successfully.',
+            'data'    => new CommonResource($user),
         ]);
     }
 
@@ -827,6 +886,8 @@ class UserProfileController extends Controller
             ->whereIn('category_id', $interestIds)
             // Only active campaigns
             ->where('status', 'active')
+            // Only campaigns that have already started
+            ->where('start_date', '<=', now()->toDateString())
             // Only campaigns from visible brands
             ->whereHas('brand', function ($q) {
                 $q->where('visibility_status', 'true');
@@ -865,6 +926,16 @@ class UserProfileController extends Controller
                      AND CAST(SUBSTRING_INDEX(REPLACE(age_range, " ", ""), "-", -1) AS UNSIGNED) >= ?',
                     [$userAge, $userAge]
                 );
+            })
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('user_campaign_skips')
+                    ->where('user_id', $user->id);
+            })
+            ->whereNotIn('id', function ($sub) use ($user) {
+                $sub->select('campaign_id')
+                    ->from('campaign_transactions')
+                    ->where('user_id', $user->id);
             })
             ->orderBy('id', 'DESC')
             ->paginate($request->input('limit', 10));

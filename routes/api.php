@@ -139,7 +139,9 @@ Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->gr
     Route::get('profile', [UserProfileController::class, 'index']);
     Route::get('referrers', [UserProfileController::class, 'referrers']);
     Route::post('update-profile', [UserProfileController::class, 'update']); // na
-    Route::post('update-kyc', [UserProfileController::class, 'updateKyc']);  // na
+    Route::post('update-kyc-pan', [UserProfileController::class, 'updateKycPan']);
+    Route::post('update-kyc-upi', [UserProfileController::class, 'updateKycUpi']);
+    Route::post('update-kyc-bank', [UserProfileController::class, 'updateKycBank']);
 
     // User wallet related routes
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
