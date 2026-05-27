@@ -258,7 +258,43 @@ class CampaignController extends Controller
             $oldStatus = $campaign->status;
             $campaign->status = $request->status;
             $campaign->save();
-            
+
+            // Refund full budget to brand wallet when admin rejects a brand-created campaign
+            if (
+                $request->status === 'rejected'
+                && $campaign->created_by === Campaign::CREATED_BY_BRAND
+                && $campaign->settlement_status !== CampaignSettlementService::SETTLEMENT_SETTLED
+            ) {
+                $refundAmount = round((float) ($campaign->compign_budget_with_gst ?? 0), 2);
+
+                if ($refundAmount > 0) {
+                    DB::transaction(function () use ($campaign, $refundAmount) {
+                        $wallet = SellerWallet::firstOrCreate(
+                            ['seller_id' => $campaign->brand_id],
+                            ['wallet_amount' => 0]
+                        );
+                        $wallet->wallet_amount = round((float) $wallet->wallet_amount + $refundAmount, 2);
+                        $wallet->save();
+
+                        SellerWalletHistory::create([
+                            'seller_id'         => $campaign->brand_id,
+                            'amount'            => $refundAmount,
+                            'remarks'           => 'Campaign rejected refund: ' . ($campaign->title ?? 'Campaign #' . $campaign->id),
+                            'type'              => 'credit',
+                            'available_balance' => $wallet->wallet_amount,
+                        ]);
+
+                        $campaign->settlement_status      = CampaignSettlementService::SETTLEMENT_SETTLED;
+                        $campaign->settled_at             = now();
+                        $campaign->amount_returned_to_wallet = $refundAmount;
+                        $campaign->save();
+
+                        Helpers::systemActivity('campaign_refund', auth()->user(), 'rejected_refund',
+                            "₹{$refundAmount} refunded to brand wallet on campaign rejection: {$campaign->title}", $campaign);
+                    });
+                }
+            }
+
             // Send FCM notification to brand about campaign status change
             if ($campaign->brand && $campaign->brand->cm_firebase_token) {
                 $title = '';
