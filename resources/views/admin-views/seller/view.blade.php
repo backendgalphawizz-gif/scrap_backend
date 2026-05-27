@@ -15,7 +15,7 @@
         .brand-cover-card {
             border: 0;
             border-radius: 18px;
-            background: linear-gradient(145deg, #4f46e5 0%, #7c3aed 45%, #8b5cf6 100%);
+            background: linear-gradient(145deg, #1f5c92 0%, #1f5c92 45%, #0a355b 100%);
             color: #fff;
             overflow: hidden;
             position: relative;
@@ -386,8 +386,8 @@
                                  onerror="this.onerror=null;this.src='{{ asset('assets/front-end/img/placeholder.png') }}';" style="width: 60px; height: 60px;">
                             <div>
                                 <h4 class="mb-1">{{ $seller->username ?: '-' }}</h4>
-                                <div class="small text-dark mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>
-                                <div class="small text-dark">{{ $seller->email ?: '-' }} | {{ $seller->phone ?: '-' }}</div>
+                                <div class="small text-light mb-1">{{ $seller->f_name }} {{ $seller->l_name }}</div>
+                                <div class="small text-light">{{ $seller->email ?: '-' }} | {{ $seller->phone ?: '-' }}</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
                                     <span class="brand-mini-chip"><i class="mdi mdi-clock-outline"></i> Joined {{ \App\CPU\Helpers::formatAdminDate($seller->created_at) }}</span>
                                     <span class="brand-mini-chip"><i class="mdi mdi-bullseye-arrow"></i> Campaigns {{ $seller->campaigns_count ?? 0 }}</span>
@@ -403,8 +403,8 @@
                                     Account: {{ ucfirst($seller->status ?? 'pending') }}
                                 </span>
                             </div>
-                            <div class="small text-dark">Unique Code: {{ $seller->unique_code ?: '-' }}</div>
-                            <div class="small text-dark">Referral Code: {{ $seller->referral_code ?: '-' }}</div>
+                            <div class="small text-light">Unique Code: {{ $seller->unique_code ?: '-' }}</div>
+                            <div class="small text-light">Referral Code: {{ $seller->referral_code ?: '-' }}</div>
                         </div>
                     </div>
                 </div>

@@ -152,7 +152,7 @@
 
                         <tbody>
                             @foreach($notifications as $key=>$notification)
-                            <tr>
+                            <tr id="data-{{$notification->id}}">
 
                                 <td>{{$notifications->firstItem()+$key}}</td>
 
@@ -194,15 +194,17 @@
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
 
-                                        <a class="btn btn-outline-info btn-sm square-btn"
+                                        <a class="btn btn-outline-primary btn-sm square-btn"
+                                            title="{{ \App\CPU\translate('Edit') }}"
                                             href="{{route('admin.notification.edit',[$notification['id']])}}">
-                                            Edit
+                                            <i class="mdi mdi-pencil-outline"></i>
                                         </a>
 
-                                        <a class="btn btn-outline-danger btn-sm delete"
+                                        <a class="btn btn-outline-danger btn-sm delete square-btn"
+                                            title="{{ \App\CPU\translate('Delete') }}"
                                             href="javascript:"
                                             id="{{$notification['id']}}">
-                                            Delete
+                                            <i class="mdi mdi-delete-outline"></i>
                                         </a>
 
                                     </div>
@@ -290,5 +292,45 @@
             });
         });
     }
+
+    $(document).on('click', '.delete', function () {
+        var id = $(this).attr('id');
+
+        Swal.fire({
+            title: '{{ \App\CPU\translate('Are you sure ?') }}',
+            text: "{{ \App\CPU\translate('You wont be able to revert this!') }}",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '{{ \App\CPU\translate('Yes, delete it!') }}',
+            cancelButtonText: '{{ \App\CPU\translate('Cancel') }}'
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route('admin.notification.delete') }}',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="_token"]').attr('content'),
+                    id: id
+                },
+                success: function () {
+                    $('#data-' + id).remove();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '{{ \App\CPU\translate('Notification deleted successfully') }}',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: '{{ \App\CPU\translate('Failed to delete notification') }}' });
+                }
+            });
+        });
+    });
 </script>
 @endpush

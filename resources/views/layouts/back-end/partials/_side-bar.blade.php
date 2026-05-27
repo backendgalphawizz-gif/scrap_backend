@@ -270,6 +270,9 @@
                         <a class="nav-link" href="{{ route('admin.business-settings.popup-banner') }}">Popup Banner</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.profession.*') ? 'active' : '' }}" href="{{ route('admin.profession.index') }}">Professions</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }}" href="{{ route('admin.landing-page.index') }}">Landing Page</a>
                     </li>
                     <li class="nav-item">

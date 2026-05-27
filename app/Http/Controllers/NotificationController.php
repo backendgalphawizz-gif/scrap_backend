@@ -188,8 +188,18 @@ class NotificationController extends Controller
     public function delete(Request $request)
     {
         $notification = Notification::find($request->id);
-        ImageManager::delete('/notification/' . $notification['image']);
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+
+        $image = $notification->getRawOriginal('image');
+        if ($image && $image !== 'null' && $image !== 'def.png') {
+            ImageManager::delete('notification/' . $image);
+        }
+
         $notification->delete();
-        return response()->json();
+
+        return response()->json(['success' => true]);
     }
 }

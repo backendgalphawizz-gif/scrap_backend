@@ -177,6 +177,11 @@ class Helpers
         return $err_keeper;
     }
 
+    public static function empty_state_image(): string
+    {
+        return asset('assets/back-end/svg/illustrations/sorry.svg');
+    }
+
     public static function get_business_settings($name)
     {
         $config = null;
@@ -222,11 +227,13 @@ class Helpers
             $data = Helpers::get_business_settings('language');
             $code = 'en';
             $direction = 'ltr';
-            foreach ($data as $ln) {
-                if (array_key_exists('default', $ln) && $ln['default']) {
-                    $code = $ln['code'];
-                    if (array_key_exists('direction', $ln)) {
-                        $direction = $ln['direction'];
+            if (is_array($data)) {
+                foreach ($data as $ln) {
+                    if (array_key_exists('default', $ln) && $ln['default']) {
+                        $code = $ln['code'];
+                        if (array_key_exists('direction', $ln)) {
+                            $direction = $ln['direction'];
+                        }
                     }
                 }
             }
@@ -504,15 +511,22 @@ class Helpers
 
     public static function module_permission_check($mod_name)
     {
-        $user_role = auth('admin')->user()->role;
-        $permission = $user_role->module_access;
-        if (isset($permission) && $user_role->status == 1 && in_array($mod_name, (array)json_decode($permission)) == true) {
+        $admin = auth('admin')->user();
+
+        if ($admin->admin_role_id == 1) {
             return true;
         }
 
-        if (auth('admin')->user()->admin_role_id == 1) {
+        $user_role = $admin->role;
+        if (!$user_role || $user_role->status != 1) {
+            return false;
+        }
+
+        $permission = $user_role->module_access;
+        if (isset($permission) && in_array($mod_name, (array) json_decode($permission), true)) {
             return true;
         }
+
         return false;
     }
 

@@ -119,7 +119,7 @@
                                         class="avatar rounded-circle"
 
                                             src="{{$seller->image}}"
-                                            data-fallback="{{ asset('public/assets/front-end/img/image-place-holder.png') }}"
+                                            data-fallback="{{ \App\CPU\Helpers::empty_state_image() }}"
                                             onerror="this.onerror=null;this.src=this.dataset.fallback;"
                                             alt="">
                                         <div>
@@ -180,10 +180,7 @@
                 @endif
 
                 @if(count($sellers)==0)
-                    <div class="text-center p-4">
-                        <img class="mb-3 w-160" src="{{asset('public/assets/back-end')}}/svg/illustrations/sorry.svg" alt="Image Description">
-                        <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
-                    </div>
+                    @include('admin-views.partials._empty-state')
                 @endif
             </div>
         </div>
