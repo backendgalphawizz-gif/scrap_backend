@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use function App\CPU\translate;
 use App\Http\Resources\CommonResource;
 use App\Services\CampaignCreditNoteService;
+use App\Services\CampaignSettlementService;
 use App\Services\CampaignInvoiceService;
 use App\Services\PanValidationService;
 
@@ -740,6 +741,19 @@ class SellerDashboardController extends Controller
 
                 $campaign->setAttribute('per_post_budget', round($perPostBudget, 2));
                 $campaign->setAttribute('budget_utilized', round($budgetUtilized, 2));
+
+                $settlementService = app(CampaignSettlementService::class);
+                $settlementPreview = $settlementService->calculateReleasableAmount($campaign);
+                $campaign->setAttribute('pending_wallet_return', (string) ($settlementPreview['releasable_amount'] ?? '0'));
+                $campaign->setAttribute(
+                    'settlement_deadline',
+                    $settlementService->settlementDeadline($campaign)->toDateTimeString()
+                );
+                $campaign->setAttribute(
+                    'awaiting_settlement',
+                    $campaign->settlement_status !== CampaignSettlementService::SETTLEMENT_SETTLED
+                    && in_array($campaign->status, ['closed', 'stopped', 'completed'], true)
+                );
             }
 
             return response()->json([

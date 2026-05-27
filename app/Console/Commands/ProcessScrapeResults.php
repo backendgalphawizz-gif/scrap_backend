@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\CPU\Helpers;
 use App\Models\Campaign;
-use App\Models\SaleCommissionLedger;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -114,43 +113,32 @@ class ProcessScrapeResults extends Command
             }
         }
 
-        $autoCompletedCampaigns = $this->autoCompleteEligibleCampaigns();
+        $closedCampaigns = $this->closeEligibleCampaigns();
+        $settledCampaigns = $this->settleEligibleCampaigns();
 
-        $this->info("Auto-completed campaigns: {$autoCompletedCampaigns}");
+        $this->info("Closed campaigns (enrollment ended): {$closedCampaigns}");
+        $this->info("Settled campaigns: {$settledCampaigns}");
         $this->info("Done. Approved: {$approved} | Released: {$released} | Flagged: {$flagged} | Deleted: {$deleted} | Pending: {$pending}");
     }
 
-    private function autoCompleteEligibleCampaigns(): int
+    private function closeEligibleCampaigns(): int
     {
         $updated = 0;
+        $settlementService = app(\App\Services\CampaignSettlementService::class);
         $eligibleStatuses = ['active', 'live', 'pending', 'accepted', 'paused'];
 
         Campaign::query()
             ->whereIn('status', $eligibleStatuses)
             ->withCount(['occupiedTransactions as occupied_slots'])
             ->orderBy('id')
-            ->chunkById(100, function ($campaigns) use (&$updated) {
+            ->chunkById(100, function ($campaigns) use (&$updated, $settlementService) {
                 foreach ($campaigns as $campaign) {
-                    $endDatePassed = $campaign->end_date
-                        ? Carbon::parse($campaign->end_date)->endOfDay()->isPast()
-                        : false;
-
-                    $occupiedSlots = (int) ($campaign->occupied_slots ?? 0);
-                    $requiredSlots = (int) ($campaign->total_user_required ?? 0);
-                    $slotsExhausted = $requiredSlots > 0 && $occupiedSlots >= $requiredSlots;
-
-                    $rewardPerUser = (float) ($campaign->reward_per_user ?: $campaign->coins ?: 0);
-                    $totalBudget = (float) ($campaign->total_campaign_budget ?? 0);
-                    $estimatedSpend = $rewardPerUser * $occupiedSlots;
-                    $budgetExhausted = $totalBudget > 0 && $estimatedSpend >= $totalBudget;
-
-                    if (! $endDatePassed && ! $slotsExhausted && ! $budgetExhausted) {
+                    if (! $settlementService->shouldCloseForEnrollment($campaign)) {
                         continue;
                     }
 
-                    $campaign->status = 'completed';
+                    $campaign->status = 'closed';
                     $campaign->save();
-                    $this->createCampaignSalesCommission($campaign);
                     $updated++;
                 }
             });
@@ -158,48 +146,26 @@ class ProcessScrapeResults extends Command
         return $updated;
     }
 
-    private function createCampaignSalesCommission(Campaign $campaign): void
+    private function settleEligibleCampaigns(): int
     {
-        if (empty($campaign->sale_id)) {
-            return;
-        }
+        $settled = 0;
+        $settlementService = app(\App\Services\CampaignSettlementService::class);
 
-        $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
-        if ($salesPercentage <= 0) {
-            return;
-        }
+        Campaign::query()
+            ->where('settlement_status', \App\Services\CampaignSettlementService::SETTLEMENT_PENDING)
+            ->whereIn('status', ['closed', 'stopped', 'completed'])
+            ->orderBy('id')
+            ->chunkById(50, function ($campaigns) use (&$settled, $settlementService) {
+                foreach ($campaigns as $campaign) {
+                    $force = $campaign->status === 'stopped';
+                    $result = $settlementService->settle($campaign, $force);
+                    if ($result['settled']) {
+                        $settled++;
+                    }
+                }
+            });
 
-        // Idempotent: skip if a commission entry already exists for this campaign
-        $alreadyExists = SaleCommissionLedger::where('campaign_id', $campaign->id)
-            ->where('reference_type', 'campaign_reward')
-            ->exists();
-
-        if ($alreadyExists) {
-            return;
-        }
-
-        // Base amount: sum of reward_per_user for all completed (rewarded) transactions
-        $completedCount = CampaignTransaction::where('campaign_id', $campaign->id)
-            ->where('status', CampaignTransaction::STATUS_COMPLETED)
-            ->count();
-
-        $rewardPerUser = (float) ($campaign->reward_per_user ?? 0);
-        $amount = $completedCount * $rewardPerUser;
-
-        if ($amount <= 0) {
-            return;
-        }
-
-        SaleCommissionLedger::create([
-            'sale_id'         => $campaign->sale_id,
-            'brand_id'        => $campaign->brand_id,
-            'campaign_id'     => $campaign->id,
-            'amount'          => $amount,
-            'commission_rate' => $salesPercentage,
-            'commission_amount' => round($amount * $salesPercentage / 100, 2),
-            'reference_type'  => 'campaign_reward',
-            'status'          => 'pending',
-        ]);
+        return $settled;
     }
 
     private function scrapedTableForPlatform(string $platform): string

@@ -37,10 +37,15 @@ class Campaign extends Model
         'refunded_amount',
         'refund_note',
         'stopped_at',
+        'settlement_status',
+        'settled_at',
+        'amount_returned_to_wallet',
     ];
 
     protected $casts = [
         'generate_gst_invoice' => 'boolean',
+        'settled_at' => 'datetime',
+        'amount_returned_to_wallet' => 'float',
     ];
 
     protected $appends = [
@@ -214,7 +219,12 @@ class Campaign extends Model
 
     public function getInvoiceAvailableAttribute(): bool
     {
-        return $this->status === 'completed' || $this->status === 'stopped';
+        if ($this->status === 'stopped') {
+            return true;
+        }
+
+        return $this->status === 'completed'
+            && $this->settlement_status === \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED;
     }
 
     public function getInvoiceTypeAttribute(): string
