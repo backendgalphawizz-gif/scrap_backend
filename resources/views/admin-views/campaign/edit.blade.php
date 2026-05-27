@@ -9,7 +9,7 @@
 @section('content')
 @php
     $selectedPlatforms = old('social_media', explode(',', (string) $campaign->share_on));
-    $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'paused', 'stopped', 'violated'];
+    $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'closed', 'paused', 'stopped', 'violated'];
     $selectedCategoryId = old('category_id', $campaign->category_id);
     $selectedSubCategoryId = old('sub_category_id', $campaign->sub_category_id);
     $categoryOptions = $categories->map(function ($category) {

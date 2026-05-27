@@ -9,7 +9,7 @@
 @section('content')
 @php
     $platforms = array_filter(explode(',', (string) $campaign->share_on));
-    $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'paused', 'stopped', 'violated'];
+    $statusLists = ['pending', 'active', 'inactive', 'accepted', 'rejected', 'completed', 'closed', 'paused', 'stopped', 'violated'];
     $guidelines = is_array($campaign->guidelines) ? array_filter($campaign->guidelines) : [];
     $images = is_array($campaign->images) ? $campaign->images : [];
 @endphp
@@ -23,6 +23,28 @@
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="mdi mdi-alert me-1"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if($campaign->status === 'closed' && $campaign->settlement_status !== 'settled')
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-clock-outline me-1"></i>
+            {{ \App\CPU\translate('Enrollment closed — awaiting verification before unused budget is returned to brand wallet.') }}
+            @if($hasInFlightParticipations ?? false)
+                {{ \App\CPU\translate('Participants still in verification.') }}
+            @elseif(!($canSettleNow ?? false))
+                {{ \App\CPU\translate('Estimated settlement after') }} {{ \App\CPU\Helpers::formatAdminDateTime($settlementDeadline ?? null) }}.
+            @endif
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if($campaign->settlement_status === 'settled')
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-check-circle me-1"></i>
+            {{ \App\CPU\translate('Settled') }}:
+            ₹{{ number_format((float) ($campaign->amount_returned_to_wallet ?? 0), 2) }}
+            {{ \App\CPU\translate('returned to brand wallet on') }}
+            {{ \App\CPU\Helpers::formatAdminDateTime($campaign->settled_at, 'N/A') }}.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -348,6 +370,24 @@
                         <small class="text-muted d-block">{{ \App\CPU\translate('Current Status') }}</small>
                         <span class="badge badge-soft-primary text-dark">{{ ucfirst($campaign->status) }}</span>
                     </div>
+                    <div class="form-group mb-2">
+                        <small class="text-muted d-block">{{ \App\CPU\translate('Settlement Status') }}</small>
+                        <span class="badge badge-soft-{{ $campaign->settlement_status === 'settled' ? 'success' : 'warning' }} text-dark">
+                            {{ ucfirst($campaign->settlement_status ?? 'pending') }}
+                        </span>
+                    </div>
+                    @if(($settlementPreview['releasable_amount'] ?? 0) > 0 && $campaign->settlement_status !== 'settled')
+                        <div class="form-group mb-2">
+                            <small class="text-muted d-block">{{ \App\CPU\translate('Pending Return to Wallet') }}</small>
+                            <strong>₹{{ number_format((float) ($settlementPreview['releasable_amount'] ?? 0), 2) }}</strong>
+                        </div>
+                    @endif
+                    @if($campaign->settlement_status === 'settled')
+                        <div class="form-group mb-2">
+                            <small class="text-muted d-block">{{ \App\CPU\translate('Returned to Wallet') }}</small>
+                            <strong>₹{{ number_format((float) ($campaign->amount_returned_to_wallet ?? 0), 2) }}</strong>
+                        </div>
+                    @endif
                     <div class="form-group mb-2">
                         <small class="text-muted d-block">{{ \App\CPU\translate('Platforms') }}</small>
                         @forelse($platforms as $platform)

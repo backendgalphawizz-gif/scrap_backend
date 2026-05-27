@@ -21,7 +21,12 @@ class CampaignInvoiceService
 
     public function canDownload(Campaign $campaign): bool
     {
-        return $campaign->status === 'completed' || $campaign->status === 'stopped';
+        if ($campaign->status === 'stopped') {
+            return true;
+        }
+
+        return $campaign->status === 'completed'
+            && $campaign->settlement_status === \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED;
     }
 
     /**
@@ -37,10 +42,14 @@ class CampaignInvoiceService
             ];
         }
 
-        if ($campaign->status !== 'completed' && $campaign->status !== 'stopped') {
+        if ($campaign->status === 'stopped') {
+            return ['ok' => true, 'message' => '', 'code' => 200];
+        }
+
+        if ($campaign->status !== 'completed' || $campaign->settlement_status !== \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED) {
             return [
                 'ok' => false,
-                'message' => 'Invoice is only available for completed campaigns.',
+                'message' => 'Invoice is only available after campaign settlement is complete.',
                 'code' => 422,
             ];
         }

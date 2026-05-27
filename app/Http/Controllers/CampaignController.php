@@ -14,6 +14,7 @@ use App\Models\SellerWallet;
 use App\Models\SellerWalletHistory;
 use App\Models\PaymentSplit;
 use App\Services\CampaignCreditNoteService;
+use App\Services\CampaignSettlementService;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +80,7 @@ class CampaignController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,paused,stopped,rejected,accepted',
+            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,closed,paused,stopped,rejected,accepted',
         ]);
         $category = BrandCategory::where('id', $request->category_id)
             ->where(function ($query) {
@@ -230,13 +231,23 @@ class CampaignController extends Controller
 
         $totalParticipants = (int) $statusCounts->sum();
 
+        $settlementService = app(CampaignSettlementService::class);
+        $settlementPreview = $settlementService->calculateReleasableAmount($campaign);
+        $settlementDeadline = $settlementService->settlementDeadline($campaign);
+        $canSettleNow = $settlementService->canSettle($campaign, $campaign->status === 'stopped');
+        $hasInFlightParticipations = $settlementService->hasInFlightParticipations($campaign);
+
         return view('admin-views.campaign.show', compact(
             'campaign',
             'participants',
             'statusCounts',
             'participantStatuses',
             'participantStatus',
-            'totalParticipants'
+            'totalParticipants',
+            'settlementPreview',
+            'settlementDeadline',
+            'canSettleNow',
+            'hasInFlightParticipations'
         ));
     }
 
@@ -301,7 +312,7 @@ class CampaignController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,paused,stopped,rejected,accepted',
+            'status' => 'nullable|in:active,inactive,pending,violated,live,completed,closed,paused,stopped,rejected,accepted',
         ]);
         $category = BrandCategory::where('id', $request->category_id)
             ->where(function ($query) {
@@ -477,8 +488,12 @@ class CampaignController extends Controller
     /**
      * Mark an existing pending refund entry as completed (money has been transferred).
      */
-    public function completeRefund(Request $request, int $id, CampaignCreditNoteService $creditNoteService)
-    {
+    public function completeRefund(
+        Request $request,
+        int $id,
+        CampaignCreditNoteService $creditNoteService,
+        CampaignSettlementService $settlementService
+    ) {
         $campaign    = Campaign::findOrFail($id);
         $refundEntry = CampaignRefund::where('campaign_id', $id)
                         ->where('status', CampaignRefund::STATUS_PENDING)
@@ -486,10 +501,18 @@ class CampaignController extends Controller
 
         $refundData = $this->calculateRefund($campaign);
 
-        DB::transaction(function () use ($campaign, $refundEntry, $request, $creditNoteService, $refundData) {
+        if ($settlementService->hasInFlightParticipations($campaign)) {
+            return back()->with('error', 'Cannot complete refund while participants are still in verification.');
+        }
+
+        $settlementResult = $settlementService->settle($campaign, true);
+
+        DB::transaction(function () use ($campaign, $refundEntry, $request, $creditNoteService, $refundData, $settlementResult) {
             $confirmedAmount = $request->filled('confirmed_amount')
                 ? (float) $request->confirmed_amount
-                : $refundEntry->calculated_amount;
+                : ($settlementResult['amount'] > 0
+                    ? $settlementResult['amount']
+                    : $refundEntry->calculated_amount);
 
             $refundEntry->status          = CampaignRefund::STATUS_COMPLETED;
             $refundEntry->refunded_amount  = $confirmedAmount;
@@ -497,19 +520,26 @@ class CampaignController extends Controller
             $refundEntry->completed_at    = now();
             $refundEntry->save();
 
+            $campaign->refresh();
             $campaign->refund_status   = 'processed';
             $campaign->refunded_amount = $confirmedAmount;
             $campaign->save();
 
             $reason = $request->input('admin_note', $refundEntry->admin_note);
-            $creditNoteService->issueForRefund($campaign, $refundEntry, $refundData, $reason);
+            if (! $campaign->creditNote) {
+                $creditNoteService->issueForRefund($campaign, $refundEntry, $refundData, $reason);
+            }
 
             Helpers::systemActivity('campaign_refund', auth()->user(), 'completed',
                 "Refund of ₹{$confirmedAmount} marked complete for campaign: {$campaign->title}", $campaign);
         });
 
+        $walletNote = $settlementResult['settled'] && $settlementResult['amount'] > 0
+            ? ' ₹' . number_format($settlementResult['amount'], 2) . ' credited to brand wallet.'
+            : '';
+
         return redirect()->route('admin.campaign.show', $id)
-            ->with('success', 'Refund marked as completed successfully.');
+            ->with('success', 'Refund marked as completed successfully.' . $walletNote);
     }
 
     /**
@@ -521,52 +551,7 @@ class CampaignController extends Controller
      */
     private function calculateRefund(Campaign $campaign): array
     {
-        $utilizedSlots = CampaignTransaction::where('campaign_id', $campaign->id)
-            ->whereIn('status', [
-                CampaignTransaction::STATUS_PENDING,
-                CampaignTransaction::STATUS_ACTIVE,
-                CampaignTransaction::STATUS_APPROVED,
-                CampaignTransaction::STATUS_COMPLETED,
-            ])
-            ->count();
-
-        $gstPercentage  = (float) Helpers::get_business_settings('campaign_gst_percentage');
-        if ($gstPercentage <= 0) {
-            $gstPercentage = 18.0;
-        }
-
-        $rewardPerUser  = (float) ($campaign->reward_per_user ?? 0);
-        $taxablePaid    = round((float) ($campaign->total_campaign_budget ?? 0), 2);
-        $totalBudgetGst = round((float) ($campaign->compign_budget_with_gst ?? 0), 2);
-        $gstPaid        = round(max(0, $totalBudgetGst - $taxablePaid), 2);
-
-        $utilizedTaxable = round($utilizedSlots * $rewardPerUser, 2);
-        $utilizedGst     = round($utilizedTaxable * $gstPercentage / 100, 2);
-        $utilizedWithGst = round($utilizedTaxable + $utilizedGst, 2);
-
-        $taxableReversal = round(max(0, $taxablePaid - $utilizedTaxable), 2);
-        $gstReversal     = round(max(0, $gstPaid - $utilizedGst), 2);
-        $cgstReversal    = round($gstReversal / 2, 2);
-        $sgstReversal    = round($gstReversal - $cgstReversal, 2);
-        $refundableAmount = round($taxableReversal + $gstReversal, 2);
-
-        return [
-            'utilized_slots'      => $utilizedSlots,
-            'reward_per_user'     => $rewardPerUser,
-            'gst_percentage'      => $gstPercentage,
-            'taxable_paid'        => $taxablePaid,
-            'gst_paid'            => $gstPaid,
-            'utilized_raw'        => $utilizedTaxable,
-            'utilized_taxable'    => $utilizedTaxable,
-            'utilized_gst'        => $utilizedGst,
-            'utilized_with_gst'   => $utilizedWithGst,
-            'taxable_reversal'    => $taxableReversal,
-            'gst_reversal'        => $gstReversal,
-            'cgst_reversal'       => $cgstReversal,
-            'sgst_reversal'       => $sgstReversal,
-            'total_budget_gst'    => $totalBudgetGst,
-            'refundable_amount'   => $refundableAmount,
-        ];
+        return app(CampaignSettlementService::class)->calculateReleasableAmount($campaign);
     }
 
     private function getCampaignGuidelineOptions(): array

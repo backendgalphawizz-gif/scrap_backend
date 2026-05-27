@@ -731,4 +731,12 @@
   'Taxable Reversal (Credit Note)' => 'Taxable Reversal (Credit Note)',
   'GST Reversal (Credit Note)' => 'GST Reversal (Credit Note)',
   'Download Credit Note' => 'Download Credit Note',
+  'Settlement Status' => 'Settlement Status',
+  'Pending Return to Wallet' => 'Pending Return to Wallet',
+  'Returned to Wallet' => 'Returned to Wallet',
+  'Settled' => 'Settled',
+  'returned to brand wallet on' => 'returned to brand wallet on',
+  'Enrollment closed — awaiting verification before unused budget is returned to brand wallet.' => 'Enrollment closed — awaiting verification before unused budget is returned to brand wallet.',
+  'Participants still in verification.' => 'Participants still in verification.',
+  'Estimated settlement after' => 'Estimated settlement after',
 );

@@ -29,6 +29,43 @@ class CampaignCreditNoteService
     }
 
     /**
+     * @param  array<string, mixed>  $settlementData  From CampaignSettlementService::calculateReleasableAmount
+     */
+    public function issueForSettlement(Campaign $campaign, array $settlementData, ?string $reason = null): ?CampaignCreditNote
+    {
+        if (!(bool) $campaign->generate_gst_invoice) {
+            return null;
+        }
+
+        $existing = CampaignCreditNote::where('campaign_id', $campaign->id)->first();
+        if ($existing) {
+            return $existing;
+        }
+
+        $taxableReversal = (float) ($settlementData['taxable_reversal'] ?? 0);
+        $gstReversal = (float) ($settlementData['gst_reversal'] ?? 0);
+
+        if ($taxableReversal <= 0 && $gstReversal <= 0) {
+            return null;
+        }
+
+        return CampaignCreditNote::create([
+            'campaign_id' => $campaign->id,
+            'campaign_refund_id' => null,
+            'brand_id' => $campaign->brand_id,
+            'original_invoice_no' => $this->originalInvoiceNumber($campaign),
+            'credit_note_no' => $this->creditNoteNumber($campaign),
+            'taxable_reversal_amount' => $taxableReversal,
+            'gst_reversal_amount' => $gstReversal,
+            'cgst_reversal' => (float) ($settlementData['cgst_reversal'] ?? round($gstReversal / 2, 2)),
+            'sgst_reversal' => (float) ($settlementData['sgst_reversal'] ?? round($gstReversal - round($gstReversal / 2, 2), 2)),
+            'reason' => $reason ?: 'Unused campaign budget settlement',
+            'credit_note_date' => ($campaign->settled_at ?? now())->toDateString(),
+            'status' => CampaignCreditNote::STATUS_ISSUED,
+        ]);
+    }
+
+    /**
      * @param  array<string, mixed>  $refundData  From CampaignController::calculateRefund
      */
     public function issueForRefund(Campaign $campaign, CampaignRefund $refund, array $refundData, ?string $reason = null): ?CampaignCreditNote
