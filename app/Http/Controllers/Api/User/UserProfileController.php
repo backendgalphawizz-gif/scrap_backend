@@ -20,7 +20,9 @@ use App\Models\UserLevel;
 use App\Models\BrandCategory;
 use App\Models\CampaignTransaction;
 use App\Services\PanValidationService;
+use App\Services\TdsCalculationService;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class UserProfileController extends Controller
 {
@@ -215,7 +217,45 @@ class UserProfileController extends Controller
         }
     }
 
-    public function debitWalletCoin(Request $request)
+    public function withdrawalPreview(Request $request, TdsCalculationService $tdsService)
+    {
+        $validator = Validator::make($request->all(), [
+            'coins' => 'required|numeric|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => Helpers::single_error_processor($validator),
+            ], 422);
+        }
+
+        try {
+            $breakdown = $tdsService->computeWithdrawal($request->user(), (float) $request->coins);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Withdrawal preview calculated successfully',
+                'data' => [
+                    'coins' => (string) $breakdown['coins'],
+                    'gross_amount' => number_format($breakdown['gross_amount'], 2, '.', ''),
+                    'tds_amount' => number_format($breakdown['tds_amount'], 2, '.', ''),
+                    'tds_rate' => (string) $breakdown['tds_rate'],
+                    'tds_section' => $breakdown['tds_section'],
+                    'net_payout' => number_format($breakdown['net_amount'], 2, '.', ''),
+                    'upi_value' => (string) $breakdown['conversion_rate'],
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => collect($e->errors())->flatten()->first() ?? 'Validation failed',
+                'data' => [],
+            ], 422);
+        }
+    }
+
+    public function debitWalletCoin(Request $request, TdsCalculationService $tdsService)
     {
         try {
             $user = $request->user();
@@ -223,7 +263,7 @@ class UserProfileController extends Controller
             $rules = [
                 'coins' => 'required|numeric|min:1',
                 'type' => 'required',
-                'value' => 'required'
+                'value' => 'required',
             ];
 
             $validator = Validator::make($request->all(), $rules);
@@ -231,9 +271,11 @@ class UserProfileController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => Helpers::single_error_processor($validator)
+                    'message' => Helpers::single_error_processor($validator),
                 ], 422);
             }
+
+            $breakdown = $tdsService->computeWithdrawal($user, (float) $request->coins);
 
             $wallet = CoinWallet::firstOrCreate(
                 ['user_id' => $user->id],
@@ -250,7 +292,7 @@ class UserProfileController extends Controller
             if ($wallet->balance < $request->coins) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Insufficient balance'
+                    'message' => 'Insufficient balance',
                 ], 422);
             }
 
@@ -258,12 +300,16 @@ class UserProfileController extends Controller
             $wallet->save();
 
             $transaction = $wallet->transactions()->create([
-                'coin' => $request->coins ?? 0,
-                'amount' => $request->amount ?? 0,
-                'tds' => $request->tds ?? 0,
-                'convertion_rate' => Helpers::get_business_settings('upi_value'),
+                'coin' => $breakdown['coins'],
+                'amount' => $breakdown['gross_amount'],
+                'tds' => $breakdown['tds_amount'],
+                'net_amount' => $breakdown['net_amount'],
+                'tds_rate' => $breakdown['tds_rate'],
+                'tds_section' => $breakdown['tds_section'],
+                'pan_status_at_withdrawal' => $breakdown['pan_status_at_withdrawal'],
+                'convertion_rate' => $breakdown['conversion_rate'],
                 'campaign_id' => 0,
-                'transaction_id' => time(),
+                'transaction_id' => (string) time(),
                 'type' => 'debit',
                 'status' => 'pending',
                 'transaction_type' => $request->type,
@@ -273,16 +319,29 @@ class UserProfileController extends Controller
 
             Helpers::logUserWalletTransaction('created', $transaction, $user, 'Wallet withdrawal request');
 
+            $resource = new CommonResource($transaction);
+            $payload = $resource->toArray($request);
+            $payload['gross_amount'] = number_format($breakdown['gross_amount'], 2, '.', '');
+            $payload['tds_amount'] = number_format($breakdown['tds_amount'], 2, '.', '');
+            $payload['tds_rate'] = (string) $breakdown['tds_rate'];
+            $payload['net_payout'] = number_format($breakdown['net_amount'], 2, '.', '');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Debit request created successfully',
-                'data' => new CommonResource($transaction)
+                'data' => $payload,
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => collect($e->errors())->flatten()->first() ?? 'Validation failed',
+                'data' => [],
+            ], 422);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage(),
-                'data' => []
+                'data' => [],
             ]);
         }
     }

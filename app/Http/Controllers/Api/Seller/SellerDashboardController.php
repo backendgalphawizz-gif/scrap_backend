@@ -21,6 +21,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use function App\CPU\translate;
 use App\Http\Resources\CommonResource;
+use App\Services\CampaignCreditNoteService;
 use App\Services\CampaignInvoiceService;
 use App\Services\PanValidationService;
 
@@ -680,6 +681,41 @@ class SellerDashboardController extends Controller
         }
 
         return $invoiceService->downloadResponse($campaign);
+    }
+
+    public function downloadCampaignCreditNote(Request $request, $id, CampaignCreditNoteService $creditNoteService)
+    {
+        $data = Helpers::get_seller_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status' => false,
+                'message' => translate('Your existing session token does not authorize you any more'),
+                'data' => [],
+            ], 401);
+        }
+
+        $seller = $data['data'];
+        $campaign = Campaign::where('id', $id)->where('brand_id', $seller['id'])->first();
+
+        if (!$campaign) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Campaign not found or you do not have permission to access this campaign.',
+                'data' => [],
+            ], 404);
+        }
+
+        $validation = $creditNoteService->validateDownload($campaign, (int) $seller['id']);
+        if (!$validation['ok']) {
+            return response()->json([
+                'status' => false,
+                'message' => $validation['message'],
+                'data' => [],
+            ], $validation['code']);
+        }
+
+        return $creditNoteService->downloadResponse($campaign);
     }
 
     public function detailCampaign(Request $request, $id)

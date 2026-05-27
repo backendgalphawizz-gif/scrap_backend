@@ -144,6 +144,7 @@ Route::prefix('user')->middleware(['auth:api', 'check.account.status:user'])->gr
     // User wallet related routes
     Route::get('wallet', [UserProfileController::class, 'coinWallet']);
     Route::get('wallet-transactions', [UserProfileController::class, 'walletTransctions']);
+    Route::get('wallet-withdrawal-preview', [UserProfileController::class, 'withdrawalPreview']);
     Route::post('wallet-withdrawl', [UserProfileController::class, 'debitWalletCoin']);
 
     // User Voucher related routes
@@ -217,6 +218,7 @@ Route::group(['prefix' => 'brand'], function () {
         Route::get('campaign/detail/{id}', [SellerDashboardController::class, 'detailCampaign']);
         Route::get('campaign/{id}/invoice', [SellerDashboardController::class, 'downloadCampaignInvoice']);
         Route::get('campaign/{id}/gst-invoice', [SellerDashboardController::class, 'downloadCampaignInvoice']);
+        Route::get('campaign/{id}/credit-note', [SellerDashboardController::class, 'downloadCampaignCreditNote']);
         Route::get('campaign/list', [SellerDashboardController::class, 'listCampaign']);
         Route::get('campaign/delete/{id}', [SellerDashboardController::class, 'deleteCampaign']);
         Route::post('campaign-transaction/{id}/report-violation', [SellerDashboardController::class, 'reportViolation']);

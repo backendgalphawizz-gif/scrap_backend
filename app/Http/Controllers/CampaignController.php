@@ -13,6 +13,7 @@ use App\Models\Seller;
 use App\Models\SellerWallet;
 use App\Models\SellerWalletHistory;
 use App\Models\PaymentSplit;
+use App\Services\CampaignCreditNoteService;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -196,7 +197,7 @@ class CampaignController extends Controller
 
     public function show(Request $request, $id)
     {
-        $campaign = Campaign::with(['brand', 'category', 'subCategory', 'sale'])
+        $campaign = Campaign::with(['brand', 'category', 'subCategory', 'sale', 'creditNote'])
             ->where('id', $id)
             ->firstOrFail();
 
@@ -476,14 +477,16 @@ class CampaignController extends Controller
     /**
      * Mark an existing pending refund entry as completed (money has been transferred).
      */
-    public function completeRefund(Request $request, int $id)
+    public function completeRefund(Request $request, int $id, CampaignCreditNoteService $creditNoteService)
     {
         $campaign    = Campaign::findOrFail($id);
         $refundEntry = CampaignRefund::where('campaign_id', $id)
                         ->where('status', CampaignRefund::STATUS_PENDING)
                         ->firstOrFail();
 
-        DB::transaction(function () use ($campaign, $refundEntry, $request) {
+        $refundData = $this->calculateRefund($campaign);
+
+        DB::transaction(function () use ($campaign, $refundEntry, $request, $creditNoteService, $refundData) {
             $confirmedAmount = $request->filled('confirmed_amount')
                 ? (float) $request->confirmed_amount
                 : $refundEntry->calculated_amount;
@@ -498,6 +501,9 @@ class CampaignController extends Controller
             $campaign->refunded_amount = $confirmedAmount;
             $campaign->save();
 
+            $reason = $request->input('admin_note', $refundEntry->admin_note);
+            $creditNoteService->issueForRefund($campaign, $refundEntry, $refundData, $reason);
+
             Helpers::systemActivity('campaign_refund', auth()->user(), 'completed',
                 "Refund of ₹{$confirmedAmount} marked complete for campaign: {$campaign->title}", $campaign);
         });
@@ -509,8 +515,9 @@ class CampaignController extends Controller
     /**
      * Calculate the refundable amount for a campaign.
      *
-     * Utilized budget = slots in (pending|active|approved|completed) × reward_per_user × (1 + gst%)
-     * Refundable      = max(0, total_budget_with_gst − utilized_with_gst)
+     * Taxable paid = total_campaign_budget; GST paid = budget_with_gst − taxable.
+     * Utilized taxable = utilized_slots × reward_per_user; utilized GST = taxable × gst%.
+     * Reversal amounts = paid − utilized (per component).
      */
     private function calculateRefund(Campaign $campaign): array
     {
@@ -523,22 +530,42 @@ class CampaignController extends Controller
             ])
             ->count();
 
-        $gstPercentage    = (float) Helpers::get_business_settings('campaign_gst_percentage');
-        $rewardPerUser    = (float) ($campaign->reward_per_user ?? 0);
-        $totalBudgetGst   = (float) ($campaign->compign_budget_with_gst ?? 0);
+        $gstPercentage  = (float) Helpers::get_business_settings('campaign_gst_percentage');
+        if ($gstPercentage <= 0) {
+            $gstPercentage = 18.0;
+        }
 
-        $utilizedRaw      = $utilizedSlots * $rewardPerUser;
-        $utilizedWithGst  = $utilizedRaw * (1 + $gstPercentage / 100);
-        $refundableAmount = max(0, $totalBudgetGst - $utilizedWithGst);
+        $rewardPerUser  = (float) ($campaign->reward_per_user ?? 0);
+        $taxablePaid    = round((float) ($campaign->total_campaign_budget ?? 0), 2);
+        $totalBudgetGst = round((float) ($campaign->compign_budget_with_gst ?? 0), 2);
+        $gstPaid        = round(max(0, $totalBudgetGst - $taxablePaid), 2);
+
+        $utilizedTaxable = round($utilizedSlots * $rewardPerUser, 2);
+        $utilizedGst     = round($utilizedTaxable * $gstPercentage / 100, 2);
+        $utilizedWithGst = round($utilizedTaxable + $utilizedGst, 2);
+
+        $taxableReversal = round(max(0, $taxablePaid - $utilizedTaxable), 2);
+        $gstReversal     = round(max(0, $gstPaid - $utilizedGst), 2);
+        $cgstReversal    = round($gstReversal / 2, 2);
+        $sgstReversal    = round($gstReversal - $cgstReversal, 2);
+        $refundableAmount = round($taxableReversal + $gstReversal, 2);
 
         return [
-            'utilized_slots'    => $utilizedSlots,
-            'reward_per_user'   => $rewardPerUser,
-            'gst_percentage'    => $gstPercentage,
-            'utilized_raw'      => round($utilizedRaw, 2),
-            'utilized_with_gst' => round($utilizedWithGst, 2),
-            'total_budget_gst'  => round($totalBudgetGst, 2),
-            'refundable_amount' => round($refundableAmount, 2),
+            'utilized_slots'      => $utilizedSlots,
+            'reward_per_user'     => $rewardPerUser,
+            'gst_percentage'      => $gstPercentage,
+            'taxable_paid'        => $taxablePaid,
+            'gst_paid'            => $gstPaid,
+            'utilized_raw'        => $utilizedTaxable,
+            'utilized_taxable'    => $utilizedTaxable,
+            'utilized_gst'        => $utilizedGst,
+            'utilized_with_gst'   => $utilizedWithGst,
+            'taxable_reversal'    => $taxableReversal,
+            'gst_reversal'        => $gstReversal,
+            'cgst_reversal'       => $cgstReversal,
+            'sgst_reversal'       => $sgstReversal,
+            'total_budget_gst'    => $totalBudgetGst,
+            'refundable_amount'   => $refundableAmount,
         ];
     }
 

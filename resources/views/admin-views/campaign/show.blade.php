@@ -316,6 +316,12 @@
                             @endif
                         </a>
                     @endif
+                    @if($campaign->creditNote)
+                        <a href="{{ route('admin.campaign.credit-note', $campaign->id) }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="mdi mdi-file-document-box-multiple-outline me-1"></i>
+                            {{ \App\CPU\translate('Download Credit Note') }}
+                        </a>
+                    @endif
                     @if($campaign->status === 'stopped')
                         @if($campaign->refund_status === 'processed')
                             <span class="badge bg-success fs-6">

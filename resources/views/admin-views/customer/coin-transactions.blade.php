@@ -163,6 +163,9 @@
                                 <th>{{\App\CPU\translate('Transaction ID')}}</th>
                                 <th>{{\App\CPU\translate('User')}}</th>
                                 <th>{{\App\CPU\translate('Coins')}}</th>
+                                <th>Gross (₹)</th>
+                                <th>TDS (₹)</th>
+                                <th>Net payout (₹)</th>
                                 <th>{{\App\CPU\translate('Type')}}</th>
                                 <th>{{\App\CPU\translate('Remarks')}}</th>
                                 <th>{{\App\CPU\translate('Transaction Type')}}</th>
@@ -178,6 +181,30 @@
                                 <td>{{ $transaction->transaction_id }}</td>
                                 <td>{{ $transaction->wallet->user->name ?? 'N/A' }}</td>
                                 <td>{{ $transaction->coin }}</td>
+                                <td>
+                                    @if($transaction->type === 'debit')
+                                        {{ number_format((float) ($transaction->amount ?? 0), 2) }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($transaction->type === 'debit')
+                                        {{ number_format((float) ($transaction->tds ?? 0), 2) }}
+                                        @if($transaction->tds_rate)
+                                            <small class="text-muted d-block">{{ $transaction->tds_rate }}% u/s {{ $transaction->tds_section ?? '194C' }}</small>
+                                        @endif
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($transaction->type === 'debit')
+                                        {{ number_format((float) ($transaction->net_amount ?? max(0, (float) $transaction->amount - (float) $transaction->tds)), 2) }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td>{{ $transaction->type }}</td>
                                 <td>{{ $transaction->description }}</td>
                                 <td>{{ $transaction->transaction_type ?? '-' }}</td>
@@ -211,7 +238,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center">{{\App\CPU\translate('No transactions found')}}</td>
+                                <td colspan="13" class="text-center">{{\App\CPU\translate('No transactions found')}}</td>
                             </tr>
                             @endforelse
                         </tbody>

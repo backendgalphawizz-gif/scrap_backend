@@ -21,7 +21,7 @@ class CampaignInvoiceService
 
     public function canDownload(Campaign $campaign): bool
     {
-        return $campaign->status === 'completed';
+        return $campaign->status === 'completed' || $campaign->status === 'stopped';
     }
 
     /**
@@ -37,7 +37,7 @@ class CampaignInvoiceService
             ];
         }
 
-        if ($campaign->status !== 'completed') {
+        if ($campaign->status !== 'completed' && $campaign->status !== 'stopped') {
             return [
                 'ok' => false,
                 'message' => 'Invoice is only available for completed campaigns.',
