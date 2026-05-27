@@ -461,16 +461,16 @@ class SellerDashboardController extends Controller
 
             $sellerWallet = Helpers::get_seller_wallet($seller['id']);
 
-            if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient fund. Please recharge wallet.',
-                    'data' => [],
-                    'balance_sufficient' => false,
-                    'current_balance' => $sellerWallet->wallet_amount,
-                    'balance_required' => $request->total_campaign_budget
-                ], 200);
-            }
+            // if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Insufficient fund. Please recharge wallet.',
+            //         'data' => [],
+            //         'balance_sufficient' => false,
+            //         'current_balance' => $sellerWallet->wallet_amount,
+            //         'balance_required' => $request->total_campaign_budget
+            //     ], 200);
+            // }
 
             $category = BrandCategory::where('id', $request->category_id)
                 ->where(function ($query) {
@@ -547,7 +547,7 @@ class SellerDashboardController extends Controller
             $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
 
             $campaign->brand_id = $seller['id'];
-            $campaign->created_by = Campaign::CREATED_BY_BRAND;
+            $campaign->created_by = Campaign::CREATED_BY_SALES_PERSON;
             $caption = (string) ($request->caption ?? '');
             $campaign->title = mb_substr($caption, 0, 20, 'UTF-8');
             $campaign->post_type = $request->post_type ?? 'post';
