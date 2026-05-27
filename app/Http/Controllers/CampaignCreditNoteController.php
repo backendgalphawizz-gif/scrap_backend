@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
-use App\Services\CampaignInvoiceService;
+use App\Services\CampaignCreditNoteService;
 use Illuminate\Http\Request;
 
-class CampaignInvoiceController extends Controller
+class CampaignCreditNoteController extends Controller
 {
     public function __construct(
-        protected CampaignInvoiceService $invoiceService
+        protected CampaignCreditNoteService $creditNoteService
     ) {
     }
 
@@ -21,11 +21,11 @@ class CampaignInvoiceController extends Controller
             return redirect()->back()->with('error', translate('Campaign not found'));
         }
 
-        $validation = $this->invoiceService->validateDownload($campaign);
+        $validation = $this->creditNoteService->validateDownload($campaign);
         if (!$validation['ok']) {
-            return redirect()->back()->with('error', $validation['message']);
+            return redirect()->back()->with('error', translate($validation['message']));
         }
 
-        return $this->invoiceService->downloadResponse($campaign);
+        return $this->creditNoteService->downloadResponse($campaign);
     }
 }

@@ -130,6 +130,14 @@
                     <table class="table table-sm table-bordered mb-0">
                         <tbody>
                             <tr>
+                                <td class="text-muted small">{{ \App\CPU\translate('Taxable Budget Paid') }}</td>
+                                <td class="text-end">₹{{ number_format($refundData['taxable_paid'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted small">{{ \App\CPU\translate('GST Paid') }} ({{ $refundData['gst_percentage'] }}%)</td>
+                                <td class="text-end">₹{{ number_format($refundData['gst_paid'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
                                 <td class="text-muted small">{{ \App\CPU\translate('Total Budget (with GST)') }}</td>
                                 <td class="text-end fw-semibold">₹{{ number_format($refundData['total_budget_gst'], 2) }}</td>
                             </tr>
@@ -139,8 +147,18 @@
                             </tr>
                             <tr>
                                 <td class="text-muted small">{{ \App\CPU\translate('GST on Utilized') }} ({{ $refundData['gst_percentage'] }}%)</td>
-                                <td class="text-end">₹{{ number_format($refundData['utilized_with_gst'] - $refundData['utilized_raw'], 2) }}</td>
+                                <td class="text-end">₹{{ number_format($refundData['utilized_gst'] ?? ($refundData['utilized_with_gst'] - $refundData['utilized_raw']), 2) }}</td>
                             </tr>
+                            @if($campaign->generate_gst_invoice)
+                            <tr class="table-info">
+                                <td class="small fw-semibold">{{ \App\CPU\translate('Taxable Reversal (Credit Note)') }}</td>
+                                <td class="text-end fw-semibold">₹{{ number_format($refundData['taxable_reversal'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td class="small fw-semibold">{{ \App\CPU\translate('GST Reversal (Credit Note)') }}</td>
+                                <td class="text-end fw-semibold">₹{{ number_format($refundData['gst_reversal'] ?? 0, 2) }}</td>
+                            </tr>
+                            @endif
                             <tr class="table-warning">
                                 <td class="small fw-semibold">{{ \App\CPU\translate('Utilized (with GST)') }}</td>
                                 <td class="text-end fw-semibold">₹{{ number_format($refundData['utilized_with_gst'], 2) }}</td>

@@ -566,7 +566,19 @@ class DashboardController extends Controller
         ]);
         
         DB::table('business_settings')->updateOrInsert(['type' => 'tds_percent'], [
-            'value' => $request->input('tds_percent') ?? ''
+            'value' => $request->input('tds_percent') ?? $request->input('tds_rate_valid_pan') ?? ''
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'tds_rate_valid_pan'], [
+            'value' => $request->input('tds_rate_valid_pan') ?? $request->input('tds_percent') ?? '1'
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'tds_rate_invalid_pan'], [
+            'value' => $request->input('tds_rate_invalid_pan') ?? '20'
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'tds_section'], [
+            'value' => $request->input('tds_section') ?? '194C'
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'max_coin_withdrawal'], [
+            'value' => $request->input('max_coin_withdrawal') ?? '20000'
         ]);
         // company email
         DB::table('business_settings')->updateOrInsert(['type' => 'company_email'], [
@@ -1058,8 +1070,9 @@ class DashboardController extends Controller
         $user = \App\Models\User::find($wallet->user_id);
         if ($user && $user->fcm_id) {
             $title = 'Payout Approved! 💰';
-            $amount = number_format($transaction->coin, 2);
-            $body = "Your payout of ₹{$amount} has been approved and processed to your wallet.";
+            $netPayout = $transaction->net_amount ?? max(0, (float) $transaction->amount - (float) $transaction->tds);
+            $amount = number_format($netPayout, 2);
+            $body = "Your payout of ₹{$amount} (after TDS) has been approved and sent to your UPI.";
             Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
         }
 

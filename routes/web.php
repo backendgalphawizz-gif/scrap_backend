@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CampaignCreditNoteController;
 use App\Http\Controllers\CampaignInvoiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
@@ -106,6 +107,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/delete', [CampaignController::class, 'delete'])->name('admin.campaign.delete');
         Route::get('/{id}/invoice', [CampaignInvoiceController::class, 'download'])->name('admin.campaign.invoice');
         Route::get('/{id}/gst-invoice', [CampaignInvoiceController::class, 'download'])->name('admin.campaign.gst-invoice');
+        Route::get('/{id}/credit-note', [CampaignCreditNoteController::class, 'download'])->name('admin.campaign.credit-note');
         Route::get('/{id}/refund-preview', [CampaignController::class, 'refundPreview'])->name('admin.campaign.refund-preview');
         Route::post('/{id}/process-refund', [CampaignController::class, 'processRefund'])->name('admin.campaign.process-refund');
         Route::post('/{id}/complete-refund', [CampaignController::class, 'completeRefund'])->name('admin.campaign.complete-refund');

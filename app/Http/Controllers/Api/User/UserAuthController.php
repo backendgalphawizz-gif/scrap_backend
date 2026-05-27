@@ -218,7 +218,11 @@ class UserAuthController extends Controller
             'is_mandatory_update' => true,
             'professions' => Profession::where('status', 1)->get(),
             'minimum_coin_withdrawl' => strval(Helpers::get_business_settings('minimum_coin_withdrawl')),
+            'max_coin_withdrawal' => strval(
+                Helpers::get_business_settings('max_coin_withdrawal') ?: '20000'
+            ),
             'upi_value' => strval(Helpers::get_business_settings('upi_value')),
+            'kyc_required_for_withdrawal' => true,
             'voucher_value' => strval(Helpers::get_business_settings('voucher_value')),
             'post_footer_content' => Helpers::get_business_settings('post_footer_content'),
             'company_name' => Helpers::get_business_settings('company_name'),
@@ -239,7 +243,20 @@ class UserAuthController extends Controller
             'post_sharing_reward' => Helpers::get_business_settings('post_sharing_reward'),
             'feedback_incentive' => Helpers::get_business_settings('feedback_incentive'),
             'platform_commission' => Helpers::get_business_settings('platform_commission'),
-            'tds_percent' => Helpers::get_business_settings('tds_percent'),
+            'tds_percent' => strval(
+                Helpers::get_business_settings('tds_rate_valid_pan')
+                    ?: Helpers::get_business_settings('tds_percent')
+                    ?: '1'
+            ),
+            'tds_rate_valid_pan' => strval(
+                Helpers::get_business_settings('tds_rate_valid_pan')
+                    ?: Helpers::get_business_settings('tds_percent')
+                    ?: '1'
+            ),
+            'tds_rate_invalid_pan' => strval(
+                Helpers::get_business_settings('tds_rate_invalid_pan') ?: '20'
+            ),
+            'tds_section' => strval(Helpers::get_business_settings('tds_section') ?: '194C'),
             'sale_post_commission' => Helpers::get_business_settings('sale_post_commission'),
             'sale_brand_commission' => Helpers::get_business_settings('sale_brand_commission'),
             'minimum_wallet_balance' => Helpers::get_business_settings('minimum_wallet_balance'),

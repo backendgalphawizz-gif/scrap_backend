@@ -132,6 +132,11 @@ class Campaign extends Model
         return $this->hasMany(SaleCommissionLedger::class, 'campaign_id');
     }
 
+    public function creditNote()
+    {
+        return $this->hasOne(CampaignCreditNote::class);
+    }
+
     public function getLeftDaysAttribute()
     {
         $endDate = \Carbon\Carbon::parse($this->end_date);
@@ -209,7 +214,7 @@ class Campaign extends Model
 
     public function getInvoiceAvailableAttribute(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === 'completed' || $this->status === 'stopped';
     }
 
     public function getInvoiceTypeAttribute(): string

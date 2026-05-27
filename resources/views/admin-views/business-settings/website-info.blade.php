@@ -99,6 +99,15 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                @php($max_coin_withdrawal=\App\CPU\Helpers::get_business_settings('max_coin_withdrawal') ?: '20000')
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Max coin withdrawal (per request)</label>
+                                    <input type="text" value="{{ $max_coin_withdrawal }}"
+                                        name="max_coin_withdrawal" class="form-control"
+                                        placeholder="20000">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 @php($upi_value=\App\CPU\Helpers::get_business_settings('upi_value'))
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('upi_value')}}</label>
@@ -180,6 +189,9 @@
                             @php($feedback_incentive=\App\Models\BusinessSetting::where('type','feedback_incentive')->first()->value ?? '')
                             @php($platform_commission=\App\Models\BusinessSetting::where('type','platform_commission')->first()->value ?? '')
                             @php($tds_percent=\App\Models\BusinessSetting::where('type','tds_percent')->first()->value ?? '')
+                            @php($tds_rate_valid_pan=\App\CPU\Helpers::get_business_settings('tds_rate_valid_pan') ?: $tds_percent ?: '1')
+                            @php($tds_rate_invalid_pan=\App\CPU\Helpers::get_business_settings('tds_rate_invalid_pan') ?: '20')
+                            @php($tds_section=\App\CPU\Helpers::get_business_settings('tds_section') ?: '194C')
                             @php($sale_post_commission=\App\Models\BusinessSetting::where('type','sale_post_commission')->first()->value ?? '')
                             @php($sale_brand_commission=\App\Models\BusinessSetting::where('type','sale_brand_commission')->first()->value ?? '')
                             @php($minimum_wallet_balance=\App\Models\BusinessSetting::where('type','minimum_wallet_balance')->first()->value ?? '')
@@ -234,8 +246,21 @@
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label class="title-color d-flex">TSD (%)</label>
-                                    <input class="form-control" type="text" name="tds_percent" value="{{ $tds_percent }}">
+                                    <label class="title-color d-flex">TDS rate — valid PAN (%)</label>
+                                    <input class="form-control" type="text" name="tds_rate_valid_pan" value="{{ $tds_rate_valid_pan }}">
+                                    <input type="hidden" name="tds_percent" value="{{ $tds_rate_valid_pan }}">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">TDS rate — invalid/missing PAN (%)</label>
+                                    <input class="form-control" type="text" name="tds_rate_invalid_pan" value="{{ $tds_rate_invalid_pan }}">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">TDS section</label>
+                                    <input class="form-control" type="text" name="tds_section" value="{{ $tds_section }}">
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6 col-sm-12">
