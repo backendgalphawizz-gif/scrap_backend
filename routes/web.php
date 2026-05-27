@@ -206,6 +206,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('/business-settings/popup-banner', [DashboardController::class, 'popupBanner'])->name('admin.business-settings.popup-banner');
     Route::post('/business-settings/popup-banner-update', [DashboardController::class, 'popupBannerUpdate'])->name('admin.business-settings.popup-banner-update');
 
+    Route::group(['prefix' => 'business-settings/professions', 'as' => 'admin.profession.'], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ProfessionController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ProfessionController::class, 'create'])->name('create');
+        Route::post('/store', [\App\Http\Controllers\Admin\ProfessionController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [\App\Http\Controllers\Admin\ProfessionController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [\App\Http\Controllers\Admin\ProfessionController::class, 'update'])->name('update');
+        Route::post('/status', [\App\Http\Controllers\Admin\ProfessionController::class, 'status'])->name('status');
+        Route::post('/delete/{id}', [\App\Http\Controllers\Admin\ProfessionController::class, 'destroy'])->name('delete');
+    });
+
     // Landing Page Management
     Route::get('/landing-page', [\App\Http\Controllers\LandingPageController::class, 'index'])->name('admin.landing-page.index');
     Route::post('/landing-page/{section}', [\App\Http\Controllers\LandingPageController::class, 'update'])->name('admin.landing-page.update');

@@ -13,15 +13,18 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-        Role::insert([
-            ['name' => 'admin'],
-            ['name' => 'sub_admin'],
-            ['name' => 'surveyor'],
-            ['name' => 'supervisor'],
-            ['name' => 'technician'],
-            ['name' => 'vehicle_manager'],
-            ['name' => 'inventory_manager'],
-        ]);
+        $roles = [
+            'admin',
+            'sub_admin',
+            'surveyor',
+            'supervisor',
+            'technician',
+            'vehicle_manager',
+            'inventory_manager',
+        ];
+
+        foreach ($roles as $name) {
+            Role::firstOrCreate(['name' => $name]);
+        }
     }
 }

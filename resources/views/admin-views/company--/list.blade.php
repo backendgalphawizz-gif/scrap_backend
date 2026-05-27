@@ -105,7 +105,7 @@
 
             @if(count($companies)==0)
                 <div class="text-center p-4">
-                    <img class="mb-3 w-160" src="{{asset('public/assets/back-end')}}/svg/illustrations/sorry.svg"
+                    <img class="mb-3 w-160" src="{{ asset('assets/back-end/svg/illustrations/sorry.svg') }}"
                          alt="Image Description">
                     <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
                 </div>

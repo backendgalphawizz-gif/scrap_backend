@@ -54,7 +54,14 @@ class AdminNotification extends Model
         ?int    $relatedId   = null,
         ?string $relatedType = null
     ): self {
-        return static::create(compact('type', 'title', 'message', 'link', 'relatedId', 'relatedType'));
+        return static::create([
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'link' => $link,
+            'related_id' => $relatedId,
+            'related_type' => $relatedType,
+        ]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

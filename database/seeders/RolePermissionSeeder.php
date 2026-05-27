@@ -21,17 +21,7 @@ class RolePermissionSeeder extends Seeder
             return;
         }
 
-        // Get permissions by name
-        $permissions = Permission::whereIn('name', [
-            'create_user',
-            'delete_user',
-            'view_users',
-            'create_role',
-            'assign_role',
-        ])->pluck('id')->toArray();
-
-        // Attach permissions to admin role
-        $adminRole->permissions()->sync($permissions);
+        $adminRole->permissions()->sync(Permission::pluck('id')->toArray());
         
 
     }

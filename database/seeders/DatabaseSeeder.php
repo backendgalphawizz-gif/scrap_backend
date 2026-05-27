@@ -26,10 +26,16 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $this->call(AdminRoleSeeder::class);
+        $this->call(BusinessSettingsSeeder::class);
+        $this->call(LandingPageSeeder::class);
         $this->call(RoleSeeder::class);
         $this->call(PermissionSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(AdminSeeder::class);
         $this->call(BrandCategorySeeder::class);
+        $this->call(SellerSeeder::class);
+        $this->call(ProfessionSeeder::class);
+        $this->call(UserLevelSeeder::class);
     }
 }
