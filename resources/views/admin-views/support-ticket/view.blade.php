@@ -59,8 +59,8 @@
 
     <div class="row mt-20">
         <div class="col-md-12">
-            <div class="">
-                <div class="mb-2 border-bottom">
+            <div class="card">
+                <div class="p-3 border-bottom">
                     <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
                         <div class="w-100">
                             <!-- Search Form -->
@@ -87,24 +87,12 @@
                             </form>
                             <!-- End Search Form -->
                         </div>
-
-                        <!-- <div class="">
-                            <div class="d-flex flex-wrap flex-sm-nowrap gap-3 justify-content-end">
-                                @php($status = request()->get('status','all'))
-                                <select class="form-control border-color-c1 w-160 form-select"
-                                    onchange="filter_tickets(this.value)">
-                                    <option value="all" {{$status=='all'?'selected':''}}>{{\App\CPU\translate('All_Status')}}</option>
-                                    <option value="open" {{$status=='open'?'selected':''}}>{{\App\CPU\translate('Open')}}</option>
-                                    <option value="close" {{$status=='close'?'selected':''}}>{{\App\CPU\translate('Close')}}</option>
-                                </select>
-                            </div>
-                        </div> -->
                     </div>
                 </div>
 
                 <!-- Tickets Listing -->
                 @foreach($tickets as $key =>$ticket)
-                <div class="border-bottom mb-2 pb-2">
+                <div class="border-bottom mb-2 pb-2 px-3">
                     <div class="card">
                         <div class="card-body align-items-center d-flex flex-wrap justify-content-between gap-3 border-bottom">
                             <div class="media gap-3">
@@ -178,11 +166,8 @@
                 </div>
                 @endif
 
-                <!-- No Data -->
                 @if(count($tickets) == 0)
-                <div class="text-center p-4">
-                    <p class="mb-0">{{\App\CPU\translate('No data found')}}</p>
-                </div>
+                    @include('admin-views.partials._empty-state', ['message' => \App\CPU\translate('No data found')])
                 @endif
             </div>
         </div>

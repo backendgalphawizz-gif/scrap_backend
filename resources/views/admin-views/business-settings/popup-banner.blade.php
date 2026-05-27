@@ -7,8 +7,7 @@
 @endpush
 
 @section('content')
-    <div class="content container-fluid">
-
+    <div class="content-wrapper">
         @php
             $bannerImage = $popupBanner['image'] ?? null;
             $bannerImageSrc = null;
@@ -27,14 +26,20 @@
             }
         @endphp
 
-        <!-- Page Title -->
-        <div class="mb-4 pb-2">
-            <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
-                <img src="{{asset('/public/assets/back-end/img/business-setup.png')}}" alt="">
-                {{\App\CPU\translate('Business_Setup')}}
-            </h2>
+        <div class="page-header">
+            <h3 class="page-title">
+                <span class="page-title-icon bg-gradient-primary text-white me-2">
+                    <i class="mdi mdi-cog"></i>
+                </span> {{\App\CPU\translate('Business_Setup')}}
+            </h3>
+            <nav aria-label="breadcrumb">
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <span></span>{{\App\CPU\translate('Popup_Banner')}} <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
+                    </li>
+                </ul>
+            </nav>
         </div>
-        <!-- End Page Title -->
 
         @if($bannerImageSrc)
             <div class="card mb-3">

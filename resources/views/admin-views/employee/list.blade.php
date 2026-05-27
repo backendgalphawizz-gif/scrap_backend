@@ -109,88 +109,87 @@
     <div class="row">
         <div class="col-lg-12">
 
-            <div class="table-responsive">
-                <table
-                    class="table">
+            <div class="card">
+                <div class="table-responsive">
+                    <table
+                        class="table">
 
-                    <thead class="text-capitalize">
-                        <tr>
-                            <th>{{\App\CPU\translate('SL')}}</th>
-                            <th>{{\App\CPU\translate('Name')}}</th>
-                            <th>{{\App\CPU\translate('Email')}}</th>
-                            <th>{{\App\CPU\translate('Phone')}}</th>
-                            <th>{{\App\CPU\translate('Role')}}</th>
-                            <th class="text-center">{{\App\CPU\translate('Status')}}</th>
-                            <th class="text-center">{{\App\CPU\translate('Action')}}</th>
-                        </tr>
-                    </thead>
+                        <thead class="text-capitalize">
+                            <tr>
+                                <th>{{\App\CPU\translate('SL')}}</th>
+                                <th>{{\App\CPU\translate('Name')}}</th>
+                                <th>{{\App\CPU\translate('Email')}}</th>
+                                <th>{{\App\CPU\translate('Phone')}}</th>
+                                <th>{{\App\CPU\translate('Role')}}</th>
+                                <th class="text-center">{{\App\CPU\translate('Status')}}</th>
+                                <th class="text-center">{{\App\CPU\translate('Action')}}</th>
+                            </tr>
+                        </thead>
 
-                    <tbody>
-                        @foreach($em as $k=>$e)
-                        @if($e->role)
-                        <tr id="data-{{ $e->id }}">
-                            <td>{{$em->firstItem()+$k}}</td>
+                        <tbody>
+                            @foreach($em as $k=>$e)
+                            @if($e->role)
+                            <tr id="data-{{ $e->id }}">
+                                <td>{{$em->firstItem()+$k}}</td>
 
-                            <td class="text-capitalize">
-                                {{$e['name']}}
-                            </td>
+                                <td class="text-capitalize">
+                                    {{$e['name']}}
+                                </td>
 
-                            <td>
-                                <a class="title-color hover-c1" href="mailto:{{$e['email']}}">
-                                    {{$e['email']}}
-                                </a>
-                            </td>
-
-                            <td>
-                                <a class="title-color hover-c1" href="tel:{{$e['phone']}}">
-                                    {{$e['phone']}}
-                                </a>
-                            </td>
-
-                            <td>{{$e->role['name']}}</td>
-
-                            <td class="text-center">
-                                <div class="form-check form-switch employee-status-switch d-inline-flex justify-content-center mb-0">
-                                    <input class="form-check-input employee-status"
-                                        type="checkbox"
-                                        role="switch"
-                                        aria-label="{{ \App\CPU\translate('Activate or deactivate') }}"
-                                        data-id="{{ $e->id }}"
-                                        {{ (int) $e->status === 1 ? 'checked' : '' }}>
-                                </div>
-                            </td>
-
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('admin.employee.update', [$e['id']]) }}"
-                                        class="btn btn-outline-primary btn-sm employee-action-btn"
-                                        title="{{ \App\CPU\translate('Edit') }}">
-                                        <i class="mdi mdi-pencil-outline"></i>
+                                <td>
+                                    <a class="title-color hover-c1" href="mailto:{{$e['email']}}">
+                                        {{$e['email']}}
                                     </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @endif
-                        @endforeach
-                    </tbody>
+                                </td>
 
-                </table>
-            </div>
+                                <td>
+                                    <a class="title-color hover-c1" href="tel:{{$e['phone']}}">
+                                        {{$e['phone']}}
+                                    </a>
+                                </td>
 
-            <!-- Pagination -->
-            <div class="table-responsive mt-4">
-                <div class="px-4 d-flex justify-content-center justify-content-md-end">
-                    {{$em->links()}}
+                                <td>{{$e->role['name']}}</td>
+
+                                <td class="text-center">
+                                    <div class="form-check form-switch employee-status-switch d-inline-flex justify-content-center mb-0">
+                                        <input class="form-check-input employee-status"
+                                            type="checkbox"
+                                            role="switch"
+                                            aria-label="{{ \App\CPU\translate('Activate or deactivate') }}"
+                                            data-id="{{ $e->id }}"
+                                            {{ (int) $e->status === 1 ? 'checked' : '' }}>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('admin.employee.update', [$e['id']]) }}"
+                                            class="btn btn-outline-primary btn-sm employee-action-btn"
+                                            title="{{ \App\CPU\translate('Edit') }}">
+                                            <i class="mdi mdi-pencil-outline"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endif
+                            @endforeach
+                        </tbody>
+
+                    </table>
                 </div>
-            </div>
 
-            @if(count($em)==0)
-            <div class="text-center p-4">
-                <img class="mb-3 w-160"
-                    src="{{ asset('assets/back-end/svg/illustrations/sorry.svg') }}">
-                <p class="mb-0">{{\App\CPU\translate('No data to show')}}</p>
+                @if($em->hasPages())
+                    <div class="table-responsive mt-4">
+                        <div class="px-4 d-flex justify-content-center justify-content-md-end">
+                            {{$em->links()}}
+                        </div>
+                    </div>
+                @endif
+
+                @if(count($em)==0)
+                    @include('admin-views.partials._empty-state')
+                @endif
             </div>
-            @endif
 
         </div>
     </div>
