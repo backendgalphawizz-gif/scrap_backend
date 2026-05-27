@@ -126,9 +126,10 @@ class PanValidationService
     }
 
     /**
-     * Verify a PAN number against the Nerofy third-party API.
+     * Verify a PAN number against the Nerofy PAN 360 API.
+     * Returns Aadhaar linkage status alongside standard validity.
      *
-     * @return array{valid: bool, status: string|null, name: string|null, error: string|null}
+     * @return array{valid: bool, status: string|null, name: string|null, aadhaar_linked: bool, masked_aadhaar: string|null, error: string|null}
      */
     public function verifyPanNumber(string $panNumber): array
     {
@@ -137,7 +138,7 @@ class PanValidationService
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/pancard/verify',
+            CURLOPT_URL            => 'https://api.nerofy.in/api/v1/service/pan/360',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => '',
             CURLOPT_MAXREDIRS      => 10,
@@ -157,23 +158,25 @@ class PanValidationService
         curl_close($curl);
 
         if ($curlError) {
-            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'PAN verification service unreachable: ' . $curlError];
+            return ['valid' => false, 'status' => null, 'name' => null, 'aadhaar_linked' => false, 'masked_aadhaar' => null, 'error' => 'PAN verification service unreachable: ' . $curlError];
         }
 
         $decoded = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['pan_status'])) {
-            return ['valid' => false, 'status' => null, 'name' => null, 'error' => 'Invalid response from PAN verification service.'];
+            return ['valid' => false, 'status' => null, 'name' => null, 'aadhaar_linked' => false, 'masked_aadhaar' => null, 'error' => 'Invalid response from PAN verification service.'];
         }
 
         $panStatus = strtoupper(trim($decoded['data']['pan_status'] ?? ''));
         $isValid   = $panStatus === 'PAN IS VALID';
 
         return [
-            'valid'  => $isValid,
-            'status' => $decoded['data']['pan_status'] ?? null,
-            'name'   => $decoded['data']['registered_name'] ?? $decoded['data']['name'] ?? null,
-            'error'  => null,
+            'valid'          => $isValid,
+            'status'         => $decoded['data']['pan_status'] ?? null,
+            'name'           => $decoded['data']['registered_name'] ?? $decoded['data']['name_pan_card'] ?? null,
+            'aadhaar_linked' => (bool) ($decoded['data']['aadhaar_linked'] ?? false),
+            'masked_aadhaar' => $decoded['data']['masked_aadhaar_number'] ?? null,
+            'error'          => null,
         ];
     }
 

@@ -111,7 +111,20 @@ class Seller extends Authenticatable
         return $this->campaigns()->where('status', 'completed')->sum('total_campaign_budget');0;
     }
     public function getCampaignEngagementAttribute() {
-        return "0";
+        $campaignIds = $this->campaigns()->pluck('id');
+
+        $totals = \App\Models\CampaignTransaction::whereIn('campaign_id', $campaignIds)
+            ->selectRaw('SUM(likes) as total_likes, SUM(comments) as total_comments, COUNT(*) as total_participants')
+            ->first();
+
+        $participants = (int) ($totals->total_participants ?? 0);
+        if ($participants === 0) {
+            return "0";
+        }
+
+        $engagement = (($totals->total_likes + $totals->total_comments) / $participants) * 100;
+
+        return round($engagement, 2);
     }
     public function getTotalCampaignRatingsAttribute() {
         return Feedback::whereIn(

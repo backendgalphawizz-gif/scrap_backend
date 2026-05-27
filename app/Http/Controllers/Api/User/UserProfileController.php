@@ -135,6 +135,13 @@ class UserProfileController extends Controller
         if ($request->hasFile('pan_image')) {
             $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
         }
+
+        // Auto-verify Aadhaar linkage via PAN 360 response
+        if ($panVerification['aadhaar_linked'] && $panVerification['masked_aadhaar'] !== null) {
+            $user->aadhar_number = $panVerification['masked_aadhaar'];
+            $user->aadhar_status = 'Verified';
+        }
+
         $user->save();
 
         return response()->json([
