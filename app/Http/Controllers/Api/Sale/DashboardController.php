@@ -225,16 +225,16 @@ class DashboardController extends Controller
 
             $sellerWallet = Helpers::get_seller_wallet($request->brand_id);
 
-            if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient fund. Please recharge wallet.',
-                    'data' => [],
-                    'balance_sufficient' => false,
-                    'current_balance' => $sellerWallet->wallet_amount,
-                    'balance_required' => $request->total_campaign_budget
-                ], 200);
-            }
+            // if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Insufficient fund. Please recharge wallet.',
+            //         'data' => [],
+            //         'balance_sufficient' => false,
+            //         'current_balance' => $sellerWallet->wallet_amount,
+            //         'balance_required' => $request->total_campaign_budget
+            //     ], 200);
+            // }
 
             $category = BrandCategory::where('id', $request->category_id)
                 ->where(function ($query) {
