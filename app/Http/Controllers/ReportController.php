@@ -795,4 +795,173 @@ class ReportController extends Controller
         ];
     }
 
+    // -------------------------------------------------------------------------
+    // Admin Earning Report
+    // -------------------------------------------------------------------------
+
+    public function adminEarningReport(Request $request)
+    {
+        [$date_type, $from, $to] = $this->resolveReportDateRange($request);
+        $limit = (int) ($request->get('limit') ?? 10);
+
+        $campaignQuery = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->withCount([
+                'campaign_transactions as completed_posts' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_APPROVED,
+                        CampaignTransaction::STATUS_COMPLETED,
+                    ]);
+                },
+                'campaign_transactions as total_participants' => function ($q) {
+                    $q->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
+                },
+            ]);
+
+        $allRows    = (clone $campaignQuery)->get()->map(fn ($c) => $this->mapAdminEarningRow($c));
+        $summary    = $this->aggregateAdminEarningSummary($allRows);
+
+        $rows = $campaignQuery
+            ->orderByDesc('id')
+            ->paginate($limit)
+            ->through(fn ($c) => $this->mapAdminEarningRow($c))
+            ->withQueryString();
+
+        return view('admin-views.report._admin-earning-report', compact(
+            'rows', 'summary', 'date_type', 'from', 'to'
+        ));
+    }
+
+    public function exportAdminEarningReport(Request $request)
+    {
+        [$date_type, $from, $to] = $this->resolveReportDateRange($request);
+
+        $campaigns = Campaign::with(['brand:id,username'])
+            ->whereBetween('created_at', [$from, $to])
+            ->withCount([
+                'campaign_transactions as completed_posts' => function ($q) {
+                    $q->whereIn('status', [
+                        CampaignTransaction::STATUS_APPROVED,
+                        CampaignTransaction::STATUS_COMPLETED,
+                    ]);
+                },
+                'campaign_transactions as total_participants' => function ($q) {
+                    $q->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES);
+                },
+            ])
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($c) => $this->mapAdminEarningRow($c));
+
+        $summary  = $this->aggregateAdminEarningSummary($campaigns);
+        $filename = 'admin-earning-report-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $fmt = fn ($v) => number_format((float) $v, 2, '.', '');
+
+        $callback = function () use ($campaigns, $summary, $fmt) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Campaign', 'Brand', 'Status',
+                'Campaign Budget (₹)', 'Admin %',
+                'Per-Post Cost (₹)',
+                'Total Posts Required', 'Completed Posts',
+                'Projected Admin Earnings (₹)', 'Actual Admin Earnings (₹)',
+                'Utilisation %',
+            ]);
+
+            // Totals row
+            fputcsv($handle, [
+                'TOTAL', '', '',
+                $fmt($summary['total_budget']),
+                '',
+                '',
+                $summary['total_posts_required'],
+                $summary['total_completed_posts'],
+                $fmt($summary['total_projected_earnings']),
+                $fmt($summary['total_actual_earnings']),
+                '',
+            ]);
+
+            foreach ($campaigns as $row) {
+                fputcsv($handle, [
+                    $row['campaign'],
+                    $row['brand'],
+                    ucwords($row['status']),
+                    $fmt($row['campaign_budget']),
+                    $row['admin_percentage'] . '%',
+                    $fmt($row['per_post_cost']),
+                    $row['posts_required'],
+                    $row['completed_posts'],
+                    $fmt($row['projected_earnings']),
+                    $fmt($row['actual_earnings']),
+                    $row['utilisation_pct'] . '%',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function mapAdminEarningRow(Campaign $campaign): array
+    {
+        $budget          = (float) ($campaign->total_campaign_budget ?? 0);
+        $adminPct        = (float) ($campaign->admin_percentage ?? 0);
+        $postsRequired   = (int)   ($campaign->total_user_required ?? 0);
+        $completedPosts  = (int)   ($campaign->completed_posts ?? 0);
+        $perPostCost     = $postsRequired > 0 ? ($budget / $postsRequired) : 0;
+
+        $projectedEarnings = ($budget * $adminPct) / 100;
+        $actualEarnings    = ($perPostCost * $adminPct / 100) * $completedPosts;
+        $utilisationPct    = $postsRequired > 0 ? round(($completedPosts / $postsRequired) * 100, 1) : 0;
+
+        return [
+            'campaign_id'        => $campaign->id,
+            'campaign'           => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+            'brand'              => $campaign->brand->username ?? '-',
+            'status'             => $campaign->status,
+            'campaign_budget'    => $budget,
+            'admin_percentage'   => $adminPct,
+            'per_post_cost'      => $perPostCost,
+            'posts_required'     => $postsRequired,
+            'completed_posts'    => $completedPosts,
+            'total_participants' => (int) ($campaign->total_participants ?? 0),
+            'projected_earnings' => $projectedEarnings,
+            'actual_earnings'    => $actualEarnings,
+            'utilisation_pct'    => $utilisationPct,
+            'created_at'         => Helpers::formatAdminDate($campaign->created_at),
+        ];
+    }
+
+    private function aggregateAdminEarningSummary($rows): array
+    {
+        $summary = [
+            'total_budget'            => 0,
+            'total_posts_required'    => 0,
+            'total_completed_posts'   => 0,
+            'total_projected_earnings'=> 0,
+            'total_actual_earnings'   => 0,
+        ];
+
+        foreach ($rows as $row) {
+            $summary['total_budget']             += $row['campaign_budget'];
+            $summary['total_posts_required']     += $row['posts_required'];
+            $summary['total_completed_posts']    += $row['completed_posts'];
+            $summary['total_projected_earnings'] += $row['projected_earnings'];
+            $summary['total_actual_earnings']    += $row['actual_earnings'];
+        }
+
+        return $summary;
+    }
+
 }

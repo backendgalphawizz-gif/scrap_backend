@@ -278,17 +278,18 @@ class ProcessScrapeResults extends Command
         $transaction->violation_reason = 'Post could not be verified after flagging. Participation removed and slot released.';
         $transaction->save();
 
+        // Resolve user once; guard against orphaned transactions
+        $user = User::find($transaction->user_id);
+
         if ($rewardTransaction->status === 'pending') {
             $rewardTransaction->status = 'rejected';
             $rewardTransaction->description = 'Campaign reward cancelled for ' . ($transaction->campaign->title ?? 'campaign');
             $rewardTransaction->save();
 
-            $user = User::find($transaction->user_id);
             Helpers::logUserWalletTransaction('rejected', $rewardTransaction, $user, 'Campaign reward cancelled');
         }
-        
+
         // Send FCM notification to user about post being deleted
-        $user = User::find($transaction->user_id);
         if ($user && $user->fcm_id) {
             $title = 'Post Deleted ❌';
             $body = "Your post for campaign \"{$transaction->campaign->title}\" could not be verified and has been deleted. Your participation has been removed.";

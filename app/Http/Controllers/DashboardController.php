@@ -16,7 +16,9 @@ use App\Models\CoinWallet;
 use App\Models\Seller;
 use App\Models\User;
 use App\Models\UserCampaignActivityLog;
+use App\Models\UserLevel;
 use App\Models\Voucher;
+use App\Models\ScrappedPost;
 use App\Http\Resources\CommonResource;
 use DB;
 use App\CPU\ImageManager;
@@ -64,6 +66,14 @@ class DashboardController extends Controller
         $notificationCounts    = $this->getNotificationTaskCounts();
         $recentNotifications   = AdminNotification::orderByDesc('created_at')->limit(10)->get();
 
+        // Last scraping timestamps per platform
+        $lastScrapedInstagram = ScrappedPost::where('platform', 'instagram')
+            ->orderByDesc('scraped_at')
+            ->value('scraped_at');
+        $lastScrapedFacebook = ScrappedPost::where('platform', 'facebook')
+            ->orderByDesc('scraped_at')
+            ->value('scraped_at');
+
         return view('admin-views.system.dashboard', compact(
             'totalCampaignparticipants',
             'totalCampaignBudget',
@@ -79,7 +89,9 @@ class DashboardController extends Controller
             'statusLabels',
             'statusSeries',
             'notificationCounts',
-            'recentNotifications'
+            'recentNotifications',
+            'lastScrapedInstagram',
+            'lastScrapedFacebook'
         ));
     }
 
@@ -252,7 +264,13 @@ class DashboardController extends Controller
         $user = User::with(['coinWallet', 'socialVerifications'])
             ->withCount('campaigns')
             ->findOrFail($id);
-        return view('admin-views.customer.view-user', compact('user'));
+
+        $totalEarnings = (int) ($user->coinWallet?->total_coin_earning ?? 0);
+        $userLevel = UserLevel::where('range_min', '<=', $totalEarnings)
+            ->where('range_max', '>=', $totalEarnings)
+            ->first();
+
+        return view('admin-views.customer.view-user', compact('user', 'userLevel', 'totalEarnings'));
     }
     public function editUser(Request $request, $id) {
         $user = User::with('socialVerifications')->findOrFail($id);

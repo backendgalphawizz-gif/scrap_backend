@@ -690,8 +690,9 @@ class UserProfileController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'platform' => 'required|in:instagram,facebook',
-            'username' => 'required|string|max:100',
+            'platform'    => 'required|in:instagram,facebook',
+            'username'    => 'required|string|max:100',
+            'unique_code' => 'required|string|max:100',
         ]);
 
         if ($validator->fails()) {

@@ -454,10 +454,10 @@
                     <h5 class="brand-section-title"><i class="mdi mdi-domain"></i>Business Details</h5>
                 </div>
                 <div class="card-body">
-                    <div class="detail-row d-flex justify-content-between align-items-center gap-2">
+                    {{-- <div class="detail-row d-flex justify-content-between align-items-center gap-2">
                         <p class="detail-key"><st</p>
                         <p class="detail-value">{{ $seller->username ?: '-' }}</p>
-                    </div>
+                    </div> --}}
                     <div class="detail-row d-flex justify-content-between align-items-center gap-2"><p class="detail-key"><strong>Owner Name</strong></p><p class="detail-value">{{ trim($seller->f_name.' '.$seller->l_name) ?: '-' }}</p></div>
                     <div class="detail-row d-flex justify-content-between align-items-center gap-2"><p class="detail-key"><strong>Business Type</strong></p><p class="detail-value">{{ $seller->business_registeration_type ?: '-' }}</p></div>
                     <div class="detail-row d-flex justify-content-between align-items-center gap-2"><p class="detail-key"><strong>Email</strong></p><p class="detail-value">{{ $seller->email ?: '-' }}</p></div>

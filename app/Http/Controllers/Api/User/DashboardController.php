@@ -12,6 +12,7 @@ use App\Models\Campaign;
 use App\Models\CoinTransaction;
 use App\Models\CoinWallet;
 use App\Models\UserCampaignSkip;
+use App\Models\SocialVerificationTransaction;
 use Illuminate\Support\Carbon;
 
 
@@ -231,6 +232,15 @@ class DashboardController extends Controller
                 'status' => false,
                 'message' => 'Campaign not found or inactive'
             ], 404);
+        }
+
+        // BUG-05: Require verified social account before allowing participation
+        $statusField = $request->share_on . '_status';
+        if ($user->$statusField !== SocialVerificationTransaction::STATUS_VERIFIED) {
+            return response()->json([
+                'status'  => false,
+                'message' => ucfirst($request->share_on) . ' account is not verified. Please verify your account before participating in a campaign.',
+            ], 422);
         }
 
         $transaction = CampaignTransaction::where([

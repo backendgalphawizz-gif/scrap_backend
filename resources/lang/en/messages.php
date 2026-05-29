@@ -749,4 +749,6 @@
   'Notification deleted successfully' => 'Notification deleted successfully',
   'Failed to delete notification' => 'Failed to delete notification',
   'Push notification successfully!' => 'Push notification successfully!',
+  'Admin_Earning_Report' => 'Admin Earning Report',
+  'Today' => 'Today',
 );

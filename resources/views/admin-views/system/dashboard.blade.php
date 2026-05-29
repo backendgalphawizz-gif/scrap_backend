@@ -141,6 +141,60 @@
             
     </div>
 
+    {{-- ══════════ LAST SCRAPING STATUS ══════════ --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm" style="border-left: 4px solid #6f42c1;">
+                <div class="card-header py-2" style="background:#f8f9fc;">
+                    <span class="fw-bold" style="color:#6f42c1;">
+                        <i class="mdi mdi-spider-web me-1"></i> Last Scraping Status
+                    </span>
+                </div>
+                <div class="card-body py-3">
+                    <div class="row g-3">
+                        {{-- Instagram --}}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 rounded" style="background:#fff3cd; border:1px solid #ffc107;">
+                                <span class="me-3" style="font-size:2rem;">📸</span>
+                                <div>
+                                    <p class="mb-0 fw-semibold" style="color:#856404;">Instagram</p>
+                                    @if($lastScrapedInstagram)
+                                        @php $igTime = \Carbon\Carbon::parse($lastScrapedInstagram, 'Asia/Kolkata'); @endphp
+                                        <p class="mb-0 small text-muted">
+                                            {{ $igTime->format('d M Y, h:i A') }}
+                                            <span class="ms-2 text-secondary">({{ $igTime->diffForHumans() }})</span>
+                                        </p>
+                                    @else
+                                        <p class="mb-0 small text-danger">No data scraped yet</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Facebook --}}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 rounded" style="background:#cfe2ff; border:1px solid #0d6efd;">
+                                <span class="me-3" style="font-size:2rem;">📘</span>
+                                <div>
+                                    <p class="mb-0 fw-semibold" style="color:#0a58ca;">Facebook</p>
+                                    @if($lastScrapedFacebook)
+                                        @php $fbTime = \Carbon\Carbon::parse($lastScrapedFacebook, 'Asia/Kolkata'); @endphp
+                                        <p class="mb-0 small text-muted">
+                                            {{ $fbTime->format('d M Y, h:i A') }}
+                                            <span class="ms-2 text-secondary">({{ $fbTime->diffForHumans() }})</span>
+                                        </p>
+                                    @else
+                                        <p class="mb-0 small text-danger">No data scraped yet</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- ══════════ END LAST SCRAPING STATUS ══════════ --}}
+
     {{-- ══════════ NOTIFICATION & TASK PANEL ══════════ --}}
     <div class="row mb-4" id="notif-panel-row">
         {{-- Task Counts --}}
