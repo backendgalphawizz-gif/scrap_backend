@@ -168,15 +168,21 @@ class Campaign extends Model
     }
 
     public function getEngagementAttribute() {
-        
-        return "0";
+        // Number of creators who have joined the campaign (occupied slots)
+        return (string) $this->occupied_slots;
     }
     public function getAvgFeedbackAttribute() {
         $avgFeedback = $this->feedbacks()->avg('ratings');
         return $avgFeedback ? round($avgFeedback, 2) : "0";
     }
     public function getCostPerClickAttribute() {
-        return "0";
+        // Budget allocated per creator slot (total_campaign_budget / number_of_post)
+        $posts = (int) ($this->number_of_post ?? 0);
+        $totalBudget = (float) ($this->total_campaign_budget ?? 0);
+        if ($posts <= 0) {
+            return (string) round((float) ($this->reward_per_user ?? 0), 2);
+        }
+        return (string) round($totalBudget / $posts, 2);
     }
     public function getBudgetAttribute() {
         return "0";

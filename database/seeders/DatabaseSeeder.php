@@ -37,5 +37,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SellerSeeder::class);
         $this->call(ProfessionSeeder::class);
         $this->call(UserLevelSeeder::class);
+        $this->call(StateSeeder::class);
+        $this->call(CitySeeder::class);
     }
 }
