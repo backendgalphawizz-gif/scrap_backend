@@ -311,6 +311,8 @@
                 <div class="staff-meta-item">Phone number:<b>{{ $user->mobile ?? 'N/A' }}</b></div>
                 <div class="staff-meta-item">Account status:<b>{{ (int)$user->status === 1 ? 'Active' : 'Inactive' }}</b></div>
                 <div class="staff-meta-item">Email:<b>{{ $user->email ?? 'N/A' }}</b></div>
+                <div class="staff-meta-item">Level:<b>{{ $userLevel?->name ?? 'N/A' }}</b></div>
+                <div class="staff-meta-item">Total coin earnings:<b>{{ $totalEarnings }}</b></div>
             </div>
         </div>
 
@@ -416,6 +418,9 @@
                         <div class="staff-info-grid">
                             <div class="staff-info"><div class="k">Wallet coins</div><div class="v">{{ $user->coinWallet?->balance ?? 0 }}</div></div>
                             <div class="staff-info"><div class="k">Wallet status</div><div class="v">{{ (int)($user->coinWallet?->status ?? 0) === 1 ? 'Active' : 'Inactive' }}</div></div>
+                            <div class="staff-info"><div class="k">Total coin earnings</div><div class="v">{{ $totalEarnings }}</div></div>
+                            <div class="staff-info"><div class="k">Level</div><div class="v">{{ $userLevel?->name ?? 'N/A' }}{{ $userLevel ? ' (' . $userLevel->range_min . ' – ' . $userLevel->range_max . ' coins)' : '' }}</div></div>
+                            <div class="staff-info"><div class="k">Max participations/day</div><div class="v">{{ $userLevel?->max_participations_per_day ?? '—' }}</div></div>
                         </div>
                     </div>
                 </div>

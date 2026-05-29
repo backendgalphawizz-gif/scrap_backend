@@ -230,6 +230,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.financial.reports') }}">Financial Report</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.earning.reports') }}">Admin Earning Report</a>
+                    </li>
                 </ul>
             </div>
         </li>

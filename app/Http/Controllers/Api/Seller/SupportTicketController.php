@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Seller;
 use App\CPU\Helpers;
 use App\Http\Controllers\Api\Support\SupportTicketPresenter;
 use App\Http\Controllers\Controller;
+use App\Models\AdminNotification;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use Illuminate\Http\Request;
@@ -89,6 +90,14 @@ class SupportTicketController extends Controller
         });
 
         $ticket->load('messages');
+
+        AdminNotification::fire(
+            type:        'support.ticket_created',
+            title:       'New Brand Support Ticket',
+            message:     "Brand {$seller->username} (#{$seller->id}) opened ticket #{$ticket->id}: \"{$ticket->subject}\".",
+            relatedId:   $ticket->id,
+            relatedType: 'SupportTicket'
+        );
 
         return response()->json([
             'status' => true,
