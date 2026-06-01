@@ -73,6 +73,9 @@ class DashboardController extends Controller
         $lastScrapedFacebook = ScrappedPost::where('platform', 'facebook')
             ->orderByDesc('scraped_at')
             ->value('scraped_at');
+        $lastScrapedThreads = ScrappedPost::where('platform', 'threads')
+            ->orderByDesc('scraped_at')
+            ->value('scraped_at');
 
         return view('admin-views.system.dashboard', compact(
             'totalCampaignparticipants',
@@ -91,7 +94,8 @@ class DashboardController extends Controller
             'notificationCounts',
             'recentNotifications',
             'lastScrapedInstagram',
-            'lastScrapedFacebook'
+            'lastScrapedFacebook',
+            'lastScrapedThreads'
         ));
     }
 

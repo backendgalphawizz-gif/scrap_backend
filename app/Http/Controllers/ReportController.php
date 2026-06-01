@@ -1050,6 +1050,15 @@ class ReportController extends Controller
         $snapshotSalesPct = (float) ($campaign->sales_percentage ?? 0);
         $snapshotAdminPct = (float) ($campaign->admin_percentage ?? 0);
 
+        // No salesperson assigned — full sales percentage goes to admin
+        if (!$campaign->sale_id) {
+            return [
+                'actual_sales_pct'    => 0.0,
+                'slab_saving_pct'     => 0.0,
+                'effective_admin_pct' => $snapshotAdminPct + $snapshotSalesPct,
+            ];
+        }
+
         $actualSalesPct = array_key_exists($campaign->id, $slabRates)
             ? (float) $slabRates[$campaign->id]
             : $snapshotSalesPct;

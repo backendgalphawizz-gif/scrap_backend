@@ -690,7 +690,7 @@ class UserProfileController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'platform'    => 'required|in:instagram,facebook',
+            'platform'    => 'required|in:instagram,facebook,threads',
             'username'    => 'required|string|max:100',
             'unique_code' => 'required|string|max:100',
         ]);
@@ -780,6 +780,11 @@ class UserProfileController extends Controller
             ->latest()
             ->first();
 
+        $threadsTx = SocialVerificationTransaction::where('user_id', $user->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_THREADS)
+            ->latest()
+            ->first();
+
         return response()->json([
             'status'  => true,
             'message' => 'Social verification status retrieved successfully',
@@ -793,6 +798,11 @@ class UserProfileController extends Controller
                     'status'       => $user->adminDisplaySocialStatus('facebook'),
                     'username'     => $user->adminDisplaySocialUsername('facebook'),
                     'submitted_at' => $facebookTx?->submitted_at,
+                ],
+                'threads' => [
+                    'status'       => $user->adminDisplaySocialStatus('threads'),
+                    'username'     => $user->adminDisplaySocialUsername('threads'),
+                    'submitted_at' => $threadsTx?->submitted_at,
                 ],
                 'level'             => $level ? $level->name : null,
                 'max_posts_per_day' => $maxPostsPerDay,

@@ -38,7 +38,7 @@ class SellerSocialVerificationController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'platform'    => 'required|in:instagram,facebook',
+            'platform'    => 'required|in:instagram,facebook,threads',
             'username'    => 'required|string|max:100',
             'unique_code' => 'nullable|string|max:100',
         ]);
@@ -109,6 +109,11 @@ class SellerSocialVerificationController extends Controller
             ->latest()
             ->first();
 
+        $threads = SocialVerificationTransaction::where('seller_id', $seller->id)
+            ->where('platform', SocialVerificationTransaction::PLATFORM_THREADS)
+            ->latest()
+            ->first();
+
         return response()->json([
             'status'  => true,
             'message' => 'Social verification status retrieved successfully',
@@ -122,6 +127,11 @@ class SellerSocialVerificationController extends Controller
                     'status'       => $seller->facebook_status,
                     'username'     => $seller->facebook_username,
                     'submitted_at' => $facebook?->submitted_at,
+                ],
+                'threads'  => [
+                    'status'       => $seller->threads_status,
+                    'username'     => $seller->threads_username,
+                    'submitted_at' => $threads?->submitted_at,
                 ],
             ],
         ]);

@@ -213,7 +213,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $validator = Validator::make($request->all(), [
-            'share_on' => 'required|in:instagram,facebook',
+            'share_on' => 'required|in:instagram,facebook,threads',
             'unique_code' => 'required|string|max:100',
             'post_url' => 'nullable|url|max:2048',
         ]);

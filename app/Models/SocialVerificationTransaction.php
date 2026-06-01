@@ -13,6 +13,7 @@ class SocialVerificationTransaction extends Model
 
     const PLATFORM_INSTAGRAM = 'instagram';
     const PLATFORM_FACEBOOK  = 'facebook';
+    const PLATFORM_THREADS   = 'threads';
 
     protected $fillable = [
         'user_id',
