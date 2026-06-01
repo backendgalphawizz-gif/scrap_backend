@@ -221,9 +221,9 @@
                                 <th>Total Amount without GST + Discount</th>
                                 <th>Discount</th>
                                 <th>Users</th>
-                                <th>Sales</th>
+                                <th>Sales <small class="text-muted fw-normal">(actual)</small></th>
                                 <th>Referral</th>
-                                <th>Admin</th>
+                                <th>Admin <small class="text-muted fw-normal">(effective)</small></th>
                             </tr>
                         </thead>
                         <tbody>

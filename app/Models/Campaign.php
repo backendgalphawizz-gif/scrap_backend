@@ -40,6 +40,8 @@ class Campaign extends Model
         'settlement_status',
         'settled_at',
         'amount_returned_to_wallet',
+        'media_type',
+        'video',
     ];
 
     protected $casts = [
@@ -86,12 +88,20 @@ class Campaign extends Model
         // return asset('storage/profile/' . ( $value ?: 'def.png'));
     }
 
+    public function getVideoAttribute($value)
+    {
+        if (!$value) return null;
+        return (strpos($value, 'https://') === 0) ? $value : asset('storage/profile/' . $value);
+    }
+
     public function getImagesAttribute($images)
     {
+        if (empty($images)) return [];
         $images = explode(',', $images);
         $imageUrls = [];
         foreach ($images as $image) {
-            $imageUrls[] = (strpos($image, 'https://') === 0) ? $image : asset('storage/profile/' . ( $image ?: 'def.png'));
+            if (empty($image)) continue;
+            $imageUrls[] = (strpos($image, 'https://') === 0) ? $image : asset('storage/profile/' . $image);
         }
         return $imageUrls;
     }

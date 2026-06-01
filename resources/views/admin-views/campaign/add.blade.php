@@ -294,8 +294,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
 
-                                    <label>{{ \App\CPU\translate('Image')}}</label>
-                                    <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 4:1 )</span>
+                                    <label>{{ \App\CPU\translate('Thumbnail Image')}}</label>
+                                    <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 4:1 — required for campaign list )</span>
 
                                     <input type="file"
                                         name="thumbnail"
@@ -312,7 +312,21 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            {{-- Media Type Toggle --}}
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="d-block mb-2 fw-semibold">{{ \App\CPU\translate('Media Type') }}</label>
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="media_type" id="mediaTypeImage" value="image" {{ old('media_type', 'image') === 'image' ? 'checked' : '' }} autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="mediaTypeImage">&#128247; {{ \App\CPU\translate('Image') }}</label>
+                                        <input type="radio" class="btn-check" name="media_type" id="mediaTypeVideo" value="video" {{ old('media_type') === 'video' ? 'checked' : '' }} autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="mediaTypeVideo">&#127909; {{ \App\CPU\translate('Video') }}</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Image fields (shown for image campaigns) --}}
+                            <div id="mediaImageFields" class="col-md-6">
                                 <div class="form-group">
 
                                     <label>{{ \App\CPU\translate('Multiple Images')}}</label>
@@ -329,11 +343,23 @@
                                 </div>
                             </div>
 
+                            {{-- Video field (shown for video campaigns) --}}
+                            <div id="mediaVideoFields" class="col-md-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>{{ \App\CPU\translate('Campaign Video') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted d-block mb-1">MP4, MOV &mdash; Max 100MB</small>
+                                    <input type="file"
+                                        name="video"
+                                        id="campaignVideoUploader"
+                                        class="form-control"
+                                        accept="video/mp4,video/quicktime,video/x-msvideo">
+                                    <video id="videoPreview" class="mt-2 rounded" controls style="display:none;max-width:100%;max-height:300px;"></video>
+                                </div>
+                            </div>
+
 
                             <div class="col-md-12 d-flex justify-content-end gap-3">
-
-
-                                <button type="submit" class="btn btn-primary px-4">{{ \App\CPU\translate('update')}}</button>
+                                <button type="submit" class="btn btn-primary px-4">{{ \App\CPU\translate('Submit')}}</button>
                             </div>
                         </div>
                     </form>
@@ -525,6 +551,37 @@
         } else {
             syncCityOptions();
         }
+    });
+</script>
+<script>
+    // Media type toggle
+    function syncMediaTypeFields() {
+        const isVideo = $('input[name="media_type"]:checked').val() === 'video';
+        $('#mediaImageFields').toggle(!isVideo);
+        $('#mediaVideoFields').toggle(isVideo);
+        if (!isVideo) {
+            $('#campaignVideoUploader').val('');
+            $('#videoPreview').hide().attr('src', '');
+        }
+    }
+
+    $('input[name="media_type"]').on('change', syncMediaTypeFields);
+
+    $('#campaignVideoUploader').on('change', function() {
+        const file = this.files && this.files[0];
+        const preview = document.getElementById('videoPreview');
+        if (file) {
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
+    });
+
+    $(document).ready(function() {
+        syncMediaTypeFields();
     });
 </script>
 <script>

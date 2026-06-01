@@ -65,54 +65,59 @@ class ReportController extends Controller
         $data['pending_product'] = (clone $campaignQuery)->where('status', 'pending')->count();
         $data['active_product'] = (clone $campaignQuery)->where('status', 'active')->count();
 
-        $mapCampaignRow = function ($campaign) {
-            $baseAmount = (float) ($campaign->total_campaign_budget ?? 0);
+        $mapCampaignRow = function ($campaign, array $slabRates = []) {
+            $baseAmount    = (float) ($campaign->total_campaign_budget ?? 0);
             $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
-            $gstAmount = max(0, $amountWithGst - $baseAmount);
+            $gstAmount     = max(0, $amountWithGst - $baseAmount);
 
-            $userPercentage = (float) ($campaign->user_percentage ?? 0);
-            $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
+            $userPercentage     = (float) ($campaign->user_percentage ?? 0);
             $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
-            $adminPercentage = (float) ($campaign->admin_percentage ?? 0);
 
-            $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
-            $discountAmount = ($baseAmount * $discountPercentage) / 100;
-            $amountWithoutGst = $baseAmount - $discountAmount;
+            $adjusted          = $this->computeSlabAdjustedRates($campaign, $slabRates);
+            $actualSalesPct    = $adjusted['actual_sales_pct'];
+            $effectiveAdminPct = $adjusted['effective_admin_pct'];
+
+            $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
+            $discountAmount     = ($baseAmount * $discountPercentage) / 100;
+            $amountWithoutGst   = $baseAmount - $discountAmount;
 
             return [
-                'brand_id' => $campaign->brand_id,
-                'campaign_id' => $campaign->id,
-                'brand' => $campaign->brand->username ?? '-',
-                'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
-                'amount_with_gst' => $amountWithGst,
-                'gst' => $gstAmount,
-                'amount_without_gst' => $amountWithoutGst,
+                'brand_id'                         => $campaign->brand_id,
+                'campaign_id'                      => $campaign->id,
+                'brand'                            => $campaign->brand->username ?? '-',
+                'campaign'                         => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'amount_with_gst'                  => $amountWithGst,
+                'gst'                              => $gstAmount,
+                'amount_without_gst'               => $amountWithoutGst,
                 'amount_without_gst_with_discount' => $baseAmount,
-                'discount' => $discountAmount,
-                'users' => ($amountWithoutGst * $userPercentage) / 100,
-                'sales' => ($amountWithoutGst * $salesPercentage) / 100,
-                'referral' => ($amountWithoutGst * $referralPercentage) / 100,
-                'admin' => ($amountWithoutGst * $adminPercentage) / 100,
+                'discount'                         => $discountAmount,
+                'users'                            => ($amountWithoutGst * $userPercentage)     / 100,
+                'sales'                            => ($amountWithoutGst * $actualSalesPct)     / 100,
+                'referral'                         => ($amountWithoutGst * $referralPercentage) / 100,
+                'admin'                            => ($amountWithoutGst * $effectiveAdminPct)  / 100,
+                'slab_saving_pct'                  => $adjusted['slab_saving_pct'],
             ];
         };
 
-        $allRows = (clone $campaignQuery)->get()->map($mapCampaignRow);
+        $allCampaigns = (clone $campaignQuery)->get();
+        $slabRates    = $this->loadSlabRates($allCampaigns->pluck('id')->all());
+        $allRows      = $allCampaigns->map(fn ($c) => $mapCampaignRow($c, $slabRates));
         $totals = [
-            'amount_with_gst' => $allRows->sum('amount_with_gst'),
-            'gst' => $allRows->sum('gst'),
-            'amount_without_gst' => $allRows->sum('amount_without_gst'),
+            'amount_with_gst'                  => $allRows->sum('amount_with_gst'),
+            'gst'                              => $allRows->sum('gst'),
+            'amount_without_gst'               => $allRows->sum('amount_without_gst'),
             'amount_without_gst_with_discount' => $allRows->sum('amount_without_gst_with_discount'),
-            'discount' => $allRows->sum('discount'),
-            'users' => $allRows->sum('users'),
-            'sales' => $allRows->sum('sales'),
-            'referral' => $allRows->sum('referral'),
-            'admin' => $allRows->sum('admin'),
+            'discount'                         => $allRows->sum('discount'),
+            'users'                            => $allRows->sum('users'),
+            'sales'                            => $allRows->sum('sales'),
+            'referral'                         => $allRows->sum('referral'),
+            'admin'                            => $allRows->sum('admin'),
         ];
 
         $brands = $campaignQuery
             ->orderByDesc('id')
             ->paginate($limit)
-            ->through($mapCampaignRow)
+            ->through(fn ($c) => $mapCampaignRow($c, $slabRates))
             ->withQueryString();
 
         return view('admin-views.report._seller-earning',compact('data', 'campaignCount', 'brandsCount', 'brands', 'totals', 'date_type','from', 'to'));
@@ -151,32 +156,39 @@ class ReportController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $rows = $campaigns->map(function ($campaign) {
-            $baseAmount   = (float) ($campaign->total_campaign_budget ?? 0);
+        $slabRates = $this->loadSlabRates($campaigns->pluck('id')->all());
+
+        $rows = $campaigns->map(function ($campaign) use ($slabRates) {
+            $baseAmount    = (float) ($campaign->total_campaign_budget ?? 0);
             $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
-            $gstAmount    = max(0, $amountWithGst - $baseAmount);
+            $gstAmount     = max(0, $amountWithGst - $baseAmount);
 
             $userPercentage     = (float) ($campaign->user_percentage ?? 0);
-            $salesPercentage    = (float) ($campaign->sales_percentage ?? 0);
             $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
-            $adminPercentage    = (float) ($campaign->admin_percentage ?? 0);
 
-            $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
+            $adjusted          = $this->computeSlabAdjustedRates($campaign, $slabRates);
+            $actualSalesPct    = $adjusted['actual_sales_pct'];
+            $effectiveAdminPct = $adjusted['effective_admin_pct'];
+
+            $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
             $discountAmount     = ($baseAmount * $discountPercentage) / 100;
             $amountWithoutGst   = $baseAmount - $discountAmount;
 
             return [
-                'Brand'                              => $campaign->brand->username ?? '-',
-                'Campaign'                           => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
-                'Total Amount with GST'              => number_format($amountWithGst, 2, '.', ''),
-                'GST'                                => number_format($gstAmount, 2, '.', ''),
-                'Total Amount without GST'           => number_format($amountWithoutGst, 2, '.', ''),
-                'Total Amount without GST + Discount'=> number_format($baseAmount, 2, '.', ''),
-                'Discount'                           => number_format($discountAmount, 2, '.', ''),
-                'Users'                              => number_format(($amountWithoutGst * $userPercentage) / 100, 2, '.', ''),
-                'Sales'                              => number_format(($amountWithoutGst * $salesPercentage) / 100, 2, '.', ''),
-                'Referral'                           => number_format(($amountWithoutGst * $referralPercentage) / 100, 2, '.', ''),
-                'Admin'                              => number_format(($amountWithoutGst * $adminPercentage) / 100, 2, '.', ''),
+                'Brand'                               => $campaign->brand->username ?? '-',
+                'Campaign'                            => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'Total Amount with GST'               => number_format($amountWithGst, 2, '.', ''),
+                'GST'                                 => number_format($gstAmount, 2, '.', ''),
+                'Total Amount without GST'            => number_format($amountWithoutGst, 2, '.', ''),
+                'Total Amount without GST + Discount' => number_format($baseAmount, 2, '.', ''),
+                'Discount'                            => number_format($discountAmount, 2, '.', ''),
+                'Users'                               => number_format(($amountWithoutGst * $userPercentage)     / 100, 2, '.', ''),
+                'Sales (Actual)'                      => number_format(($amountWithoutGst * $actualSalesPct)     / 100, 2, '.', ''),
+                'Sales Slab % Used'                   => number_format($actualSalesPct, 2, '.', ''),
+                'Slab Saving %'                       => number_format($adjusted['slab_saving_pct'], 2, '.', ''),
+                'Referral'                            => number_format(($amountWithoutGst * $referralPercentage) / 100, 2, '.', ''),
+                'Admin (Effective)'                   => number_format(($amountWithoutGst * $effectiveAdminPct)  / 100, 2, '.', ''),
+                'Effective Admin %'                   => number_format($effectiveAdminPct, 2, '.', ''),
             ];
         });
 
@@ -561,13 +573,15 @@ class ReportController extends Controller
                 },
             ]);
 
-        $allRows = (clone $campaignQuery)->get()->map(fn ($campaign) => $this->mapFinancialReportRow($campaign));
-        $totals = $this->aggregateFinancialReportTotals($allRows);
+        $allCampaigns  = (clone $campaignQuery)->get();
+        $slabRates     = $this->loadSlabRates($allCampaigns->pluck('id')->all());
+        $allRows       = $allCampaigns->map(fn ($c) => $this->mapFinancialReportRow($c, $slabRates));
+        $totals        = $this->aggregateFinancialReportTotals($allRows);
 
         $rows = $campaignQuery
             ->orderByDesc('id')
             ->paginate($limit)
-            ->through(fn ($campaign) => $this->mapFinancialReportRow($campaign))
+            ->through(fn ($c) => $this->mapFinancialReportRow($c, $slabRates))
             ->withQueryString();
 
         return view('admin-views.report._financial-report', compact('rows', 'totals', 'date_type', 'from', 'to'));
@@ -598,10 +612,11 @@ class ReportController extends Controller
                 },
             ])
             ->orderByDesc('id')
-            ->get()
-            ->map(fn ($campaign) => $this->mapFinancialReportRow($campaign));
+            ->get();
 
-        $totals = $this->aggregateFinancialReportTotals($campaigns);
+        $slabRates  = $this->loadSlabRates($campaigns->pluck('id')->all());
+        $campaignRows = $campaigns->map(fn ($c) => $this->mapFinancialReportRow($c, $slabRates));
+        $totals = $this->aggregateFinancialReportTotals($campaignRows);
         $filename = 'financial-report-' . now()->format('Y-m-d') . '.csv';
 
         $headers = [
@@ -612,7 +627,7 @@ class ReportController extends Controller
             'Expires'             => '0',
         ];
 
-        $callback = function () use ($campaigns, $totals) {
+        $callback = function () use ($campaignRows, $totals) {
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
@@ -621,9 +636,9 @@ class ReportController extends Controller
                 'Post Completed', '', '',
                 'Already Spent', '', '',
                 'To Users', '', '',
-                'To Sales', '', '',
+                'To Sales (Actual)', '', '',
                 'For referral', '', '',
-                'Admin', '', '',
+                'Admin (Effective)', '', '',
             ]);
             fputcsv($handle, [
                 '', '', '', '', '', '', '', '', '',
@@ -637,7 +652,7 @@ class ReportController extends Controller
 
             fputcsv($handle, $this->financialReportCsvRow($totals, 'Total'));
 
-            foreach ($campaigns as $row) {
+            foreach ($campaignRows as $row) {
                 fputcsv($handle, $this->financialReportCsvRow($row, $row['brand'], $row['campaign'], $row['start_date'], $row['end_date']));
             }
 
@@ -682,58 +697,61 @@ class ReportController extends Controller
         return [$date_type, $from, $to];
     }
 
-    private function mapFinancialReportRow(Campaign $campaign): array
+    private function mapFinancialReportRow(Campaign $campaign, array $slabRates = []): array
     {
-        $baseAmount = (float) ($campaign->total_campaign_budget ?? 0);
-        $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
-        $userPercentage = (float) ($campaign->user_percentage ?? 0);
-        $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
+        $baseAmount         = (float) ($campaign->total_campaign_budget ?? 0);
+        $amountWithGst      = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
+        $userPercentage     = (float) ($campaign->user_percentage ?? 0);
         $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
-        $adminPercentage = (float) ($campaign->admin_percentage ?? 0);
 
-        $discountPercentage = max(0, 100 - ($userPercentage + $salesPercentage + $referralPercentage + $adminPercentage));
-        $discountAmount = ($baseAmount * $discountPercentage) / 100;
-        $amountWithoutGst = $baseAmount - $discountAmount;
+        $adjusted          = $this->computeSlabAdjustedRates($campaign, $slabRates);
+        $actualSalesPct    = $adjusted['actual_sales_pct'];
+        $effectiveAdminPct = $adjusted['effective_admin_pct'];
 
-        $totalPostRequired = (int) ($campaign->total_user_required ?? 0);
-        $perPostCost = $totalPostRequired > 0 ? ($baseAmount / $totalPostRequired) : 0;
+        $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
+        $discountAmount     = ($baseAmount * $discountPercentage) / 100;
+        $amountWithoutGst   = $baseAmount - $discountAmount;
 
-        $postsCompletedTotal = (int) ($campaign->posts_completed_total ?? 0);
-        $postsVerified = (int) ($campaign->posts_verified ?? 0);
-        $postsNotVerified = (int) ($campaign->posts_not_verified ?? 0);
+        $totalPostRequired  = (int) ($campaign->total_user_required ?? 0);
+        $perPostCost        = $totalPostRequired > 0 ? ($baseAmount / $totalPostRequired) : 0;
+
+        $postsCompletedTotal  = (int) ($campaign->posts_completed_total ?? 0);
+        $postsVerified        = (int) ($campaign->posts_verified ?? 0);
+        $postsNotVerified     = (int) ($campaign->posts_not_verified ?? 0);
 
         $splitAmount = function (float $percentage, int $postCount) use ($perPostCost) {
             return ($perPostCost * $percentage / 100) * $postCount;
         };
 
         return [
-            'brand' => $campaign->brand->username ?? '-',
-            'campaign' => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
-            'start_date' => Helpers::formatAdminDate($campaign->start_date),
-            'end_date' => Helpers::formatAdminDate($campaign->end_date),
-            'amount_with_gst' => $amountWithGst,
-            'amount_without_gst' => $amountWithoutGst,
-            'per_post_cost' => $perPostCost,
-            'total_post_required' => $totalPostRequired,
-            'discount' => $discountAmount,
-            'posts_completed_total' => $postsCompletedTotal,
-            'posts_verified' => $postsVerified,
-            'posts_not_verified' => $postsNotVerified,
-            'already_spent_total' => $perPostCost * $postsCompletedTotal,
-            'already_spent_verified' => $perPostCost * $postsVerified,
+            'brand'                      => $campaign->brand->username ?? '-',
+            'campaign'                   => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+            'start_date'                 => Helpers::formatAdminDate($campaign->start_date),
+            'end_date'                   => Helpers::formatAdminDate($campaign->end_date),
+            'amount_with_gst'            => $amountWithGst,
+            'amount_without_gst'         => $amountWithoutGst,
+            'per_post_cost'              => $perPostCost,
+            'total_post_required'        => $totalPostRequired,
+            'discount'                   => $discountAmount,
+            'posts_completed_total'      => $postsCompletedTotal,
+            'posts_verified'             => $postsVerified,
+            'posts_not_verified'         => $postsNotVerified,
+            'already_spent_total'        => $perPostCost * $postsCompletedTotal,
+            'already_spent_verified'     => $perPostCost * $postsVerified,
             'already_spent_not_verified' => $perPostCost * $postsNotVerified,
-            'users_total' => $splitAmount($userPercentage, $postsCompletedTotal),
-            'users_verified' => $splitAmount($userPercentage, $postsVerified),
-            'users_not_verified' => $splitAmount($userPercentage, $postsNotVerified),
-            'sales_total' => $splitAmount($salesPercentage, $postsCompletedTotal),
-            'sales_verified' => $splitAmount($salesPercentage, $postsVerified),
-            'sales_not_verified' => $splitAmount($salesPercentage, $postsNotVerified),
-            'referral_total' => $splitAmount($referralPercentage, $postsCompletedTotal),
-            'referral_verified' => $splitAmount($referralPercentage, $postsVerified),
-            'referral_not_verified' => $splitAmount($referralPercentage, $postsNotVerified),
-            'admin_total' => $splitAmount($adminPercentage, $postsCompletedTotal),
-            'admin_verified' => $splitAmount($adminPercentage, $postsVerified),
-            'admin_not_verified' => $splitAmount($adminPercentage, $postsNotVerified),
+            'users_total'                => $splitAmount($userPercentage,     $postsCompletedTotal),
+            'users_verified'             => $splitAmount($userPercentage,     $postsVerified),
+            'users_not_verified'         => $splitAmount($userPercentage,     $postsNotVerified),
+            'sales_total'                => $splitAmount($actualSalesPct,     $postsCompletedTotal),
+            'sales_verified'             => $splitAmount($actualSalesPct,     $postsVerified),
+            'sales_not_verified'         => $splitAmount($actualSalesPct,     $postsNotVerified),
+            'referral_total'             => $splitAmount($referralPercentage, $postsCompletedTotal),
+            'referral_verified'          => $splitAmount($referralPercentage, $postsVerified),
+            'referral_not_verified'      => $splitAmount($referralPercentage, $postsNotVerified),
+            'admin_total'                => $splitAmount($effectiveAdminPct,  $postsCompletedTotal),
+            'admin_verified'             => $splitAmount($effectiveAdminPct,  $postsVerified),
+            'admin_not_verified'         => $splitAmount($effectiveAdminPct,  $postsNotVerified),
+            'slab_saving_pct'            => $adjusted['slab_saving_pct'],
         ];
     }
 
@@ -818,13 +836,15 @@ class ReportController extends Controller
                 },
             ]);
 
-        $allRows    = (clone $campaignQuery)->get()->map(fn ($c) => $this->mapAdminEarningRow($c));
-        $summary    = $this->aggregateAdminEarningSummary($allRows);
+        $allCampaigns = (clone $campaignQuery)->get();
+        $slabRates    = $this->loadSlabRates($allCampaigns->pluck('id')->all());
+        $allRows      = $allCampaigns->map(fn ($c) => $this->mapAdminEarningRow($c, $slabRates));
+        $summary      = $this->aggregateAdminEarningSummary($allRows);
 
         $rows = $campaignQuery
             ->orderByDesc('id')
             ->paginate($limit)
-            ->through(fn ($c) => $this->mapAdminEarningRow($c))
+            ->through(fn ($c) => $this->mapAdminEarningRow($c, $slabRates))
             ->withQueryString();
 
         return view('admin-views.report._admin-earning-report', compact(
@@ -850,11 +870,12 @@ class ReportController extends Controller
                 },
             ])
             ->orderByDesc('id')
-            ->get()
-            ->map(fn ($c) => $this->mapAdminEarningRow($c));
+            ->get();
 
-        $summary  = $this->aggregateAdminEarningSummary($campaigns);
-        $filename = 'admin-earning-report-' . now()->format('Y-m-d') . '.csv';
+        $slabRates   = $this->loadSlabRates($campaigns->pluck('id')->all());
+        $campaignRows = $campaigns->map(fn ($c) => $this->mapAdminEarningRow($c, $slabRates));
+        $summary     = $this->aggregateAdminEarningSummary($campaignRows);
+        $filename    = 'admin-earning-report-' . now()->format('Y-m-d') . '.csv';
 
         $headers = [
             'Content-Type'        => 'text/csv',
@@ -866,15 +887,17 @@ class ReportController extends Controller
 
         $fmt = fn ($v) => number_format((float) $v, 2, '.', '');
 
-        $callback = function () use ($campaigns, $summary, $fmt) {
+        $callback = function () use ($campaignRows, $summary, $fmt) {
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
                 'Campaign', 'Brand', 'Status',
-                'Campaign Budget (₹)', 'Admin %',
+                'Campaign Budget (₹)', 'Snapshotted Admin %', 'Effective Admin %', 'Slab Saving %',
                 'Per-Post Cost (₹)',
                 'Total Posts Required', 'Completed Posts',
-                'Projected Admin Earnings (₹)', 'Actual Admin Earnings (₹)',
+                'Projected Admin Earnings (₹)',
+                'Slab Saving Earnings (₹)',
+                'Actual Admin Earnings (₹)',
                 'Utilisation %',
             ]);
 
@@ -882,26 +905,30 @@ class ReportController extends Controller
             fputcsv($handle, [
                 'TOTAL', '', '',
                 $fmt($summary['total_budget']),
-                '',
+                '', '', '',
                 '',
                 $summary['total_posts_required'],
                 $summary['total_completed_posts'],
                 $fmt($summary['total_projected_earnings']),
+                $fmt($summary['total_slab_saving_earnings']),
                 $fmt($summary['total_actual_earnings']),
                 '',
             ]);
 
-            foreach ($campaigns as $row) {
+            foreach ($campaignRows as $row) {
                 fputcsv($handle, [
                     $row['campaign'],
                     $row['brand'],
                     ucwords($row['status']),
                     $fmt($row['campaign_budget']),
-                    $row['admin_percentage'] . '%',
+                    $row['admin_percentage']    . '%',
+                    $row['effective_admin_pct'] . '%',
+                    $row['slab_saving_pct']     . '%',
                     $fmt($row['per_post_cost']),
                     $row['posts_required'],
                     $row['completed_posts'],
                     $fmt($row['projected_earnings']),
+                    $fmt($row['slab_saving_earnings']),
                     $fmt($row['actual_earnings']),
                     $row['utilisation_pct'] . '%',
                 ]);
@@ -913,55 +940,128 @@ class ReportController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    private function mapAdminEarningRow(Campaign $campaign): array
+    private function mapAdminEarningRow(Campaign $campaign, array $slabRates = []): array
     {
-        $budget          = (float) ($campaign->total_campaign_budget ?? 0);
-        $adminPct        = (float) ($campaign->admin_percentage ?? 0);
-        $postsRequired   = (int)   ($campaign->total_user_required ?? 0);
-        $completedPosts  = (int)   ($campaign->completed_posts ?? 0);
-        $perPostCost     = $postsRequired > 0 ? ($budget / $postsRequired) : 0;
+        $budget         = (float) ($campaign->total_campaign_budget ?? 0);
+        $adminPct       = (float) ($campaign->admin_percentage ?? 0);
+        $postsRequired  = (int)   ($campaign->total_user_required ?? 0);
+        $completedPosts = (int)   ($campaign->completed_posts ?? 0);
+        $perPostCost    = $postsRequired > 0 ? ($budget / $postsRequired) : 0;
 
-        $projectedEarnings = ($budget * $adminPct) / 100;
-        $actualEarnings    = ($perPostCost * $adminPct / 100) * $completedPosts;
-        $utilisationPct    = $postsRequired > 0 ? round(($completedPosts / $postsRequired) * 100, 1) : 0;
+        $adjusted          = $this->computeSlabAdjustedRates($campaign, $slabRates);
+        $effectiveAdminPct = $adjusted['effective_admin_pct'];
+        $slabSavingPct     = $adjusted['slab_saving_pct'];
+
+        // Projected uses the snapshotted admin % (baseline expectation)
+        $projectedEarnings  = ($budget * $adminPct) / 100;
+
+        // Actual uses the effective admin % which includes any slab saving
+        $actualEarnings     = ($perPostCost * $effectiveAdminPct / 100) * $completedPosts;
+        $slabSavingEarnings = ($perPostCost * $slabSavingPct    / 100) * $completedPosts;
+
+        $utilisationPct = $postsRequired > 0 ? round(($completedPosts / $postsRequired) * 100, 1) : 0;
 
         return [
-            'campaign_id'        => $campaign->id,
-            'campaign'           => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
-            'brand'              => $campaign->brand->username ?? '-',
-            'status'             => $campaign->status,
-            'campaign_budget'    => $budget,
-            'admin_percentage'   => $adminPct,
-            'per_post_cost'      => $perPostCost,
-            'posts_required'     => $postsRequired,
-            'completed_posts'    => $completedPosts,
-            'total_participants' => (int) ($campaign->total_participants ?? 0),
-            'projected_earnings' => $projectedEarnings,
-            'actual_earnings'    => $actualEarnings,
-            'utilisation_pct'    => $utilisationPct,
-            'created_at'         => Helpers::formatAdminDate($campaign->created_at),
+            'campaign_id'           => $campaign->id,
+            'campaign'              => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+            'brand'                 => $campaign->brand->username ?? '-',
+            'status'                => $campaign->status,
+            'campaign_budget'       => $budget,
+            'admin_percentage'      => $adminPct,
+            'effective_admin_pct'   => $effectiveAdminPct,
+            'actual_sales_pct'      => $adjusted['actual_sales_pct'],
+            'slab_saving_pct'       => $slabSavingPct,
+            'slab_saving_earnings'  => $slabSavingEarnings,
+            'per_post_cost'         => $perPostCost,
+            'posts_required'        => $postsRequired,
+            'completed_posts'       => $completedPosts,
+            'total_participants'    => (int) ($campaign->total_participants ?? 0),
+            'projected_earnings'    => $projectedEarnings,
+            'actual_earnings'       => $actualEarnings,
+            'utilisation_pct'       => $utilisationPct,
+            'created_at'            => Helpers::formatAdminDate($campaign->created_at),
         ];
     }
 
     private function aggregateAdminEarningSummary($rows): array
     {
         $summary = [
-            'total_budget'            => 0,
-            'total_posts_required'    => 0,
-            'total_completed_posts'   => 0,
-            'total_projected_earnings'=> 0,
-            'total_actual_earnings'   => 0,
+            'total_budget'                => 0,
+            'total_posts_required'        => 0,
+            'total_completed_posts'       => 0,
+            'total_projected_earnings'    => 0,
+            'total_actual_earnings'       => 0,
+            'total_slab_saving_earnings'  => 0,
         ];
 
         foreach ($rows as $row) {
-            $summary['total_budget']             += $row['campaign_budget'];
-            $summary['total_posts_required']     += $row['posts_required'];
-            $summary['total_completed_posts']    += $row['completed_posts'];
-            $summary['total_projected_earnings'] += $row['projected_earnings'];
-            $summary['total_actual_earnings']    += $row['actual_earnings'];
+            $summary['total_budget']               += $row['campaign_budget'];
+            $summary['total_posts_required']       += $row['posts_required'];
+            $summary['total_completed_posts']      += $row['completed_posts'];
+            $summary['total_projected_earnings']   += $row['projected_earnings'];
+            $summary['total_actual_earnings']      += $row['actual_earnings'];
+            $summary['total_slab_saving_earnings'] += $row['slab_saving_earnings'] ?? 0;
         }
 
         return $summary;
+    }
+
+    // -------------------------------------------------------------------------
+    // Slab-rate helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Load the actual commission_rate used at settlement for a set of campaigns.
+     * Returns a campaign_id → commission_rate map (only for settled campaigns).
+     *
+     * @param  int[] $campaignIds
+     * @return array<int, float>
+     */
+    private function loadSlabRates(array $campaignIds): array
+    {
+        if (empty($campaignIds)) {
+            return [];
+        }
+
+        return \App\Models\SaleCommissionLedger::whereIn('campaign_id', $campaignIds)
+            ->where('reference_type', 'campaign_reward')
+            ->pluck('commission_rate', 'campaign_id')
+            ->all();
+    }
+
+    /**
+     * Given a campaign and the preloaded slab-rate lookup, return the effective
+     * rates to use for sales and admin in reports.
+     *
+     * Logic:
+     *   - actualSalesPct   = slab rate actually used at settlement (from ledger),
+     *                        or the campaign's snapshotted sales_percentage if
+     *                        the campaign has not been settled yet.
+     *   - slabSavingPct    = max(0, snapshotSalesPct − actualSalesPct)
+     *                        (the saving from using a lower slab; goes to admin)
+     *   - effectiveAdminPct = snapshotAdminPct + slabSavingPct
+     *
+     * @param  \App\Models\Campaign $campaign
+     * @param  array<int, float>    $slabRates  campaign_id → actual commission_rate
+     * @return array{actual_sales_pct: float, slab_saving_pct: float, effective_admin_pct: float}
+     */
+    private function computeSlabAdjustedRates(\App\Models\Campaign $campaign, array $slabRates): array
+    {
+        $snapshotSalesPct = (float) ($campaign->sales_percentage ?? 0);
+        $snapshotAdminPct = (float) ($campaign->admin_percentage ?? 0);
+
+        $actualSalesPct = array_key_exists($campaign->id, $slabRates)
+            ? (float) $slabRates[$campaign->id]
+            : $snapshotSalesPct;
+
+        $slabSavingPct    = max(0.0, $snapshotSalesPct - $actualSalesPct);
+        $effectiveAdminPct = $snapshotAdminPct + $slabSavingPct;
+
+        return [
+            'actual_sales_pct'    => $actualSalesPct,
+            'slab_saving_pct'     => $slabSavingPct,
+            'effective_admin_pct' => $effectiveAdminPct,
+        ];
     }
 
 }

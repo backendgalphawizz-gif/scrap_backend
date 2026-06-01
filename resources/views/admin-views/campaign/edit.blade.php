@@ -282,7 +282,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>{{ \App\CPU\translate('Image')}}</label>
+                                        <label>{{ \App\CPU\translate('Thumbnail Image')}} <small class="text-muted">(required for list display)</small></label>
                                         <span class="ml-1 text-info">( {{\App\CPU\translate('ratio')}} 4:1 )</span>
                                         <input type="file" name="thumbnail" id="mbimageFileUploader" class="form-control" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                         <a href="#" class="campaign-zoom-trigger d-inline-block mt-2" data-src="{{ $campaign->thumbnail }}" data-fallback="{{ asset('assets/logo/logo-3.png') }}">
@@ -290,7 +290,22 @@
                                         </a>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+
+                                {{-- Media Type Toggle --}}
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="d-block mb-2 fw-semibold">{{ \App\CPU\translate('Media Type') }}</label>
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check" name="media_type" id="mediaTypeImage" value="image" {{ ($campaign->media_type ?? 'image') === 'image' ? 'checked' : '' }} autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="mediaTypeImage">&#128247; {{ \App\CPU\translate('Image') }}</label>
+                                            <input type="radio" class="btn-check" name="media_type" id="mediaTypeVideo" value="video" {{ ($campaign->media_type ?? '') === 'video' ? 'checked' : '' }} autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="mediaTypeVideo">&#127909; {{ \App\CPU\translate('Video') }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Image fields --}}
+                                <div id="mediaImageFields" class="col-md-6">
                                     <div class="form-group">
                                         <label>{{ \App\CPU\translate('Multiple Images')}}</label>
                                         <input type="file" name="images[]" id="multipleImageUploader" class="form-control" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" multiple>
@@ -302,6 +317,23 @@
                                             @empty
                                             @endforelse
                                         </div>
+                                    </div>
+                                </div>
+
+                                {{-- Video field --}}
+                                <div id="mediaVideoFields" class="col-md-6" style="display:none;">
+                                    <div class="form-group">
+                                        <label>{{ \App\CPU\translate('Campaign Video') }}</label>
+                                        <small class="text-muted d-block mb-1">MP4, MOV &mdash; Max 100MB. Leave blank to keep existing video.</small>
+                                        <input type="file" name="video" id="campaignVideoUploader" class="form-control" accept="video/mp4,video/quicktime,video/x-msvideo">
+                                        @if($campaign->video)
+                                            <p class="mt-2 mb-1 text-muted small">Current video:</p>
+                                            <video id="videoPreview" class="rounded" controls style="max-width:100%;max-height:300px;">
+                                                <source src="{{ $campaign->video }}" type="video/mp4">
+                                            </video>
+                                        @else
+                                            <video id="videoPreview" class="mt-2 rounded" controls style="display:none;max-width:100%;max-height:300px;"></video>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -445,6 +477,33 @@
             });
         }
     }
+</script>
+<script>
+    // Media type toggle
+    function syncMediaTypeFields() {
+        const isVideo = $('input[name="media_type"]:checked').val() === 'video';
+        $('#mediaImageFields').toggle(!isVideo);
+        $('#mediaVideoFields').toggle(isVideo);
+        if (!isVideo) {
+            $('#campaignVideoUploader').val('');
+        }
+    }
+
+    $('input[name="media_type"]').on('change', syncMediaTypeFields);
+
+    $('#campaignVideoUploader').on('change', function() {
+        const file = this.files && this.files[0];
+        const preview = document.getElementById('videoPreview');
+        if (file) {
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+        }
+    });
+
+    $(document).ready(function() {
+        syncMediaTypeFields();
+    });
 </script>
 <script>
     const cityData = @json($cityDataByState);

@@ -6,6 +6,7 @@ use App\CPU\Helpers;
 use App\Models\Campaign;
 use App\Models\CampaignTransaction;
 use App\Models\SaleCommissionLedger;
+use App\Models\SalesCommissionSlab;
 use App\Models\SellerWallet;
 use App\Models\SellerWalletHistory;
 use Carbon\Carbon;
@@ -259,11 +260,6 @@ class CampaignSettlementService
             return;
         }
 
-        $salesPercentage = (float) ($campaign->sales_percentage ?? 0);
-        if ($salesPercentage <= 0) {
-            return;
-        }
-
         $alreadyExists = SaleCommissionLedger::where('campaign_id', $campaign->id)
             ->where('reference_type', 'campaign_reward')
             ->exists();
@@ -283,15 +279,64 @@ class CampaignSettlementService
             return;
         }
 
+        // ── Determine commission rate via slabs (if configured) ──────────────
+        $commissionRate = $this->resolveSlabRate($campaign, $amount);
+
         SaleCommissionLedger::create([
-            'sale_id' => $campaign->sale_id,
-            'brand_id' => $campaign->brand_id,
-            'campaign_id' => $campaign->id,
-            'amount' => $amount,
-            'commission_rate' => $salesPercentage,
-            'commission_amount' => round($amount * $salesPercentage / 100, 2),
-            'reference_type' => 'campaign_reward',
-            'status' => 'pending',
+            'sale_id'          => $campaign->sale_id,
+            'brand_id'         => $campaign->brand_id,
+            'campaign_id'      => $campaign->id,
+            'amount'           => $amount,
+            'commission_rate'  => $commissionRate,
+            'commission_amount' => round($amount * $commissionRate / 100, 2),
+            'reference_type'   => 'campaign_reward',
+            'status'           => 'pending',
         ]);
+    }
+
+    /**
+     * Resolve the commission rate for a sales person using the dynamic slab config.
+     *
+     * Logic:
+     *  1. Load all configured slabs ordered by min_earning.
+     *  2. If no slabs exist, fall back to the campaign-snapshotted sales_percentage.
+     *  3. Compute the salesperson's current total approved earnings
+     *     (sum of commission_amount in approved campaign_reward ledger entries).
+     *  4. Add the current payout base (`$amount`) to get the "new total".
+     *  5. Find the slab where new_total falls: min_earning <= new_total < max_earning
+     *     (null max_earning means the slab covers everything above min_earning).
+     *  6. If no slab matches (gap in admin config), fall back to campaign-snapshotted rate.
+     */
+    private function resolveSlabRate(Campaign $campaign, float $amount): float
+    {
+        $slabs = SalesCommissionSlab::ordered();
+
+        if ($slabs->isEmpty()) {
+            // No slabs configured — use the flat rate snapshotted on the campaign.
+            $flatRate = (float) ($campaign->sales_percentage ?? 0);
+            return $flatRate;
+        }
+
+        // Sum of approved commission earnings for this salesperson (before this entry).
+        $currentEarnings = (float) SaleCommissionLedger::where('sale_id', $campaign->sale_id)
+            ->where('reference_type', 'campaign_reward')
+            ->where('status', 'approved')
+            ->sum('commission_amount');
+
+        // The "new total" used to determine which slab applies.
+        $newTotal = $currentEarnings + $amount;
+
+        foreach ($slabs as $slab) {
+            $min = (float) $slab->min_earning;
+            $max = $slab->max_earning !== null ? (float) $slab->max_earning : null;
+
+            $inSlab = $newTotal >= $min && ($max === null || $newTotal < $max);
+            if ($inSlab) {
+                return (float) $slab->rate;
+            }
+        }
+
+        // Slab config has a gap — fall back to campaign-snapshotted rate.
+        return (float) ($campaign->sales_percentage ?? 0);
     }
 }

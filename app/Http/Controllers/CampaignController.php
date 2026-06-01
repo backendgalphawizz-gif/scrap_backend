@@ -112,15 +112,25 @@ class CampaignController extends Controller
         if($request->hasFile('thumbnail')) {
             $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
         }
-        if ($request->file('images')) {
-            $product_images = [];
-            foreach ($request->file('images') as $img) {
-                $image_name = ImageManager::upload('profile/', 'png', $img);
-                $product_images[] = $image_name;
+
+        $mediaType = $request->input('media_type', 'image');
+        $campaign->media_type = $mediaType;
+
+        if ($mediaType === 'video') {
+            if ($request->hasFile('video')) {
+                $campaign->video = ImageManager::upload('profile/', 'mp4', $request->file('video'));
             }
-            $campaign->images = implode(',', $product_images);
-        }  
-        
+        } else {
+            if ($request->file('images')) {
+                $product_images = [];
+                foreach ($request->file('images') as $img) {
+                    $image_name = ImageManager::upload('profile/', 'png', $img);
+                    $product_images[] = $image_name;
+                }
+                $campaign->images = implode(',', $product_images);
+            }
+        }
+
         $paymentSplit = PaymentSplit::first();
 
         $campaign->brand_id = $request->brand_id;
@@ -381,20 +391,33 @@ class CampaignController extends Controller
             $campaign->thumbnail = ImageManager::update('profile/', $campaign->thumbnail, 'png', $request->file('thumbnail'));
         }
 
-        if ($request->file('images')) {
-            $product_images = [];
-            foreach ($request->file('images') as $img) {
-                if($img) {
-                    try {
-                        // code...
-                        $image_name = ImageManager::upload('profile/', 'png', $img);
-                        $product_images[] = $image_name;
-                    } catch (\Throwable $th) {
-                        //throw $th;
+        $mediaType = $request->input('media_type', $campaign->media_type ?? 'image');
+        $campaign->media_type = $mediaType;
+
+        if ($mediaType === 'video') {
+            if ($request->hasFile('video')) {
+                $oldVideo = $campaign->getRawOriginal('video');
+                if ($oldVideo) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete('profile/' . $oldVideo);
+                }
+                $campaign->video = ImageManager::upload('profile/', 'mp4', $request->file('video'));
+            }
+        } else {
+            if ($request->file('images')) {
+                $product_images = [];
+                foreach ($request->file('images') as $img) {
+                    if($img) {
+                        try {
+                            // code...
+                            $image_name = ImageManager::upload('profile/', 'png', $img);
+                            $product_images[] = $image_name;
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                        }
                     }
                 }
+                $campaign->images = implode(',', $product_images);
             }
-            $campaign->images = implode(',', $product_images);
         }
         $campaign->brand_id = $request->brand_id;
         $campaign->title = $request->title ?? $request->caption;

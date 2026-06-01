@@ -278,14 +278,24 @@ class DashboardController extends Controller
             if($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
             }
-            if ($request->file('images')) {
-                $product_images = [];
-                foreach ($request->file('images') as $img) {
-                    $image_name = ImageManager::upload('profile/', 'png', $img);
-                    $product_images[] = $image_name;
+
+            $mediaType = $request->input('media_type', 'image');
+            $campaign->media_type = $mediaType;
+
+            if ($mediaType === 'video') {
+                if ($request->hasFile('video')) {
+                    $campaign->video = ImageManager::upload('profile/', 'mp4', $request->file('video'));
                 }
-                $campaign->images = json_encode($product_images);
-            } 
+            } else {
+                if ($request->file('images')) {
+                    $product_images = [];
+                    foreach ($request->file('images') as $img) {
+                        $image_name = ImageManager::upload('profile/', 'png', $img);
+                        $product_images[] = $image_name;
+                    }
+                    $campaign->images = json_encode($product_images);
+                }
+            }
             
               
             $paymentSplit = PaymentSplit::first();
@@ -463,14 +473,28 @@ class DashboardController extends Controller
             if($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
             }
-            if ($request->file('images')) {
-                $product_images = [];
-                foreach ($request->file('images') as $img) {
-                    $image_name = ImageManager::upload('profile/', 'png', $img);
-                    $product_images[] = $image_name;
+
+            $mediaType = $request->input('media_type', $campaign->media_type ?? 'image');
+            $campaign->media_type = $mediaType;
+
+            if ($mediaType === 'video') {
+                if ($request->hasFile('video')) {
+                    $oldVideo = $campaign->getRawOriginal('video');
+                    if ($oldVideo) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete('profile/' . $oldVideo);
+                    }
+                    $campaign->video = ImageManager::upload('profile/', 'mp4', $request->file('video'));
                 }
-                $campaign->images = implode(',', $product_images);
-            }            
+            } else {
+                if ($request->file('images')) {
+                    $product_images = [];
+                    foreach ($request->file('images') as $img) {
+                        $image_name = ImageManager::upload('profile/', 'png', $img);
+                        $product_images[] = $image_name;
+                    }
+                    $campaign->images = implode(',', $product_images);
+                }
+            }
             $campaign->sale_id = $seller['id'];
             $campaign->brand_id = $request->brand_id;
             $campaign->title = $request->caption;
