@@ -153,7 +153,7 @@
                 <div class="card-body py-3">
                     <div class="row g-3">
                         {{-- Instagram --}}
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="d-flex align-items-center p-3 rounded" style="background:#fff3cd; border:1px solid #ffc107;">
                                 <span class="me-3" style="font-size:2rem;">📸</span>
                                 <div>
@@ -171,7 +171,7 @@
                             </div>
                         </div>
                         {{-- Facebook --}}
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="d-flex align-items-center p-3 rounded" style="background:#cfe2ff; border:1px solid #0d6efd;">
                                 <span class="me-3" style="font-size:2rem;">📘</span>
                                 <div>
@@ -181,6 +181,24 @@
                                         <p class="mb-0 small text-muted">
                                             {{ $fbTime->format('d M Y, h:i A') }}
                                             <span class="ms-2 text-secondary">({{ $fbTime->diffForHumans() }})</span>
+                                        </p>
+                                    @else
+                                        <p class="mb-0 small text-danger">No data scraped yet</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Threads --}}
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center p-3 rounded" style="background:#e8d5f5; border:1px solid #7c3aed;">
+                                <span class="me-3" style="font-size:2rem;">🧵</span>
+                                <div>
+                                    <p class="mb-0 fw-semibold" style="color:#5b21b6;">Threads</p>
+                                    @if($lastScrapedThreads)
+                                        @php $thTime = \Carbon\Carbon::parse($lastScrapedThreads, 'Asia/Kolkata'); @endphp
+                                        <p class="mb-0 small text-muted">
+                                            {{ $thTime->format('d M Y, h:i A') }}
+                                            <span class="ms-2 text-secondary">({{ $thTime->diffForHumans() }})</span>
                                         </p>
                                     @else
                                         <p class="mb-0 small text-danger">No data scraped yet</p>

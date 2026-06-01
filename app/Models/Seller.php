@@ -39,6 +39,8 @@ class Seller extends Authenticatable
         'instagram_status',
         'facebook_username',
         'facebook_status',
+        'threads_username',
+        'threads_status',
         'website_url',
         'sale_id',
         'visibility_status',
