@@ -158,12 +158,21 @@
                     <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value text-primary">{{ $fmt($summary['total_actual_earnings']) }}</div>
-                            <div class="summary-label">Actual Admin Earnings<br><small class="text-muted">(from completed posts)</small></div>
+                            <div class="summary-label">Actual Admin Earnings<br><small class="text-muted">(includes slab savings)</small></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
+                    <div class="card summary-card h-100">
+                        <div class="card-body">
+                            <div class="summary-value text-success">{{ $fmt($summary['total_slab_saving_earnings'] ?? 0) }}</div>
+                            <div class="summary-label">Slab Saving Earnings<br><small class="text-muted">(admin gain from lower slab rate)</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-2">
                     <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value text-secondary">{{ $fmt($summary['total_projected_earnings']) }}</div>
@@ -172,7 +181,7 @@
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value">{{ $fmt($summary['total_budget']) }}</div>
@@ -181,7 +190,7 @@
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value">
@@ -221,11 +230,13 @@
                                 <th>Status</th>
                                 <th>Campaign Budget</th>
                                 <th>Admin %</th>
+                                <th>Effective Admin %</th>
                                 <th>Per-Post Cost</th>
                                 <th>Posts Required</th>
                                 <th>Completed Posts</th>
                                 <th>Utilisation</th>
                                 <th>Projected Earnings</th>
+                                <th class="text-success">Slab Saving (₹)</th>
                                 <th class="text-success">Actual Earnings</th>
                             </tr>
                         </thead>
@@ -241,10 +252,12 @@
                                 <td>{{ $fmt($summary['total_budget']) }}</td>
                                 <td></td>
                                 <td></td>
+                                <td></td>
                                 <td>{{ number_format($summary['total_posts_required']) }}</td>
                                 <td>{{ number_format($summary['total_completed_posts']) }}</td>
                                 <td></td>
                                 <td>{{ $fmt($summary['total_projected_earnings']) }}</td>
+                                <td class="text-success">{{ $fmt($summary['total_slab_saving_earnings'] ?? 0) }}</td>
                                 <td class="text-success">{{ $fmt($summary['total_actual_earnings']) }}</td>
                             </tr>
                             @endif
@@ -257,6 +270,12 @@
                                 <td>{!! $statusBadge($row['status']) !!}</td>
                                 <td>{{ $fmt($row['campaign_budget']) }}</td>
                                 <td>{{ $row['admin_percentage'] }}%</td>
+                                <td>
+                                    {{ $row['effective_admin_pct'] }}%
+                                    @if(($row['slab_saving_pct'] ?? 0) > 0)
+                                        <span class="badge bg-success ms-1" title="Includes {{ $row['slab_saving_pct'] }}% slab saving">+{{ $row['slab_saving_pct'] }}%</span>
+                                    @endif
+                                </td>
                                 <td>{{ $fmt($row['per_post_cost']) }}</td>
                                 <td>{{ $row['posts_required'] }}</td>
                                 <td>{{ $row['completed_posts'] }}</td>
@@ -269,11 +288,18 @@
                                     <small>{{ $row['utilisation_pct'] }}%</small>
                                 </td>
                                 <td class="text-secondary">{{ $fmt($row['projected_earnings']) }}</td>
+                                <td class="text-success">
+                                    @if(($row['slab_saving_earnings'] ?? 0) > 0)
+                                        {{ $fmt($row['slab_saving_earnings']) }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td class="text-success fw-semibold">{{ $fmt($row['actual_earnings']) }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="12" class="text-center py-4">No data available for the selected period.</td>
+                                <td colspan="14" class="text-center py-4">No data available for the selected period.</td>
                             </tr>
                             @endforelse
 

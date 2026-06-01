@@ -271,6 +271,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     // Payment Split Settings
     Route::get('business-settings/payment-split', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'edit'])->name('admin.payment-split.edit');
     Route::post('business-settings/payment-split', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'update'])->name('admin.payment-split.update');
+    // Sales Commission Slabs
+    Route::post('business-settings/payment-split/slabs', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'storeSlab'])->name('admin.payment-split.slab.store');
+    Route::post('business-settings/payment-split/slabs/{id}/update', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'updateSlab'])->name('admin.payment-split.slab.update');
+    Route::post('business-settings/payment-split/slabs/{id}/delete', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'destroySlab'])->name('admin.payment-split.slab.destroy');
 });
 
 Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])

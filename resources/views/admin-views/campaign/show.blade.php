@@ -130,18 +130,29 @@
                                     </a>
                                 </div>
                                 <div class="col-md-8">
-                                    <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Gallery Images') }}</small>
-                                    <div class="row g-2">
-                                        @forelse($images as $image)
-                                            <div class="col-md-4 col-sm-6">
-                                                <a href="#" class="campaign-zoom-trigger" data-src="{{ $image }}">
-                                                    <img src="{{ $image }}" class="img-thumbnail campaign-gallery-image" alt="Campaign Image" style="cursor:zoom-in;width:200px;height:130px;" onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
-                                                </a>
-                                            </div>
-                                        @empty
-                                            <div class="col-12 text-muted">No additional images.</div>
-                                        @endforelse
-                                    </div>
+                                    @if(($campaign->media_type ?? 'image') === 'video' && $campaign->video)
+                                        <small class="text-muted d-block mb-2">
+                                            {{ \App\CPU\translate('Campaign Video') }}
+                                            <span class="badge bg-primary ms-1">VIDEO</span>
+                                        </small>
+                                        <video controls class="rounded border w-100" style="max-height:320px;">
+                                            <source src="{{ $campaign->video }}" type="video/mp4">
+                                            {{ \App\CPU\translate('Your browser does not support the video tag.') }}
+                                        </video>
+                                    @else
+                                        <small class="text-muted d-block mb-2">{{ \App\CPU\translate('Gallery Images') }}</small>
+                                        <div class="row g-2">
+                                            @forelse($images as $image)
+                                                <div class="col-md-4 col-sm-6">
+                                                    <a href="#" class="campaign-zoom-trigger" data-src="{{ $image }}">
+                                                        <img src="{{ $image }}" class="img-thumbnail campaign-gallery-image" alt="Campaign Image" style="cursor:zoom-in;width:200px;height:130px;" onerror='this.src="{{ asset('assets/logo/logo-3.png') }}"'>
+                                                    </a>
+                                                </div>
+                                            @empty
+                                                <div class="col-12 text-muted">No additional images.</div>
+                                            @endforelse
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
