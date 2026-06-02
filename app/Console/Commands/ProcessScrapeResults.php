@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\CampaignTransaction;
 use App\Models\CoinWallet;
 use App\Models\CoinTransaction;
+use App\Models\ScrappedPost;
+use App\Services\FraudDetectionService;
+use App\Services\FraudScoreService;
 use Carbon\Carbon;
 
 class ProcessScrapeResults extends Command
@@ -17,15 +20,15 @@ class ProcessScrapeResults extends Command
     protected $signature = 'campaign:process-results';
 
     protected $description = 'Verify campaign posts, keep rewards pending, and release them after campaign completion';
-    private const GRACE_PERIOD_DAYS = 1;
+    private const GRACE_PERIOD_DAYS = 0;
 
     private ?int $maxVerifiedDays = null;
 
     private function getMaxVerifiedDays(): int
     {
         if ($this->maxVerifiedDays === null) {
-            $setting = (int) env('CAMPAIGN_VERIFICATION_DAYS', 3);
-            $this->maxVerifiedDays = $setting > 0 ? $setting : 3;
+            $setting = (int) env('CAMPAIGN_VERIFICATION_DAYS', 1);
+            $this->maxVerifiedDays = $setting > 0 ? $setting : 1;
         }
         return $this->maxVerifiedDays;
     }
@@ -116,9 +119,43 @@ class ProcessScrapeResults extends Command
         $closedCampaigns = $this->closeEligibleCampaigns();
         $settledCampaigns = $this->settleEligibleCampaigns();
 
+        $this->checkPostDeletions();
+
         $this->info("Closed campaigns (enrollment ended): {$closedCampaigns}");
         $this->info("Settled campaigns: {$settledCampaigns}");
         $this->info("Done. Approved: {$approved} | Released: {$released} | Flagged: {$flagged} | Deleted: {$deleted} | Pending: {$pending}");
+    }
+
+    /**
+     * Re-verify completed transactions from the last 45 days to catch post-delete fraud.
+     * If a user's post no longer exists in scrapped_posts a fraud signal is created.
+     */
+    private function checkPostDeletions(): void
+    {
+        $fraudService = app(FraudDetectionService::class);
+        $scoreService = app(FraudScoreService::class);
+
+        $completedTransactions = CampaignTransaction::where('status', CampaignTransaction::STATUS_COMPLETED)
+            ->whereNotNull('unique_code')
+            ->where('updated_at', '>=', now()->subDays(45))
+            ->get(['id', 'user_id', 'campaign_id', 'unique_code', 'earning']);
+
+        $userIdsToRecalculate = [];
+
+        foreach ($completedTransactions as $tx) {
+            $signalCreated = $fraudService->checkPostDeletedAfterCredit($tx);
+            if ($signalCreated) {
+                $userIdsToRecalculate[$tx->user_id] = true;
+                $this->info("Post-delete signal: user_id={$tx->user_id} unique_code={$tx->unique_code}");
+            }
+        }
+
+        foreach (array_keys($userIdsToRecalculate) as $userId) {
+            $user = User::find($userId);
+            if ($user) {
+                $scoreService->recalculate($user);
+            }
+        }
     }
 
     private function closeEligibleCampaigns(): int

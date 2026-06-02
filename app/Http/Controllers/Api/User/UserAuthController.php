@@ -12,6 +12,8 @@ use App\Models\Profession;
 use App\Models\User;
 use App\Models\PaymentSplit;
 use App\CPU\Helpers;
+use App\Services\FraudDetectionService;
+use App\Services\FraudScoreService;
 
 class UserAuthController extends Controller
 {
@@ -134,6 +136,13 @@ class UserAuthController extends Controller
         // $user->fcm_id = $request->fcm_id??null;
         $user->save();
 
+        // Fraud detection on login — update device_id and re-check
+        if ($request->filled('device_id')) {
+            $fraudService = app(FraudDetectionService::class);
+            $fraudService->checkDuplicateDevice($user, $request->device_id);
+            app(FraudScoreService::class)->recalculate($user);
+        }
+
         $token =  $user->createToken('AdminToken')->accessToken;
 
         return response()->json([
@@ -195,6 +204,14 @@ class UserAuthController extends Controller
             $user->fcm_id = $request->fcm_id;
             $user->device_type = $request->device_type;
             $user->save();
+
+            // Fraud detection at registration
+            $fraudService = app(FraudDetectionService::class);
+            $fraudService->checkDuplicateDevice($user, $request->device_id);
+            if (!empty($request->referral_code)) {
+                $fraudService->checkReferralAbuse($user, $request->referral_code);
+            }
+            app(FraudScoreService::class)->recalculate($user);
 
             return response()->json([
                 'status' => true,

@@ -499,17 +499,58 @@ class SellerDashboardController extends Controller
                 }
             }
 
+            $saleRecordForReferral = null;
             if ($request->filled('sales_referal_code')) {
                 $salesReferralCode = trim((string) $request->sales_referal_code);
-                $isValidSalesReferral = Sale::where('referral_code', $salesReferralCode)->exists();
+                $saleRecordForReferral = Sale::where('referral_code', $salesReferralCode)->first();
 
-                if (!$isValidSalesReferral) {
+                if (!$saleRecordForReferral) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Invalid sales referral code.',
                         'data' => [],
                     ], 422);
                 }
+            }
+
+            // ── Discount voucher validation ───────────────────────────────────────
+            $discountAmount  = 0.0;
+            $discountCode    = null;
+            $discountVoucher = null;
+
+            if ($request->filled('discount_code')) {
+                if (!$saleRecordForReferral) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'A valid sales referral code is required to apply a discount code.',
+                        'data' => [],
+                    ], 422);
+                }
+
+                $discountCode    = trim((string) $request->discount_code);
+                $discountVoucher = \App\Models\CampaignDiscountVoucher::where('code', $discountCode)
+                    ->where('sale_id', $saleRecordForReferral->id)
+                    ->first();
+
+                if (!$discountVoucher || !$discountVoucher->isValid()) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid, expired, or exhausted discount voucher code.',
+                        'data' => [],
+                    ], 422);
+                }
+
+                $paymentSplitCheck = PaymentSplit::first();
+                $maxAllowedDiscount = ($request->total_campaign_budget * ($paymentSplitCheck->sales_percentage ?? 0)) / 100;
+                if ($discountVoucher->discount_amount > $maxAllowedDiscount) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Discount amount exceeds the maximum allowed from the sales commission for this campaign.',
+                        'data' => [],
+                    ], 422);
+                }
+
+                $discountAmount = (float) $discountVoucher->discount_amount;
             }
 
             $generateGstInvoice = $request->boolean('generate_gst_invoice');
@@ -553,7 +594,9 @@ class SellerDashboardController extends Controller
             $paymentSplit = PaymentSplit::first();
             $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
             $total_campaign_budget = $request->total_campaign_budget;
-            $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
+            // Apply discount before GST: GST is charged on the net taxable amount only
+            $net_taxable_amount      = $total_campaign_budget - $discountAmount;
+            $compign_budget_with_gst = $net_taxable_amount + ($net_taxable_amount * $gst_percentage / 100);
 
             $campaign->brand_id = $seller['id'];
             $campaign->created_by = Campaign::CREATED_BY_BRAND;
@@ -587,10 +630,11 @@ class SellerDashboardController extends Controller
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
             $campaign->sales_referal_code = $request->sales_referal_code;
-            if ($request->filled('sales_referal_code')) {
-                $saleRecord = Sale::where('referral_code', trim((string) $request->sales_referal_code))->first();
-                $campaign->sale_id = $saleRecord?->id;
+            if ($saleRecordForReferral) {
+                $campaign->sale_id = $saleRecordForReferral->id;
             }
+            $campaign->discount_amount       = $discountAmount;
+            $campaign->discount_code         = $discountCode;
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
             $campaign->generate_gst_invoice = $generateGstInvoice;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
@@ -628,9 +672,12 @@ class SellerDashboardController extends Controller
 
             $campaign->save();
 
-            // here remove amount from wellert and create transaction for campaign creation
+            // Mark discount voucher as used
+            if ($discountVoucher) {
+                $discountVoucher->increment('used_count');
+            }
 
-
+            // Debit brand wallet by actual amount charged (net_taxable + GST = compign_budget_with_gst)
             $sellerWallet->wallet_amount -= $compign_budget_with_gst;
             $sellerWallet->save();
 

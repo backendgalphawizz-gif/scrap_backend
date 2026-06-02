@@ -66,6 +66,10 @@ class User extends Authenticatable
         'post_slots',
         'my_interest',
         'fcm_id',
+        'device_id',
+        'fraud_score',
+        'fraud_status',
+        'last_fraud_check_at',
     ];
 
     /**
@@ -91,6 +95,11 @@ class User extends Authenticatable
     public function socialVerifications()
     {
         return $this->hasMany(SocialVerificationTransaction::class, 'user_id');
+    }
+
+    public function fraudSignals()
+    {
+        return $this->hasMany(FraudSignal::class, 'user_id');
     }
 
     public function latestSocialVerification(string $platform): ?SocialVerificationTransaction

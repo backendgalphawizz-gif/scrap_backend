@@ -79,6 +79,15 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                @php($company_state=\App\CPU\Helpers::get_business_settings('company_state'))
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Company State <small class="text-muted ml-1">(for GST — CGST/SGST vs IGST)</small></label>
+                                    <input type="text" value="{{ $company_state ?? '' }}"
+                                        name="company_state" class="form-control"
+                                        placeholder="e.g. Maharashtra">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 @php($shop_address=\App\CPU\Helpers::get_business_settings('shop_address'))
                                 <div class="form-group">
                                     <label class="title-color d-flex">{{\App\CPU\translate('company_address')}}</label>

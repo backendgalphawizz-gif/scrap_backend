@@ -287,6 +287,12 @@ Route::group(['prefix' => 'sale'], function () {
         Route::get('notifications', [SaleDashboardController::class, 'notifications']);
         Route::get('ledger-commission-transactions', [SaleDashboardController::class, 'ledgerTransactions']);
 
+        // Discount vouchers — sales person manages their own codes
+        Route::get('discount-vouchers', [\App\Http\Controllers\Api\Sale\DiscountVoucherController::class, 'index']);
+        Route::post('discount-vouchers', [\App\Http\Controllers\Api\Sale\DiscountVoucherController::class, 'store']);
+        Route::get('discount-vouchers/{id}', [\App\Http\Controllers\Api\Sale\DiscountVoucherController::class, 'show']);
+        Route::put('discount-vouchers/{id}', [\App\Http\Controllers\Api\Sale\DiscountVoucherController::class, 'update']);
+
         Route::get('sales-terms-and-conditions', [SaleDashboardController::class, 'salesTermsAndConditions']);
         Route::get('sales-privacy-policy', [SaleDashboardController::class, 'salesPrivacyPolicy']);
     });

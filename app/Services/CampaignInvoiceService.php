@@ -74,11 +74,22 @@ class CampaignInvoiceService
         }
 
         $taxableAmount = round((float) ($campaign->total_campaign_budget ?? 0), 2);
-        $gstAmount = round($taxableAmount * $gstPercentage / 100, 2);
-        $totalAmount = round((float) ($campaign->compign_budget_with_gst ?? ($taxableAmount + $gstAmount)), 2);
+        $discountAmount = round((float) ($campaign->discount_amount ?? 0), 2);
+        $netTaxableAmount = round($taxableAmount - $discountAmount, 2);
+        // GST is calculated on net taxable (after discount)
+        $gstAmount = round($netTaxableAmount * $gstPercentage / 100, 2);
+        $totalAmount = round((float) ($campaign->compign_budget_with_gst ?? ($netTaxableAmount + $gstAmount)), 2);
+
+        // Determine if intra-state (CGST+SGST) or inter-state (IGST)
+        // Compare platform's registered state with brand's billing state (case-insensitive trim)
+        $platformState = strtolower(trim((string) (Helpers::get_business_settings('company_state') ?? '')));
+        $brandState    = strtolower(trim((string) ($brand->state ?? '')));
+        $isIntraState  = $platformState !== '' && $brandState !== '' && $platformState === $brandState;
+
         $halfGstRate = $gstPercentage / 2;
-        $cgstAmount = round($gstAmount / 2, 2);
-        $sgstAmount = round($gstAmount - $cgstAmount, 2);
+        $cgstAmount  = $isIntraState ? round($gstAmount / 2, 2) : 0.0;
+        $sgstAmount  = $isIntraState ? round($gstAmount - $cgstAmount, 2) : 0.0;
+        $igstAmount  = $isIntraState ? 0.0 : $gstAmount;
 
         $brandName = trim(($brand->f_name ?? '') . ' ' . ($brand->l_name ?? ''));
         if ($brandName === '') {
@@ -112,14 +123,20 @@ class CampaignInvoiceService
                 'phone' => $brand->phone ?? $brand->primary_contact ?? '',
                 'email' => $brand->email ?? '',
             ],
+            'is_intra_state' => $isIntraState,
             'amounts' => [
                 'taxable' => $taxableAmount,
+                'discount_amount' => $discountAmount,
+                'net_taxable' => $netTaxableAmount,
                 'gst_percentage' => $gstPercentage,
                 'gst_amount' => $gstAmount,
+                'is_intra_state' => $isIntraState,
                 'cgst_rate' => $halfGstRate,
                 'sgst_rate' => $halfGstRate,
                 'cgst_amount' => $cgstAmount,
                 'sgst_amount' => $sgstAmount,
+                'igst_rate' => $gstPercentage,
+                'igst_amount' => $igstAmount,
                 'total' => $totalAmount,
             ],
         ];

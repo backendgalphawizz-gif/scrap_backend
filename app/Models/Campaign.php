@@ -32,6 +32,7 @@ class Campaign extends Model
         'category_id',
         'sub_category_id',
         'unique_code','used_post','total_user_required','sale_id','created_by','sales_referal_code','admin_percentage','user_percentage','sales_percentage','compign_budget_with_gst','generate_gst_invoice',
+        'discount_amount','discount_code',
         'repeat_brand_percentage','user_referral_percentage','referral_coin',
         'refund_status',
         'refunded_amount',
@@ -48,6 +49,7 @@ class Campaign extends Model
         'generate_gst_invoice' => 'boolean',
         'settled_at' => 'datetime',
         'amount_returned_to_wallet' => 'float',
+        'discount_amount' => 'float',
     ];
 
     protected $appends = [

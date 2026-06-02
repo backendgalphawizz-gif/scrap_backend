@@ -85,9 +85,23 @@
 
     <table class="totals" style="max-width:420px;margin-left:auto;margin-top:16px;">
         <tr>
-            <td class="label">Taxable Amount</td>
+            <td class="label">Total Amount (Base)</td>
             <td class="value">₹{{ number_format($amounts['taxable'], 2) }}</td>
         </tr>
+        @if(($amounts['discount_amount'] ?? 0) > 0)
+        <tr>
+            <td class="label" style="color:#c0392b;">Less: Voucher Discount
+                @if($campaign->discount_code)<span class="muted"> ({{ $campaign->discount_code }})</span>@endif
+            </td>
+            <td class="value" style="color:#c0392b;">- ₹{{ number_format($amounts['discount_amount'], 2) }}</td>
+        </tr>
+        <tr>
+            <td class="label">Net Taxable Amount</td>
+            <td class="value">₹{{ number_format($amounts['net_taxable'], 2) }}</td>
+        </tr>
+        @endif
+        @if($amounts['is_intra_state'])
+        {{-- Intra-state: supplier & buyer in same state → CGST + SGST --}}
         <tr>
             <td class="label">CGST @ {{ number_format($amounts['cgst_rate'], 2) }}%</td>
             <td class="value">₹{{ number_format($amounts['cgst_amount'], 2) }}</td>
@@ -96,8 +110,15 @@
             <td class="label">SGST @ {{ number_format($amounts['sgst_rate'], 2) }}%</td>
             <td class="value">₹{{ number_format($amounts['sgst_amount'], 2) }}</td>
         </tr>
+        @else
+        {{-- Inter-state: supplier & buyer in different states → IGST --}}
         <tr>
-            <td class="label"><strong>Total (incl. GST)</strong></td>
+            <td class="label">IGST @ {{ number_format($amounts['igst_rate'], 2) }}%</td>
+            <td class="value">₹{{ number_format($amounts['igst_amount'], 2) }}</td>
+        </tr>
+        @endif
+        <tr>
+            <td class="label"><strong>Total Payable (incl. GST)</strong></td>
             <td class="value"><strong>₹{{ number_format($amounts['total'], 2) }}</strong></td>
         </tr>
     </table>

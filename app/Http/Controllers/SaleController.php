@@ -363,7 +363,38 @@ class SaleController extends Controller
             'status' => true,
             'message' => 'Status updated success'
         ]);
+    }
 
+    // ── Discount Vouchers (admin oversight) ──────────────────────────────────
+
+    /**
+     * List all discount vouchers across all sales persons.
+     */
+    public function discountVouchers(Request $request)
+    {
+        $vouchers = \App\Models\CampaignDiscountVoucher::with(['sale:id,name,email'])
+            ->when($request->filled('sale_id'), fn ($q) => $q->where('sale_id', $request->sale_id))
+            ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', (bool) $request->is_active))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('code', 'like', '%' . trim($request->search) . '%');
+            })
+            ->orderByDesc('id')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('admin-views.sale.discount-vouchers', compact('vouchers'));
+    }
+
+    /**
+     * Toggle is_active on any discount voucher (admin can deactivate/reactivate).
+     */
+    public function updateDiscountVoucherStatus(Request $request)
+    {
+        $voucher = \App\Models\CampaignDiscountVoucher::findOrFail($request->id);
+        $voucher->is_active = (bool) $request->is_active;
+        $voucher->save();
+
+        return response()->json(['status' => true, 'message' => 'Voucher status updated.']);
     }
 
 }

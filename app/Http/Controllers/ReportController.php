@@ -68,7 +68,11 @@ class ReportController extends Controller
         $mapCampaignRow = function ($campaign, array $slabRates = []) {
             $baseAmount    = (float) ($campaign->total_campaign_budget ?? 0);
             $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
-            $gstAmount     = max(0, $amountWithGst - $baseAmount);
+
+            // Actual voucher discount stored on the campaign (default 0 for legacy campaigns)
+            $discountAmount = (float) ($campaign->discount_amount ?? 0);
+            $netTaxable     = $baseAmount - $discountAmount;
+            $gstAmount      = max(0, $amountWithGst - $netTaxable);
 
             $userPercentage     = (float) ($campaign->user_percentage ?? 0);
             $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
@@ -77,24 +81,25 @@ class ReportController extends Controller
             $actualSalesPct    = $adjusted['actual_sales_pct'];
             $effectiveAdminPct = $adjusted['effective_admin_pct'];
 
-            $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
-            $discountAmount     = ($baseAmount * $discountPercentage) / 100;
-            $amountWithoutGst   = $baseAmount - $discountAmount;
+            // Buckets are on the BASE amount; discount is deducted from the SALES bucket only
+            $grossSalesBucket = ($baseAmount * $actualSalesPct)     / 100;
+            $netSalesBucket   = max(0, $grossSalesBucket - $discountAmount);
 
             return [
                 'brand_id'                         => $campaign->brand_id,
                 'campaign_id'                      => $campaign->id,
                 'brand'                            => $campaign->brand->username ?? '-',
                 'campaign'                         => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'discount_code'                    => $campaign->discount_code ?? '',
                 'amount_with_gst'                  => $amountWithGst,
                 'gst'                              => $gstAmount,
-                'amount_without_gst'               => $amountWithoutGst,
+                'amount_without_gst'               => $netTaxable,
                 'amount_without_gst_with_discount' => $baseAmount,
                 'discount'                         => $discountAmount,
-                'users'                            => ($amountWithoutGst * $userPercentage)     / 100,
-                'sales'                            => ($amountWithoutGst * $actualSalesPct)     / 100,
-                'referral'                         => ($amountWithoutGst * $referralPercentage) / 100,
-                'admin'                            => ($amountWithoutGst * $effectiveAdminPct)  / 100,
+                'users'                            => ($baseAmount * $userPercentage)     / 100,
+                'sales'                            => $netSalesBucket,
+                'referral'                         => ($baseAmount * $referralPercentage) / 100,
+                'admin'                            => ($baseAmount * $effectiveAdminPct)  / 100,
                 'slab_saving_pct'                  => $adjusted['slab_saving_pct'],
             ];
         };
@@ -161,7 +166,10 @@ class ReportController extends Controller
         $rows = $campaigns->map(function ($campaign) use ($slabRates) {
             $baseAmount    = (float) ($campaign->total_campaign_budget ?? 0);
             $amountWithGst = (float) ($campaign->compign_budget_with_gst ?? $baseAmount);
-            $gstAmount     = max(0, $amountWithGst - $baseAmount);
+
+            $discountAmount = (float) ($campaign->discount_amount ?? 0);
+            $netTaxable     = $baseAmount - $discountAmount;
+            $gstAmount      = max(0, $amountWithGst - $netTaxable);
 
             $userPercentage     = (float) ($campaign->user_percentage ?? 0);
             $referralPercentage = (float) ($campaign->feedback_percentage ?? 0);
@@ -170,24 +178,24 @@ class ReportController extends Controller
             $actualSalesPct    = $adjusted['actual_sales_pct'];
             $effectiveAdminPct = $adjusted['effective_admin_pct'];
 
-            $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
-            $discountAmount     = ($baseAmount * $discountPercentage) / 100;
-            $amountWithoutGst   = $baseAmount - $discountAmount;
+            $grossSalesBucket = ($baseAmount * $actualSalesPct) / 100;
+            $netSalesBucket   = max(0, $grossSalesBucket - $discountAmount);
 
             return [
                 'Brand'                               => $campaign->brand->username ?? '-',
                 'Campaign'                            => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+                'Discount Code'                       => $campaign->discount_code ?? '',
                 'Total Amount with GST'               => number_format($amountWithGst, 2, '.', ''),
                 'GST'                                 => number_format($gstAmount, 2, '.', ''),
-                'Total Amount without GST'            => number_format($amountWithoutGst, 2, '.', ''),
+                'Total Amount without GST'            => number_format($netTaxable, 2, '.', ''),
                 'Total Amount without GST + Discount' => number_format($baseAmount, 2, '.', ''),
                 'Discount'                            => number_format($discountAmount, 2, '.', ''),
-                'Users'                               => number_format(($amountWithoutGst * $userPercentage)     / 100, 2, '.', ''),
-                'Sales (Actual)'                      => number_format(($amountWithoutGst * $actualSalesPct)     / 100, 2, '.', ''),
+                'Users'                               => number_format(($baseAmount * $userPercentage)     / 100, 2, '.', ''),
+                'Sales (Net)'                         => number_format($netSalesBucket, 2, '.', ''),
                 'Sales Slab % Used'                   => number_format($actualSalesPct, 2, '.', ''),
                 'Slab Saving %'                       => number_format($adjusted['slab_saving_pct'], 2, '.', ''),
-                'Referral'                            => number_format(($amountWithoutGst * $referralPercentage) / 100, 2, '.', ''),
-                'Admin (Effective)'                   => number_format(($amountWithoutGst * $effectiveAdminPct)  / 100, 2, '.', ''),
+                'Referral'                            => number_format(($baseAmount * $referralPercentage) / 100, 2, '.', ''),
+                'Admin (Effective)'                   => number_format(($baseAmount * $effectiveAdminPct)  / 100, 2, '.', ''),
                 'Effective Admin %'                   => number_format($effectiveAdminPct, 2, '.', ''),
             ];
         });
@@ -708,9 +716,10 @@ class ReportController extends Controller
         $actualSalesPct    = $adjusted['actual_sales_pct'];
         $effectiveAdminPct = $adjusted['effective_admin_pct'];
 
-        $discountPercentage = max(0, 100 - ($userPercentage + $actualSalesPct + $referralPercentage + $effectiveAdminPct));
-        $discountAmount     = ($baseAmount * $discountPercentage) / 100;
-        $amountWithoutGst   = $baseAmount - $discountAmount;
+        // Actual voucher discount (0 for legacy campaigns)
+        $discountAmount     = (float) ($campaign->discount_amount ?? 0);
+        $netTaxable         = $baseAmount - $discountAmount;
+        $gstAmount          = max(0, $amountWithGst - $netTaxable);
 
         $totalPostRequired  = (int) ($campaign->total_user_required ?? 0);
         $perPostCost        = $totalPostRequired > 0 ? ($baseAmount / $totalPostRequired) : 0;
@@ -719,6 +728,11 @@ class ReportController extends Controller
         $postsVerified        = (int) ($campaign->posts_verified ?? 0);
         $postsNotVerified     = (int) ($campaign->posts_not_verified ?? 0);
 
+        // Buckets on base; discount deducted from sales bucket only
+        $grossSalesBucket = ($baseAmount * $actualSalesPct) / 100;
+        $netSalesBucket   = max(0, $grossSalesBucket - $discountAmount);
+        $salesPctEffective = $baseAmount > 0 ? ($netSalesBucket / $baseAmount * 100) : 0;
+
         $splitAmount = function (float $percentage, int $postCount) use ($perPostCost) {
             return ($perPostCost * $percentage / 100) * $postCount;
         };
@@ -726,10 +740,11 @@ class ReportController extends Controller
         return [
             'brand'                      => $campaign->brand->username ?? '-',
             'campaign'                   => $campaign->unique_code ?? ('RXC_' . str_pad((string) $campaign->id, 5, '0', STR_PAD_LEFT)),
+            'discount_code'              => $campaign->discount_code ?? '',
             'start_date'                 => Helpers::formatAdminDate($campaign->start_date),
             'end_date'                   => Helpers::formatAdminDate($campaign->end_date),
             'amount_with_gst'            => $amountWithGst,
-            'amount_without_gst'         => $amountWithoutGst,
+            'amount_without_gst'         => $netTaxable,
             'per_post_cost'              => $perPostCost,
             'total_post_required'        => $totalPostRequired,
             'discount'                   => $discountAmount,
@@ -742,9 +757,9 @@ class ReportController extends Controller
             'users_total'                => $splitAmount($userPercentage,     $postsCompletedTotal),
             'users_verified'             => $splitAmount($userPercentage,     $postsVerified),
             'users_not_verified'         => $splitAmount($userPercentage,     $postsNotVerified),
-            'sales_total'                => $splitAmount($actualSalesPct,     $postsCompletedTotal),
-            'sales_verified'             => $splitAmount($actualSalesPct,     $postsVerified),
-            'sales_not_verified'         => $splitAmount($actualSalesPct,     $postsNotVerified),
+            'sales_total'                => $splitAmount($salesPctEffective,  $postsCompletedTotal),
+            'sales_verified'             => $splitAmount($salesPctEffective,  $postsVerified),
+            'sales_not_verified'         => $splitAmount($salesPctEffective,  $postsNotVerified),
             'referral_total'             => $splitAmount($referralPercentage, $postsCompletedTotal),
             'referral_verified'          => $splitAmount($referralPercentage, $postsVerified),
             'referral_not_verified'      => $splitAmount($referralPercentage, $postsNotVerified),

@@ -103,6 +103,7 @@
                                     <th>{{ \App\CPU\translate('Campaign')}}</th>
                                     <th>{{ \App\CPU\translate('Campaign Budget')}}</th>
                                     <th>{{ \App\CPU\translate('Commission Rate')}}</th>
+                                    <th>{{ \App\CPU\translate('Discount Absorbed')}}</th>
                                     <th>{{ \App\CPU\translate('Commission Amount')}}</th>
                                     <th>{{ \App\CPU\translate('Reference_type')}}</th>
                                     <th>{{ \App\CPU\translate('Status')}}</th>
@@ -118,6 +119,13 @@
                                         <td>{{ ucwords($txn->campaign->title ?? '') }}</td>
                                         <td>{{ $txn->amount ?? '' }}</td>
                                         <td>{{ $txn->commission_rate ?? '' }}</td>
+                                        <td>
+                                            @if(($txn->discount_absorbed ?? 0) > 0)
+                                                <span class="text-danger">- ₹{{ number_format($txn->discount_absorbed, 2) }}</span>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
                                         <td>{{ $txn->commission_amount ?? '' }}</td>
                                         <td>{{ $txn->reference_type ?? '' }}</td>
                                         <td>
