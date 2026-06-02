@@ -272,6 +272,38 @@ class DashboardController extends Controller
                 ], 422);
             }
 
+            // ── Discount voucher validation ───────────────────────────────────────
+            $discountAmount  = 0.0;
+            $discountCode    = null;
+            $discountVoucher = null;
+
+            if ($request->filled('discount_code')) {
+                $discountCode    = trim((string) $request->discount_code);
+                $discountVoucher = \App\Models\CampaignDiscountVoucher::where('code', $discountCode)
+                    ->where('sale_id', $salesId)
+                    ->first();
+
+                if (!$discountVoucher || !$discountVoucher->isValid()) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid, expired, or exhausted discount voucher code.',
+                        'data' => [],
+                    ], 422);
+                }
+
+                $paymentSplitCheck = PaymentSplit::first();
+                $maxAllowedDiscount = ($request->total_campaign_budget * ($paymentSplitCheck->sales_percentage ?? 0)) / 100;
+                if ($discountVoucher->discount_amount > $maxAllowedDiscount) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Discount amount exceeds the maximum allowed from the sales commission for this campaign.',
+                        'data' => [],
+                    ], 422);
+                }
+
+                $discountAmount = (float) $discountVoucher->discount_amount;
+            }
+
             // Logic to create campaign
 
             $campaign = new Campaign;
@@ -301,7 +333,9 @@ class DashboardController extends Controller
             $paymentSplit = PaymentSplit::first();
             $gst_percentage = (int) Helpers::get_business_settings('campaign_gst_percentage');
             $total_campaign_budget = $request->total_campaign_budget;
-            $compign_budget_with_gst = $total_campaign_budget + ($total_campaign_budget * $gst_percentage / 100);
+            // Apply discount before GST: GST is charged on the net taxable amount only
+            $net_taxable_amount      = $total_campaign_budget - $discountAmount;
+            $compign_budget_with_gst = $net_taxable_amount + ($net_taxable_amount * $gst_percentage / 100);
 
             $campaign->brand_id = $request->brand_id;
             $campaign->sale_id = $salesId;
@@ -336,6 +370,8 @@ class DashboardController extends Controller
             $campaign->user_percentage = $paymentSplit->user_percentage;
             $campaign->sales_percentage = $paymentSplit->sales_percentage;
             $campaign->sales_referal_code = $data['referral_code'] ?? null;
+            $campaign->discount_amount       = $discountAmount;
+            $campaign->discount_code         = $discountCode;
             $campaign->compign_budget_with_gst = $compign_budget_with_gst;
             $campaign->generate_gst_invoice = $generateGstInvoice;
             $upi_value =  strval(Helpers::get_business_settings('upi_value'));
@@ -373,7 +409,10 @@ class DashboardController extends Controller
            
             $campaign->save();
 
-            // here remove amount from wellert and create transaction for campaign creation
+            // Mark discount voucher as used
+            if ($discountVoucher) {
+                $discountVoucher->increment('used_count');
+            }
 
             Helpers::systemActivity('campaign', $seller, 'created', 'Campaign created successfully', $campaign);
 

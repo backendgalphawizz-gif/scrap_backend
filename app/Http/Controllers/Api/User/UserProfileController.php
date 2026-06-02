@@ -18,6 +18,8 @@ use App\Models\Notification;
 use App\Models\SocialVerificationTransaction;
 use App\Models\UserLevel;
 use App\Models\BrandCategory;
+use App\Services\FraudDetectionService;
+use App\Services\FraudScoreService;
 use App\Models\CampaignTransaction;
 use App\Services\PanValidationService;
 use App\Services\TdsCalculationService;
@@ -347,6 +349,17 @@ class UserProfileController extends Controller
                 ['user_id' => $user->id],
                 ['balance' => 0]
             );
+
+            // Fraud check — duplicate UPI/bank account
+            $upiId = $request->value;
+            $fraudDetected = app(FraudDetectionService::class)->checkDuplicateUpi($user, $upiId);
+            if ($fraudDetected) {
+                app(FraudScoreService::class)->recalculate($user);
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Withdrawal could not be processed. Please contact support.',
+                ], 422);
+            }
 
             if ($wallet->withdrawal_frozen) {
                 return response()->json([

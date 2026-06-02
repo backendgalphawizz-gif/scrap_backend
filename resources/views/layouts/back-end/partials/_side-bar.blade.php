@@ -86,6 +86,9 @@
                         <a class="nav-link {{ request()->routeIs('admin.sale.list') ? 'active' : '' }}" href="{{ route('admin.sale.list') }}">Sales User</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.sale.discount-vouchers') ? 'active' : '' }}" href="{{ route('admin.sale.discount-vouchers') }}">Discount Vouchers</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.business-settings.sale-faq*') ? 'active' : '' }}" href="{{ route('admin.business-settings.sale-faq') }}">Sale FAQ</a>
                     </li>
                    
@@ -254,6 +257,14 @@
             </div>
         </li>
         @endif
+
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.fraud.*') ? 'active' : '' }}"
+               href="{{ route('admin.fraud.index') }}">
+                <span class="menu-title">Fraud Monitor</span>
+                <i class="mdi mdi-shield-alert menu-icon text-danger"></i>
+            </a>
+        </li>
 
         @if(\App\CPU\Helpers::module_permission_check('business_settings'))
         <li class="nav-item">

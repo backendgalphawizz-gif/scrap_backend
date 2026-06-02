@@ -114,7 +114,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         Route::post('/{id}/process-refund', [CampaignController::class, 'processRefund'])->name('admin.campaign.process-refund');
         Route::post('/{id}/complete-refund', [CampaignController::class, 'completeRefund'])->name('admin.campaign.complete-refund');
     });
-    
+
     // CampaignController
     Route::group(['prefix' => 'sales'], function() {
         Route::get('/', [SaleController::class, 'list'])->name('admin.sale.list');
@@ -129,6 +129,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
         
         Route::get('/ledger-transactions', [SaleController::class, 'ledgerTransactions'])->name('admin.sale.ledger-transactions');
         Route::post('/update-ledger-transactions-status', [SaleController::class, 'updateLedgerTransactionStatus'])->name('admin.sale.update-ledger-transactions-status');
+
+        Route::get('/discount-vouchers', [SaleController::class, 'discountVouchers'])->name('admin.sale.discount-vouchers');
+        Route::post('/discount-vouchers/status', [SaleController::class, 'updateDiscountVoucherStatus'])->name('admin.sale.discount-vouchers.status');
         
     });
 
@@ -275,6 +278,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::post('business-settings/payment-split/slabs', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'storeSlab'])->name('admin.payment-split.slab.store');
     Route::post('business-settings/payment-split/slabs/{id}/update', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'updateSlab'])->name('admin.payment-split.slab.update');
     Route::post('business-settings/payment-split/slabs/{id}/delete', [\App\Http\Controllers\Admin\PaymentSplitController::class, 'destroySlab'])->name('admin.payment-split.slab.destroy');
+
+    // Fraud Detection Dashboard
+    Route::get('fraud', [\App\Http\Controllers\Admin\FraudController::class, 'index'])->name('admin.fraud.index');
+    Route::get('fraud/{id}', [\App\Http\Controllers\Admin\FraudController::class, 'show'])->name('admin.fraud.show');
+    Route::post('fraud/signal/{signalId}/resolve', [\App\Http\Controllers\Admin\FraudController::class, 'resolveSignal'])->name('admin.fraud.signal.resolve');
+    Route::post('fraud/user/{id}/block', [\App\Http\Controllers\Admin\FraudController::class, 'blockUser'])->name('admin.fraud.user.block');
+    Route::post('fraud/user/{id}/clear', [\App\Http\Controllers\Admin\FraudController::class, 'clearUser'])->name('admin.fraud.user.clear');
 });
 
 Route::post('/support-ticket/close/{id}', [SupportTicketController::class, 'close'])

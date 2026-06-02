@@ -8,6 +8,8 @@ use App\Models\SocialVerificationTransaction;
 use App\Models\Seller;
 use App\Models\User;
 use App\Services\FcmNotificationService;
+use App\Services\FraudDetectionService;
+use App\Services\FraudScoreService;
 use Carbon\Carbon;
 
 class ProcessSocialVerifications extends Command
@@ -38,6 +40,7 @@ class ProcessSocialVerifications extends Command
 
             if ($found) {
                 $this->markVerified($transaction);
+                $this->runFraudChecksForVerified($transaction);
                 $verified++;
             } elseif (Carbon::now()->gt(Carbon::parse($transaction->submitted_at)->addHours(24))) {
                 $this->markNotVerified($transaction, $fcm);
@@ -48,6 +51,22 @@ class ProcessSocialVerifications extends Command
         }
 
         $this->info("Done. Verified: {$verified} | Not Verified: {$failed} | Pending: {$pending}");
+    }
+
+    private function runFraudChecksForVerified(SocialVerificationTransaction $transaction): void
+    {
+        if (!$transaction->user_id || empty($transaction->username)) {
+            return;
+        }
+
+        $user = User::find($transaction->user_id);
+        if (!$user) {
+            return;
+        }
+
+        $fraudService = app(FraudDetectionService::class);
+        $fraudService->checkDuplicateSocialHandle($user, $transaction->platform, $transaction->username);
+        app(FraudScoreService::class)->recalculate($user);
     }
 
     private function findUniqueCodeInScrapedPosts(string $uniqueCode, string $platform, string $username): bool

@@ -17,6 +17,7 @@ class SaleCommissionLedger extends Model
         'amount',
         'commission_rate',
         'commission_amount',
+        'discount_absorbed',
         'reference_type',
         'status'
     ];

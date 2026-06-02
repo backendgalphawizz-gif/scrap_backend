@@ -586,6 +586,9 @@ class DashboardController extends Controller
         DB::table('business_settings')->updateOrInsert(['type' => 'company_gst_number'], [
             'value' => $request->input('company_gst_number') ?? ''
         ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'company_state'], [
+            'value' => $request->input('company_state') ?? ''
+        ]);
         
         DB::table('business_settings')->updateOrInsert(['type' => 'tds_percent'], [
             'value' => $request->input('tds_percent') ?? $request->input('tds_rate_valid_pan') ?? ''

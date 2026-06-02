@@ -282,15 +282,21 @@ class CampaignSettlementService
         // ── Determine commission rate via slabs (if configured) ──────────────
         $commissionRate = $this->resolveSlabRate($campaign, $amount);
 
+        // ── Deduct voucher discount from this commission (absorbed by sales) ─
+        $discountAbsorbed = round((float) ($campaign->discount_amount ?? 0), 2);
+        $grossCommission  = round($amount * $commissionRate / 100, 2);
+        $netCommission    = max(0.0, $grossCommission - $discountAbsorbed);
+
         SaleCommissionLedger::create([
-            'sale_id'          => $campaign->sale_id,
-            'brand_id'         => $campaign->brand_id,
-            'campaign_id'      => $campaign->id,
-            'amount'           => $amount,
-            'commission_rate'  => $commissionRate,
-            'commission_amount' => round($amount * $commissionRate / 100, 2),
-            'reference_type'   => 'campaign_reward',
-            'status'           => 'pending',
+            'sale_id'           => $campaign->sale_id,
+            'brand_id'          => $campaign->brand_id,
+            'campaign_id'       => $campaign->id,
+            'amount'            => $amount,
+            'commission_rate'   => $commissionRate,
+            'commission_amount' => $netCommission,
+            'discount_absorbed' => $discountAbsorbed,
+            'reference_type'    => 'campaign_reward',
+            'status'            => 'pending',
         ]);
     }
 

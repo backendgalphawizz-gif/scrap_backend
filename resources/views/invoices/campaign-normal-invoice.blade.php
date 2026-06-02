@@ -80,6 +80,18 @@
 
     <table class="totals" style="max-width:420px;margin-left:auto;margin-top:16px;">
         <tr>
+            <td class="label">Total Amount (Base)</td>
+            <td class="value">₹{{ number_format($amounts['taxable'], 2) }}</td>
+        </tr>
+        @if(($amounts['discount_amount'] ?? 0) > 0)
+        <tr>
+            <td class="label" style="color:#c0392b;">Less: Voucher Discount
+                @if($campaign->discount_code)<span class="muted"> ({{ $campaign->discount_code }})</span>@endif
+            </td>
+            <td class="value" style="color:#c0392b;">- ₹{{ number_format($amounts['discount_amount'], 2) }}</td>
+        </tr>
+        @endif
+        <tr>
             <td class="label"><strong>Total Amount Paid</strong></td>
             <td class="value"><strong>₹{{ number_format($amounts['total'], 2) }}</strong></td>
         </tr>
