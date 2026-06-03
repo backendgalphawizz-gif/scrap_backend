@@ -1,43 +1,47 @@
-name: Deploy via FTP
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # codeload.github.com often fails for marketplace actions on GitHub runners;
-      # fetch the action via git (same as checkout) instead.
-      - name: Checkout FTP Deploy Action
-        uses: actions/checkout@v4
-        with:
-          repository: SamKirkland/FTP-Deploy-Action
-          ref: v4.3.6
-          path: .github/actions/ftp-deploy
-
-      - name: Deploy to FTP Server
-        uses: ./.github/actions/ftp-deploy
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          log-level: verbose
-          exclude: |
-            **/RoleMiddleware.php
-            **/2026_03_07_102249_create_activity_log_table.php
-            **/database/migrations/2026_03_07_102250_add_event_column_to_activity_log_table.php
-            **/database/migrations/2026_03_07_102251_add_batch_uuid_column_to_activity_log_table.php
-            **/debug_profile.png
-            **/fb_results.json
-            **/fb_session
-            **/ig_session
-          server-dir: /admin/
+name: Deploy via FTP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # codeload.github.com often fails for marketplace actions on GitHub runners;
+      # fetch the action via git (same as checkout) instead.
+      - name: Checkout FTP Deploy Action
+        uses: actions/checkout@v4
+        with:
+          repository: SamKirkland/FTP-Deploy-Action
+          ref: v4.3.6
+          path: .github/actions/ftp-deploy
+
+      - name: Deploy to FTP Server
+        uses: ./.github/actions/ftp-deploy
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          log-level: verbose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/scraper/**
+            **/RoleMiddleware.php
+            **/2026_03_07_102249_create_activity_log_table.php
+            **/database/migrations/2026_03_07_102250_add_event_column_to_activity_log_table.php
+            **/database/migrations/2026_03_07_102251_add_batch_uuid_column_to_activity_log_table.php
+            **/debug_profile.png
+            **/fb_results.json
+            **/fb_session
+            **/ig_session
+          server-dir: /admin/
 
