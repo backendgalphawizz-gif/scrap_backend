@@ -25,6 +25,7 @@ public/*.json
 /storage/*.key
 
 # Python (scraper/)
+/scraper
 scraper/.venv/
 scraper/venv/
 scraper/**/__pycache__/
@@ -34,9 +35,16 @@ scraper/**/*.egg-info/
 scraper/.env
 scraper/.env.*
 !scraper/.env.example
+scraper/test_scrapy.py
+scraper/face_post.py
+scraper/thread.py
+scraper/run_ig_then_threads.py
+scraper/run_threads_server.sh
+scraper/fb_results.json
 
 # Playwright (if installed under project)
 scraper/.playwright/
+
 
 # IDE & OS
 /.fleet
