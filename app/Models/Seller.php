@@ -29,6 +29,7 @@ class Seller extends Authenticatable
         'username',
         'phone',
         'email',
+        'status',
         'referral_code',
         'friends_code',
         'unique_code',
