@@ -732,6 +732,7 @@ class DashboardController extends Controller
                     'city' => $request->city,
                     'sale_id' => $sale['id'],
                     'state' => $request->state,
+                    'visibility_status' => 'true',
                     'instagram_username' => $request->instagram_username,
                     'facebook_username' => $request->facebook_username,
                     'auth_token' => '',
