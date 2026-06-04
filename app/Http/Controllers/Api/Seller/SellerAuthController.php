@@ -308,6 +308,7 @@ class SellerAuthController extends Controller
                 'phone' => $request->mobile,
                 'email' => $request->email,
                 'status' => 'approved',
+                'visibility_status' => 'true',
                 'referral_code' => Helpers::generate_referral_code(),
                 'friends_code' => $request->referral_code ?? '',
                 'city' => $request->city,
