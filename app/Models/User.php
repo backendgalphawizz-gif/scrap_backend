@@ -122,7 +122,7 @@ class User extends Authenticatable
     {
         $value = $this->rawImagePath();
         if (! $value) {
-            return asset('public/assets/front-end/img/image-place-holder.png');
+            return asset('assets/front-end/img/image-place-holder.png');
         }
 
         return str_starts_with($value, 'http://') || str_starts_with($value, 'https://')

@@ -36,7 +36,7 @@
                     <div class="avatar avatar-sm avatar-circle">
                         <img class="avatar-img"
                             src="{{asset('storage/app/public/admin/'.auth('admin')->user()->image)}}"
-                            onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'">
+                            onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'">
                     </div>
                     <div class="media-body">
                         <h5 class="profile-name mb-1">{{ auth('admin')->user()->name }}</h5>
@@ -56,7 +56,7 @@
                             <div class="avatar avatar-sm avatar-circle">
                                 <img class="avatar-img"
                                     src="{{ asset('storage/app/public/profile/'.$app->image) }}"
-                                    onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'">
+                                    onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'">
                             </div>
 
                             <div>
@@ -81,7 +81,7 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar avatar-sm avatar-circle">
                             <img id="chatProfileImage" class="avatar-img"
-                                onerror="this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}'">
+                                onerror="this.src='{{ asset('assets/front-end/img/image-place-holder.png') }}'">
                             
                         </div>
                         <div>

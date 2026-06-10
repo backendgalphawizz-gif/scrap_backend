@@ -227,13 +227,6 @@ class SellerDashboardController extends Controller
                 $shop->pan_number = $panValidationService->normalizePan($request->pan_number);
                 $shop->pan_status = 'Submitted';
             }
-            if ($request->hasFile('pan_image') && $shop->pan_status !== 'Verified') {
-                $shop->pan_status = 'Submitted';
-            }
-            if ($request->hasFile('pan_image')) {
-                $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'), $shop->pan_image);
-            }
-            // $shop->pan_image = $request->pan_image ?? '';
             $shop->primary_contact = $request->primary_contact ?? '';
             $shop->alternate_contact = $request->alternate_contact ?? '';
             $shop->full_address = $request->full_address ?? '';
@@ -341,9 +334,6 @@ class SellerDashboardController extends Controller
 
             $shop->pan_number = $panValidationService->normalizePan($request->pan_number);
             $shop->pan_status = 'Submitted';
-            if ($request->hasFile('pan_image')) {
-                $shop->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'), $shop->pan_image);
-            }
         }
 
         if ($request->has('gst_number') && $shop->gst_status !== 'Verified') {

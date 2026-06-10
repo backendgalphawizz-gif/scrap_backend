@@ -68,6 +68,7 @@ class ProcessScrapeResults extends Command
                 $wasAlreadyApproved = $transaction->status === CampaignTransaction::STATUS_APPROVED;
                 if (!$wasAlreadyApproved) {
                     $approved++;
+                    $transaction->verified_at = now();
                 }
                 $transaction->status = CampaignTransaction::STATUS_APPROVED;
                 $transaction->violation_reason = null;

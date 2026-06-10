@@ -26,7 +26,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                   <!-- <img src="{{asset('/public/assets/back-end/img/productdetail/product.png')}}" alt="" /> -->
                   <img
                   class=" {{Session::get('direction') === "rtl" ? 'ml-4' : 'mr-4'}}"
-                  onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                  onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                   src="{{\App\CPU\ProductManager::product_image_path('thumbnail')}}/{{$product['thumbnail']}}"
                   alt="Image Description"/>
                </div>
@@ -81,7 +81,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                         <div class="card">
                            <div class="card-body">
                               <img class="width-100"
-                              onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                              onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                               src="{{asset("storage/app/public/product/$photo")}}" alt="Product image">
                            </div>
                         </div>
@@ -120,7 +120,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                   <div class="d-flex align-items-center">
                      <img
                      class="avatar avatar-xxl d-none avatar-4by3 {{Session::get('direction') === "rtl" ? 'ml-4' : 'mr-4'}}"
-                     onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                     onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                      src="{{\App\CPU\ProductManager::product_image_path('thumbnail')}}/{{$product['thumbnail']}}"
                      alt="Image Description">
                      <div class="d-block">
@@ -445,7 +445,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                <div class="d-flex align-items-center">
                   <img
                   class="avatar avatar-xxl avatar-4by3 {{Session::get('direction') === "rtl" ? 'ml-4' : 'mr-4'}}"
-                  onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                  onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                   src="{{\App\CPU\ProductManager::product_image_path('thumbnail')}}/{{$product['thumbnail']}}"
                   alt="Image Description">
                   <div class="d-block">
@@ -594,7 +594,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                      <div class="col-6 col-md-4 col-lg-3">
                         <div class="card">
                            <div class="card-body">
-                             <img class="width-100" style="cursor: pointer;" onclick="showImageModal('{{ asset("storage/app/public/product/$photo") }}')" onerror="this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}'" src="{{ asset("storage/app/public/product/$photo") }}" alt="Product image">
+                             <img class="width-100" style="cursor: pointer;" onclick="showImageModal('{{ asset("storage/app/public/product/$photo") }}')" onerror="this.src='{{ asset('assets/front-end/img/image-place-holder.png') }}'" src="{{ asset("storage/app/public/product/$photo") }}" alt="Product image">
 
                            </div>
                         </div>
@@ -642,7 +642,7 @@ style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
                      <div class="avatar avatar-circle">
                         <img
                            class="avatar-img"
-                           onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                           onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                            src="{{asset('storage/app/public/profile/'.$review->customer->image)}}"
                            alt="Image Description">
                      </div>

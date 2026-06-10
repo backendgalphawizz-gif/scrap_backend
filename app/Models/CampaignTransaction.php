@@ -33,10 +33,15 @@ class CampaignTransaction extends Model
         'earning',
         'start_date',
         'end_date',
+        'verified_at',
         'unique_code',
         'violation_reason',
         'post_url',
         'day_status',
+    ];
+
+    protected $casts = [
+        'verified_at' => 'datetime',
     ];
 
     // protected $appends = ['left_days'];

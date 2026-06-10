@@ -27,7 +27,7 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar avatar-sm avatar-circle">
                             <img id="chatProfileImage" class="avatar-img"
-                                onerror="this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}'">
+                                onerror="this.src='{{ asset('assets/front-end/img/image-place-holder.png') }}'">
 
                         </div>
                         <div>

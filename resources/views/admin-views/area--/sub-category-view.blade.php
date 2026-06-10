@@ -162,7 +162,7 @@
                                     <td>{{$category['id']}}</td>
                                     <td class="text-center">
                                         <img class="rounded" width="64"
-                                             onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                             onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                              src="{{asset('storage/app/public/category')}}/{{$category['icon']}}">
                                     </td>
                                     <td>{{$category['name']}}</td>

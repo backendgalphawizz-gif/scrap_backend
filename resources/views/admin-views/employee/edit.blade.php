@@ -32,8 +32,8 @@
                             {{-- Profile Image --}}
                             <div class="col-12 d-flex align-items-center gap-3 mb-2">
                                 <img id="viewer"
-                                    src="{{ $e['image'] ?? asset('public/assets/front-end/img/image-place-holder.png') }}"
-                                    onerror="this.onerror=null; this.src='{{ asset('public/assets/front-end/img/image-place-holder.png') }}'"
+                                    src="{{ $e['image'] ?? asset('assets/front-end/img/image-place-holder.png') }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('assets/front-end/img/image-place-holder.png') }}'"
                                     alt="Profile"
                                     style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #0c9ea2;">
                                 <div>

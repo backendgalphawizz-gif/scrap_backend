@@ -108,7 +108,7 @@
                     <div class="mt-3">
                         <img id="user-image-preview" class="__img-70 rounded border {{ $isEdit && $review->user_image ? '' : 'd-none' }}"
                             style="width: 200px;"
-                            src="{{ $isEdit && $review->user_image ? asset('storage/app/public/profile/' . $review->user_image) : asset('public/assets/front-end/img/image-place-holder.png') }}"
+                            src="{{ $isEdit && $review->user_image ? asset('storage/app/public/profile/' . $review->user_image) : asset('assets/front-end/img/image-place-holder.png') }}"
                             alt="{{ \App\CPU\translate('User Image Preview') }}">
                     </div>
 
@@ -135,7 +135,7 @@
                 rowHeight: '150px',
                 groupClassName: 'col-6',  // changed from col-md-4 to col-6 for 2 columns
                 placeholderImage: {
-                    image: '{{ asset('public/assets/front-end/img/image-place-holder.png') }}',
+                    image: '{{ asset('assets/front-end/img/image-place-holder.png') }}',
                     width: '100%'
                 },
                 dropFileLabel: "{{ \App\CPU\translate('drop_here') }}",
@@ -180,7 +180,7 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             } else {
-                preview.src = "{{ asset('public/assets/front-end/img/image-place-holder.png') }}";
+                preview.src = "{{ asset('assets/front-end/img/image-place-holder.png') }}";
                 preview.classList.add('d-none');
             }
         }

@@ -123,7 +123,7 @@
                 <div class="card h-100" >
                     @if($customer)
                         @php($customerImage = blank($customer->image)
-                            ? asset('public/assets/front-end/img/image-place-holder.png')
+                            ? asset('assets/front-end/img/image-place-holder.png')
                             : (\Illuminate\Support\Str::startsWith($customer->image, ['http://', 'https://'])
                                 ? $customer->image
                                 : asset('storage/profile/' . ltrim($customer->image, '/'))))
@@ -137,7 +137,7 @@
                                 <div class="mr-3">
                                     <img
                                         class="avatar rounded-circle avatar-70"
-                                        onerror="this.onerror=null;this.src=&quot;{{ asset('public/assets/front-end/img/image-place-holder.png') }}&quot;;"
+                                        onerror="this.onerror=null;this.src=&quot;{{ asset('assets/front-end/img/image-place-holder.png') }}&quot;;"
                                         src="{{$customerImage}}"
                                         alt="Image">
                                 </div>

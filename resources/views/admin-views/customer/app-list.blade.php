@@ -6,7 +6,7 @@
         <div class="avatar avatar-sm avatar-circle">
             <img class="avatar-img"
                  src="{{ asset('storage/app/public/profile/'.$app->image) }}"
-                 onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'">
+                 onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'">
         </div>
         <div>
             <h6 class="mb-0">{{ $app->f_name.' '.$app->l_name }}</h6>
