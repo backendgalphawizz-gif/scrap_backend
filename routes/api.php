@@ -59,6 +59,15 @@ Route::post('/optimize-clear', function () {
 Route::get('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 Route::post('/campaign/sync-post-day-status', [CampaignDayStatusController::class, 'syncBulk']);
 
+Route::get('/campaign/run-close-daily-ended', function () {
+    Artisan::call('campaign:close-daily-ended');
+
+    return response()->json([
+        'status' => true,
+        'message' => 'campaign:close-daily-ended executed successfully',
+        'output' => Artisan::output(),
+    ]);
+});
 Route::get('/campaign/run-process-results', function () {
     Artisan::call('campaign:process-results');
 
