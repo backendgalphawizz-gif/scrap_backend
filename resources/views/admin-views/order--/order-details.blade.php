@@ -406,7 +406,7 @@
                             <div class="media flex-wrap gap-3">
                                 <div class="">
                                     <img class="avatar rounded-circle avatar-70"
-                                         onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                         onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                          src="{{asset('storage/app/public/profile/'.$order->customer->image)}}"
                                          alt="Image">
                                 </div>
@@ -544,7 +544,7 @@
                         <div class="media">
                             @if($order->seller_is == 'admin')
                                 <div class="mr-3">
-                                    <img class="avatar rounded avatar-70" onerror="this.src='https://6valley.6amtech.com/public/assets/front-end/img/image-place-holder.png'"
+                                    <img class="avatar rounded avatar-70" onerror="this.src='https://6valley.6amtech.com/assets/front-end/img/image-place-holder.png'"
                                          src="{{asset("storage/app/public/company/$company_web_logo")}}" alt="">
                                 </div>
 
@@ -555,7 +555,7 @@
                             @else
                                 @if(!empty($order->seller->shop))
                                     <div class="mr-3">
-                                        <img class="avatar rounded avatar-70" onerror="this.src='https://6valley.6amtech.com/public/assets/front-end/img/image-place-holder.png'"
+                                        <img class="avatar rounded avatar-70" onerror="this.src='https://6valley.6amtech.com/assets/front-end/img/image-place-holder.png'"
                                              src="{{asset('storage/app/public/shop')}}/{{$order->seller->shop->image}}" alt="">
                                     </div>
                                     <div class="media-body d-flex flex-column gap-2">

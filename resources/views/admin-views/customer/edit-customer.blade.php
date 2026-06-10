@@ -217,7 +217,7 @@
                                         src="{{ $userImage }}"
                                         class="img-thumbnail mt-2"
                                         style="max-width:100px"
-                                        onerror="this.onerror=null;this.src=&quot;{{ asset('public/assets/front-end/img/image-place-holder.png') }}&quot;;">
+                                        onerror="this.onerror=null;this.src=&quot;{{ asset('assets/front-end/img/image-place-holder.png') }}&quot;;">
                                 </div>
                             </div>
 

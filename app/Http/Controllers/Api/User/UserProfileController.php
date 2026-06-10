@@ -23,6 +23,7 @@ use App\Services\FraudScoreService;
 use App\Models\CampaignTransaction;
 use App\Services\PanValidationService;
 use App\Services\TdsCalculationService;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -88,7 +89,6 @@ class UserProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'pan_number' => 'required|string|size:10',
-            'pan_image'  => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -134,9 +134,6 @@ class UserProfileController extends Controller
 
         $user->pan_number = $panValidation->normalizePan($request->pan_number);
         $user->pan_status = 'Submitted';
-        if ($request->hasFile('pan_image')) {
-            $user->pan_image = ImageManager::upload('profile/', 'png', $request->file('pan_image'));
-        }
 
         // Auto-verify Aadhaar linkage via PAN 360 response
         if ($panVerification['aadhaar_linked'] && $panVerification['masked_aadhaar'] !== null) {
@@ -605,6 +602,25 @@ class UserProfileController extends Controller
                 'answer' => $normalizedAnswer,
                 'options' => $questionType === 'multiple_choice' ? $options : [],
             ];
+        }
+
+        $feedbackTxn = CampaignTransaction::where('campaign_id', $campaign->id)
+            ->where('user_id', $user->id)
+            ->whereNotNull('verified_at')
+            ->orderByDesc('verified_at')
+            ->first();
+
+        $feedbackBase = Carbon::parse($campaign->end_date)->endOfDay();
+        if ($feedbackTxn && $feedbackTxn->verified_at->gt($feedbackBase)) {
+            $feedbackBase = $feedbackTxn->verified_at;
+        }
+        $feedbackDeadline = $feedbackBase->copy()->addDays(3);
+
+        if (Carbon::now()->gt($feedbackDeadline)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Feedback period has ended.',
+            ], 422);
         }
 
         $existingFeedback = Feedback::where('campaign_id', $campaign->id)

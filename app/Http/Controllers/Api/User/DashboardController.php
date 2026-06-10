@@ -415,6 +415,23 @@ class DashboardController extends Controller
             $q->where('user_id', $user->id);
         }])->whereIn('id', $campaign_ids)->get();
 
+        $now = Carbon::now();
+        $campaigns->each(function ($campaign) use ($now) {
+            $txn = $campaign->campaign_transactions
+                ->filter(fn ($t) => $t->verified_at !== null)
+                ->sortByDesc('verified_at')
+                ->first();
+
+            $base = Carbon::parse($campaign->end_date)->endOfDay();
+            if ($txn && $txn->verified_at->gt($base)) {
+                $base = $txn->verified_at;
+            }
+            $deadline = $base->copy()->addDays(3);
+
+            $campaign->feedback_deadline = $deadline->toISOString();
+            $campaign->is_feedback_open  = $now->lte($deadline);
+        });
+
         $total_coins_earned = strval(CampaignTransaction::where('user_id', $user->id)
             ->where('status', CampaignTransaction::STATUS_COMPLETED)
             ->sum('earning'));

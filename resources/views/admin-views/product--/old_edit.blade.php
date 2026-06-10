@@ -486,7 +486,7 @@
                                     <div class="__coba-aspect">
                                         <div class="row g-2" id="meta_img">
                                             <div class="col-sm-6 col-md-12 col-lg-6">
-                                                <img class="w-100" height="auto" onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                                <img class="w-100" height="auto" onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                                         src="{{asset("storage/app/public/product/meta")}}/{{$product['meta_image']}}" alt="Meta image">
                                             </div>
                                         </div>
@@ -530,7 +530,7 @@
                                                         <div class="card">
                                                             <div class="card-body">
                                                                 <img class="w-100" height="auto"
-                                                                     onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                                                     onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                                                      src="{{asset("storage/app/public/product/$photo")}}"
                                                                      alt="Product image">
                                                                 <a href="{{route('admin.product.remove-image',['id'=>$product['id'],'name'=>$photo])}}"
@@ -547,7 +547,7 @@
                                                             <div class="card">
                                                                 <div class="card-body">
                                                                     <img class="w-100" height="auto"
-                                                                         onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                                                         onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                                                          src="{{asset("storage/app/public/product/$photo->image_name")}}"
                                                                          alt="Product image">
                                                                     <a href="{{route('admin.product.remove-image',['id'=>$product['id'],'name'=>$photo->image_name,'color'=>'null'])}}"
@@ -563,7 +563,7 @@
                                                             <div class="card">
                                                                 <div class="card-body">
                                                                     <img class="w-100" height="auto"
-                                                                         onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                                                         onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                                                          src="{{asset("storage/app/public/product/$photo")}}"
                                                                          alt="Product image">
                                                                     <a href="{{route('admin.product.remove-image',['id'=>$product['id'],'name'=>$photo])}}"
@@ -586,7 +586,7 @@
 
                                     <div class="row gy-3" id="thumbnail">
                                         <div class="col-sm-6 col-md-12 col-lg-6">
-                                            <img class="w-100" height="auto" onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                            <img class="w-100" height="auto" onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                                     src="{{asset("storage/app/public/product/thumbnail")}}/{{$product['thumbnail']}}" alt="Product image">
                                         </div>
                                     </div>
@@ -871,7 +871,7 @@
                                     <i class="tio-done"></i>
                                     </span>
                                         <img class="w-100" height="auto"
-                                             onerror="this.src='{{asset('public/assets/front-end/img/image-place-holder.png')}}'"
+                                             onerror="this.src='{{asset('assets/front-end/img/image-place-holder.png')}}'"
                                              src="{{asset('storage/app/public/product/`+image_name+`')}}"
                                              alt="Product image">
                                         <a href="`+remove_url+`?id=`+product_id+`&name=`+image_name+`&color=`+color_value['color']+`"

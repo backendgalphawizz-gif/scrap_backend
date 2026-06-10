@@ -301,7 +301,7 @@
                                     <a href="#"
                                     class="title-color hover-c1 d-flex align-items-center gap-10">
                                         <img src="{{$customerImage}}"
-                                            onerror="this.onerror=null;this.src=&quot;{{ asset('public/assets/front-end/img/image-place-holder.png') }}&quot;;"
+                                            onerror="this.onerror=null;this.src=&quot;{{ asset('assets/front-end/img/image-place-holder.png') }}&quot;;"
                                             class="avatar rounded-circle" alt="" width="40">
                                         {{\Illuminate\Support\Str::limit($customer->name,20)}}
                                     </a>
