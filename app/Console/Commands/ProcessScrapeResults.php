@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\CPU\Helpers;
-use App\Models\Campaign;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -160,49 +159,12 @@ class ProcessScrapeResults extends Command
 
     private function closeEligibleCampaigns(): int
     {
-        $updated = 0;
-        $settlementService = app(\App\Services\CampaignSettlementService::class);
-        $eligibleStatuses = ['active', 'live', 'pending', 'accepted', 'paused'];
-
-        Campaign::query()
-            ->whereIn('status', $eligibleStatuses)
-            ->withCount(['occupiedTransactions as occupied_slots'])
-            ->orderBy('id')
-            ->chunkById(100, function ($campaigns) use (&$updated, $settlementService) {
-                foreach ($campaigns as $campaign) {
-                    if (! $settlementService->shouldCloseForEnrollment($campaign)) {
-                        continue;
-                    }
-
-                    $campaign->status = 'closed';
-                    $campaign->save();
-                    $updated++;
-                }
-            });
-
-        return $updated;
+        return app(\App\Services\CampaignSettlementService::class)->closeEligibleCampaigns();
     }
 
     private function settleEligibleCampaigns(): int
     {
-        $settled = 0;
-        $settlementService = app(\App\Services\CampaignSettlementService::class);
-
-        Campaign::query()
-            ->where('settlement_status', \App\Services\CampaignSettlementService::SETTLEMENT_PENDING)
-            ->whereIn('status', ['closed', 'stopped', 'completed'])
-            ->orderBy('id')
-            ->chunkById(50, function ($campaigns) use (&$settled, $settlementService) {
-                foreach ($campaigns as $campaign) {
-                    $force = $campaign->status === 'stopped';
-                    $result = $settlementService->settle($campaign, $force);
-                    if ($result['settled']) {
-                        $settled++;
-                    }
-                }
-            });
-
-        return $settled;
+        return app(\App\Services\CampaignSettlementService::class)->settleEligibleCampaigns();
     }
 
     private function scrapedTableForPlatform(string $platform): string

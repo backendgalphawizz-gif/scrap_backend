@@ -172,6 +172,59 @@ class CampaignSettlementService
     }
 
     /**
+     * Close all campaigns whose end date has passed (or whose slots/budget are exhausted).
+     * Safe to call multiple times — already-closed campaigns are skipped.
+     */
+    public function closeEligibleCampaigns(): int
+    {
+        $updated = 0;
+        $eligibleStatuses = ['active', 'live', 'pending', 'accepted', 'paused'];
+
+        Campaign::query()
+            ->whereIn('status', $eligibleStatuses)
+            ->withCount(['occupiedTransactions as occupied_slots'])
+            ->orderBy('id')
+            ->chunkById(100, function ($campaigns) use (&$updated) {
+                foreach ($campaigns as $campaign) {
+                    if (! $this->shouldCloseForEnrollment($campaign)) {
+                        continue;
+                    }
+
+                    $campaign->status = 'closed';
+                    $campaign->save();
+                    $updated++;
+                }
+            });
+
+        return $updated;
+    }
+
+    /**
+     * Settle all campaigns that are closed/stopped/completed and past their grace period.
+     * Safe to call multiple times — already-settled campaigns are skipped.
+     */
+    public function settleEligibleCampaigns(): int
+    {
+        $settled = 0;
+
+        Campaign::query()
+            ->where('settlement_status', self::SETTLEMENT_PENDING)
+            ->whereIn('status', ['closed', 'stopped', 'completed'])
+            ->orderBy('id')
+            ->chunkById(50, function ($campaigns) use (&$settled) {
+                foreach ($campaigns as $campaign) {
+                    $force = $campaign->status === 'stopped';
+                    $result = $this->settle($campaign, $force);
+                    if ($result['settled']) {
+                        $settled++;
+                    }
+                }
+            });
+
+        return $settled;
+    }
+
+    /**
      * @return array{settled: bool, amount: float, message: string}
      */
     public function settle(Campaign $campaign, bool $forceForStopped = false): array
