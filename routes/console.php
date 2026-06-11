@@ -15,6 +15,12 @@ Schedule::command('campaign:close-daily-ended')
     ->withoutOverlapping()
     ->runInBackground();
 
+// Backfill Instagram follower counts for verified users (before process-results at 06:00)
+Schedule::command('followers:fetch-instagram')
+    ->dailyAt('05:30')
+    ->withoutOverlapping()
+    ->runInBackground();
+
 // Check scraped post results daily and credit coins for verified 7-day campaigns
 Schedule::command('campaign:process-results')
     ->dailyAt('06:00')

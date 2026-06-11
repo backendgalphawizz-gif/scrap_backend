@@ -19,6 +19,7 @@ use App\Models\BrandCategory;
 use App\Models\Sale;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use function App\CPU\translate;
 use App\Http\Resources\CommonResource;
 use App\Services\CampaignCreditNoteService;
@@ -787,6 +788,30 @@ class SellerDashboardController extends Controller
 
                 $campaign->setAttribute('per_post_budget', round($perPostBudget, 2));
                 $campaign->setAttribute('budget_utilized', round($budgetUtilized, 2));
+
+                // Reach-based CPC: sum follower counts of occupied participants by platform
+                $estimatedReach = (int) DB::table('campaign_transactions as ct')
+                    ->join('users as u', 'u.id', '=', 'ct.user_id')
+                    ->where('ct.campaign_id', $campaign->id)
+                    ->whereIn('ct.status', CampaignTransaction::SLOT_OCCUPIED_STATUSES)
+                    ->whereNull('u.deleted_at')
+                    ->selectRaw(
+                        'SUM(CASE WHEN ct.shared_on = "instagram" THEN COALESCE(u.instagram_followers, 0) ELSE 0 END)' .
+                        ' + SUM(CASE WHEN ct.shared_on = "facebook"  THEN COALESCE(u.facebook_followers,  0) ELSE 0 END)' .
+                        ' AS estimated_reach'
+                    )
+                    ->value('estimated_reach');
+
+                $campaign->setAttribute('estimated_reach', $estimatedReach);
+
+                // Override cost_per_click with reach-based formula when we have follower data;
+                // fall back to budget / posts when reach is unknown (no followers collected yet).
+                if ($estimatedReach > 0) {
+                    $campaign->setAttribute(
+                        'cost_per_click',
+                        (string) round($totalCampaignBudget / $estimatedReach, 4)
+                    );
+                }
 
                 $settlementService = app(CampaignSettlementService::class);
                 $settlementPreview = $settlementService->calculateReleasableAmount($campaign);

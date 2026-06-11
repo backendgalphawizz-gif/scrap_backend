@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CommonResource;
 use App\Models\BrandFeedbackQuestion;
@@ -425,12 +426,48 @@ class UserProfileController extends Controller
     public function referrers(Request $request)
     {
         $user = $request->user();
-        // $user->referrers;
+        $referredUsers = $user->referrers()->get();
+
+        if ($referredUsers->isEmpty()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'User profile retrieved successfully',
+                'data' => []
+            ]);
+        }
+
+        $walletId = optional($user->coinWallet)->id;
+        $coinsPerUser = collect();
+
+        if ($walletId) {
+            $referredUserIds = $referredUsers->pluck('id');
+
+            // Join referral coin_transactions back to campaign_transactions to identify
+            // which referred user triggered each referral bonus.
+            // transaction_id on the referral credit = 'REF-' + campaign_transactions.id
+            $coinsPerUser = DB::table('coin_transactions as rt')
+                ->join('campaign_transactions as ct', DB::raw("CONCAT('REF-', ct.id)"), '=', 'rt.transaction_id')
+                ->where('rt.coin_wallet_id', $walletId)
+                ->where('rt.type', 'credit')
+                ->where('rt.transaction_type', 'referral_reward')
+                ->where(function ($q) {
+                    $q->where('rt.status', 'completed')->orWhereNull('rt.status');
+                })
+                ->whereIn('ct.user_id', $referredUserIds)
+                ->groupBy('ct.user_id')
+                ->select('ct.user_id', DB::raw('SUM(rt.coin) as referral_coins'))
+                ->pluck('referral_coins', 'user_id');
+        }
+
+        $result = $referredUsers->map(function ($referred) use ($coinsPerUser) {
+            $referred->referral_coins = (float) ($coinsPerUser->get($referred->id) ?? 0);
+            return $referred;
+        });
 
         return response()->json([
             'status' => true,
             'message' => 'User profile retrieved successfully',
-            'data' => $user->referrers
+            'data' => $result
         ]);
     }
 
@@ -659,7 +696,7 @@ class UserProfileController extends Controller
                 'tds' => 0,
                 'convertion_rate' => Helpers::get_business_settings('upi_value') ?? 0,
                 'campaign_id' => $campaign->id,
-                'transaction_id' => time() . rand(100, 999),
+                'transaction_id' => 'FDB-' . time() . '-' . $campaign->id,
                 'type' => 'credit',
                 'status' => 'completed',
                 'transaction_type' => 'campaign_feedback',
@@ -720,7 +757,7 @@ class UserProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'platform'    => 'required|in:instagram,facebook,threads',
-            'username'    => 'required|string|max:100',
+            'username'    => 'required|string|max:255',
             'unique_code' => 'required|string|max:100',
         ]);
 
@@ -741,6 +778,12 @@ class UserProfileController extends Controller
             ], 422);
         }
 
+        // For Facebook, normalize any input format (URL, numeric ID, vanity handle)
+        // to a canonical identifier so the scraper can build a navigable profile URL.
+        $username = $platform === 'facebook'
+            ? $this->parseFacebookIdentifier($request->username)
+            : $request->username;
+
         // Cancel any existing pending transaction for this platform
         SocialVerificationTransaction::where('user_id', $user->id)
             ->where('platform', $platform)
@@ -750,7 +793,7 @@ class UserProfileController extends Controller
         $transaction = SocialVerificationTransaction::create([
             'user_id'      => $user->id,
             'platform'     => $platform,
-            'username'     => $request->username,
+            'username'     => $username,
             'unique_code'  => $request->unique_code,
             'status'       => SocialVerificationTransaction::STATUS_PENDING,
             'submitted_at' => now(),
@@ -758,7 +801,7 @@ class UserProfileController extends Controller
         ]);
 
         $usernameField = $platform . '_username';
-        $user->$usernameField = $request->username;
+        $user->$usernameField = $username;
         $user->$statusField = SocialVerificationTransaction::STATUS_PENDING;
         $user->save();
 
@@ -768,10 +811,57 @@ class UserProfileController extends Controller
             'data'    => [
                 'unique_code' => $request->unique_code,
                 'platform'    => $platform,
-                'username'    => $request->username,
+                'username'    => $username,
                 'end_date'    => $transaction->end_date,
             ],
         ]);
+    }
+
+    /**
+     * Normalize any Facebook profile input to a canonical stored identifier.
+     *
+     * Accepts:
+     *   https://www.facebook.com/profile.php?id=61589493652439  →  61589493652439
+     *   https://www.facebook.com/swara.kx                       →  swara.kx
+     *   https://fb.com/swara.kx                                 →  swara.kx
+     *   61589493652439                                           →  61589493652439  (numeric id)
+     *   swara.kx                                                 →  swara.kx        (vanity handle)
+     *
+     * Display names like "Swara Kx" are not resolvable to a URL and are returned
+     * as-is so the scraper can skip them gracefully rather than silently failing.
+     */
+    private function parseFacebookIdentifier(string $raw): string
+    {
+        $raw = trim($raw);
+
+        // Already a numeric profile ID
+        if (preg_match('/^\d+$/', $raw)) {
+            return $raw;
+        }
+
+        // URL containing profile.php?id=<digits>
+        if (preg_match('/profile\.php[^?]*\?(?:[^#]*&)?id=(\d+)/i', $raw, $m)) {
+            return $m[1];
+        }
+
+        // Full URL with a vanity path: (www.)facebook.com/<handle> or fb.com/<handle>
+        if (preg_match('~(?:https?://)?(?:www\.)?(?:facebook|fb)\.com/([^/?#\s]+)~i', $raw, $m)) {
+            $handle = rtrim($m[1], '/');
+            // Skip known non-profile path segments
+            $reserved = ['pages', 'groups', 'events', 'hashtag', 'watch', 'marketplace', 'gaming'];
+            if (!in_array(strtolower($handle), $reserved, true)) {
+                return $handle;
+            }
+        }
+
+        // Plain vanity handle (no spaces, no http prefix) — return as-is
+        if (!str_contains($raw, ' ') && !str_contains($raw, 'http')) {
+            return $raw;
+        }
+
+        // Unresolvable (e.g. display name "Swara Kx") — return as-is;
+        // scraper will skip and log a warning.
+        return $raw;
     }
 
     public function socialVerificationStatus(Request $request)

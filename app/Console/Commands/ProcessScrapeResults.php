@@ -26,8 +26,8 @@ class ProcessScrapeResults extends Command
     private function getMaxVerifiedDays(): int
     {
         if ($this->maxVerifiedDays === null) {
-            $setting = (int) env('CAMPAIGN_VERIFICATION_DAYS', 1);
-            $this->maxVerifiedDays = $setting > 0 ? $setting : 1;
+            $setting = (int) env('CAMPAIGN_VERIFICATION_DAYS', 2);
+            $this->maxVerifiedDays = $setting > 0 ? $setting : 2;
         }
         return $this->maxVerifiedDays;
     }

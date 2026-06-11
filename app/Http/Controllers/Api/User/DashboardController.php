@@ -304,7 +304,7 @@ class DashboardController extends Controller
             'status' => CampaignTransaction::STATUS_PENDING,
             'earning' => $campaign->coins ?? 0,
             'start_date' => date('Y-m-d'),
-            'end_date' => now()->addDays((int) (env('CAMPAIGN_VERIFICATION_DAYS', 1) ?: 1))->toDateString(),
+            'end_date' => now()->addDays((int) (env('CAMPAIGN_VERIFICATION_DAYS', 2) ?: 2))->toDateString(),
             'unique_code' => $request->unique_code,
             'post_url' => $request->post_url,
         ]);

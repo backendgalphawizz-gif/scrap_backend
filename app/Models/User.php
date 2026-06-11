@@ -61,7 +61,9 @@ class User extends Authenticatable
         'facebook_username',
         'threads_username',
         'instagram_status',
+        'instagram_followers',
         'facebook_status',
+        'facebook_followers',
         'threads_status',
         'post_slots',
         'my_interest',
@@ -186,6 +188,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_fraud_check_at' => 'datetime',
             'password' => 'hashed',
+            'instagram_followers' => 'integer',
+            'facebook_followers' => 'integer',
         ];
     }
 

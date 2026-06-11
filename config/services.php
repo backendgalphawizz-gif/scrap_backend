@@ -47,4 +47,9 @@ return [
         'server_key' => env('FCM_SERVER_KEY'),
     ],
 
+    'instagram' => [
+        'app_id' => env('INSTAGRAM_APP_ID', '936619743392459'),
+        'cookie' => env('INSTAGRAM_COOKIE', ''),
+    ],
+
 ];

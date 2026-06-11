@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Models\BrandFeedbackQuestion;
 use App\Models\Sale;
 use App\Models\Seller;
 use App\Models\SaleWalletTransaction;
@@ -750,6 +751,8 @@ class DashboardController extends Controller
                     'website_link' => $request->website_link ?? ''
                 ]);
     
+                BrandFeedbackQuestion::createDefaultsForBrand($user->id);
+
                 Helpers::systemActivity('brand', $sale, 'created', 'Brand Registration', $user);
 
                 return response()->json([
