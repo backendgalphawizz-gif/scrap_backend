@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('otp')->nullable();
             $table->timestamp('otp_expires_at')->nullable();
             $table->string('instagram_username', 45)->nullable();
-            $table->string('facebook_username', 45)->nullable();
+            $table->longText('facebook_username')->nullable();
             $table->date('dob')->nullable();
             $table->enum('gender', ['male', 'female', 'others'])->default('male');
             $table->string('referral_code', 45)->nullable();

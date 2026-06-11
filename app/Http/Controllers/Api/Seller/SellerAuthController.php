@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\Banner;
 use App\Models\BrandCategory;
+use App\Models\BrandFeedbackQuestion;
 use App\Models\Seller;
 use App\Models\User;
 use App\CPU\Helpers;
@@ -331,6 +332,8 @@ class SellerAuthController extends Controller
                 'google_map_link' => $request->google_map_link ?? NULL,
                 'website_link' => $request->website_link ?? NULL
             ]);
+
+            BrandFeedbackQuestion::createDefaultsForBrand($user->id);
 
             Helpers::systemActivity('new_register', $user, 'signup', 'New user registered', $user);
             if (User::where('referral_code', $request->referral_code)->first()) {

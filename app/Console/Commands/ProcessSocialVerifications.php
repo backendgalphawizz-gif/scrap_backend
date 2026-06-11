@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\FcmNotificationService;
 use App\Services\FraudDetectionService;
 use App\Services\FraudScoreService;
+use App\Services\InstagramFollowerService;
 use Carbon\Carbon;
 
 class ProcessSocialVerifications extends Command
@@ -89,6 +90,24 @@ class ProcessSocialVerifications extends Command
             if (filled($transaction->username)) {
                 $updates[$usernameField] = $transaction->username;
             }
+
+            // Fetch follower count immediately on Instagram verification
+            if ($transaction->platform === 'instagram' && filled($transaction->username)) {
+                try {
+                    $followers = app(InstagramFollowerService::class)->fetchFollowers($transaction->username);
+                    if ($followers !== null) {
+                        $updates['instagram_followers'] = $followers;
+                    }
+                } catch (\Throwable $e) {
+                    // Never let follower fetch block verification
+                    \Illuminate\Support\Facades\Log::warning('markVerified: failed to fetch instagram followers', [
+                        'user_id'  => $transaction->user_id,
+                        'username' => $transaction->username,
+                        'error'    => $e->getMessage(),
+                    ]);
+                }
+            }
+
             User::where('id', $transaction->user_id)->update($updates);
         }
         if ($transaction->seller_id) {

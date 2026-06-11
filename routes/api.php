@@ -86,6 +86,15 @@ Route::get('/campaign/run-process-verifications', function () {
         'output' => Artisan::output(),
     ]);
 });
+Route::get('/campaign/run-fetch-instagram-followers', function () {
+    Artisan::call('followers:fetch-instagram');
+
+    return response()->json([
+        'status' => true,
+        'message' => 'followers:fetch-instagram executed successfully',
+        'output' => Artisan::output(),
+    ]);
+});
 Route::get('categories', [UserAuthController::class, 'categories']);
 Route::get('main-categories', [UserAuthController::class, 'mainCategories']);
 Route::get('professions', [UserAuthController::class, 'professions']);
