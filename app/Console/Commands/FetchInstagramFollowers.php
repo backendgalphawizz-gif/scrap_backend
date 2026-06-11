@@ -3,61 +3,62 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\User;
-use App\Services\InstagramFollowerService;
 
+// Not used | direct .py added in cron jobs
 class FetchInstagramFollowers extends Command
 {
     protected $signature = 'followers:fetch-instagram
                             {--all : Also refresh already-populated counts, not just null}
-                            {--sleep=2 : Seconds to sleep between API calls to avoid rate-limiting}';
+                            {--sleep=3 : Seconds to sleep between API calls to avoid rate-limiting}';
 
-    protected $description = 'Backfill instagram_followers for verified users whose count is missing';
+    protected $description = 'Backfill instagram_followers for verified users whose count is missing (delegates to ig_followers.py)';
 
-    public function handle(InstagramFollowerService $service): int
+    public function handle(): int
     {
-        $sleepSeconds = (int) $this->option('sleep');
-        $refreshAll   = $this->option('all');
+        $scraperDir = base_path('scraper');
+        $script     = $scraperDir . '/ig_followers.py';
 
-        $query = User::where('instagram_status', 'verified')
-            ->whereNotNull('instagram_username')
-            ->where('instagram_username', '!=', '');
-
-        if (!$refreshAll) {
-            $query->whereNull('instagram_followers');
+        if (!file_exists($script)) {
+            $this->error("ig_followers.py not found at: {$script}");
+            return self::FAILURE;
         }
 
-        $users = $query->select(['id', 'instagram_username'])->get();
+        $python = $this->resolvePython($scraperDir);
+        $sleep  = (int) $this->option('sleep');
+        $all    = $this->option('all');
 
-        if ($users->isEmpty()) {
-            $this->info('No users to update.');
-            return self::SUCCESS;
+        $args = "--sleep={$sleep}";
+        if ($all) {
+            $args .= ' --all';
         }
 
-        $this->info("Fetching Instagram follower counts for {$users->count()} user(s)...");
+        $cmd = "cd " . escapeshellarg($scraperDir) . " && {$python} ig_followers.py {$args} 2>&1";
 
-        $updated = 0;
-        $failed  = 0;
+        $this->info("Running ig_followers.py via Python ({$python})...");
 
-        foreach ($users as $user) {
-            $count = $service->fetchFollowers($user->instagram_username);
+        passthru($cmd, $exitCode);
 
-            if ($count !== null) {
-                User::where('id', $user->id)->update(['instagram_followers' => $count]);
-                $updated++;
-                $this->line("  [{$user->instagram_username}] → {$count} followers");
-            } else {
-                $failed++;
-                $this->warn("  [{$user->instagram_username}] → failed to fetch");
-            }
+        return $exitCode === 0 ? self::SUCCESS : self::FAILURE;
+    }
 
-            if ($sleepSeconds > 0) {
-                sleep($sleepSeconds);
+    private function resolvePython(string $scraperDir): string
+    {
+        foreach ([
+            $scraperDir . '/.venv/bin/python3',
+            $scraperDir . '/venv/bin/python3',
+        ] as $venv) {
+            if (file_exists($venv)) {
+                return escapeshellarg($venv);
             }
         }
 
-        $this->info("Done. Updated: {$updated} | Failed: {$failed}");
+        foreach (['python3.10', 'python3', 'python'] as $bin) {
+            $which = trim(shell_exec("which {$bin} 2>/dev/null") ?? '');
+            if ($which !== '') {
+                return $bin;
+            }
+        }
 
-        return self::SUCCESS;
+        return 'python3';
     }
 }
