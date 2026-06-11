@@ -25,6 +25,7 @@ class SocialVerificationTransaction extends Model
         'submitted_at',
         'verified_at',
         'end_date',
+        'failure_reason',
     ];
 
     protected $casts = [

@@ -19,24 +19,34 @@ class InstagramFollowerService
         $appId  = config('services.instagram.app_id');
         $cookie = config('services.instagram.cookie');
 
-        if (empty($appId) || empty($cookie) || empty($username)) {
-            Log::warning('InstagramFollowerService: missing config or username', [
-                'username'    => $username,
-                'has_app_id'  => !empty($appId),
-                'has_cookie'  => !empty($cookie),
+        if (empty($appId) || empty($username)) {
+            Log::warning('InstagramFollowerService: missing app_id or username', [
+                'username'   => $username,
+                'has_app_id' => !empty($appId),
             ]);
             return null;
         }
 
+        if (empty($cookie)) {
+            Log::warning('InstagramFollowerService: INSTAGRAM_COOKIE is not set — requests will likely be rejected by Instagram', [
+                'username' => $username,
+            ]);
+        }
+
+        $headers = [
+            'x-ig-app-id' => $appId,
+            'User-Agent'  => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept'      => '*/*',
+            'Referer'     => 'https://www.instagram.com/',
+        ];
+
+        if (!empty($cookie)) {
+            $headers['Cookie'] = $cookie;
+        }
+
         try {
             $response = Http::timeout(15)
-                ->withHeaders([
-                    'x-ig-app-id' => $appId,
-                    'Cookie'      => $cookie,
-                    'User-Agent'  => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                    'Accept'      => '*/*',
-                    'Referer'     => 'https://www.instagram.com/',
-                ])
+                ->withHeaders($headers)
                 ->get('https://www.instagram.com/api/v1/users/web_profile_info/', [
                     'username' => $username,
                 ]);
@@ -45,6 +55,7 @@ class InstagramFollowerService
                 Log::warning('InstagramFollowerService: non-200 response', [
                     'username' => $username,
                     'status'   => $response->status(),
+                    'body'     => substr($response->body(), 0, 500),
                 ]);
                 return null;
             }

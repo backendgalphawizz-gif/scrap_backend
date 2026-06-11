@@ -77,6 +77,23 @@ class ProcessSocialVerifications extends Command
             ->exists();
     }
 
+    private function determinePostFailureReason(string $username, string $platform, string $uniqueCode): string
+    {
+        $post = DB::table('scrapped_posts')
+            ->where('username', $username)
+            ->where('platform', $platform)
+            ->orderByDesc('scraped_at')
+            ->first(['caption', 'unique_code']);
+
+        if (!$post) {
+            return 'Your post was not found. Please make sure you have tagged @rexarix in your post.';
+        }
+        if (empty($post->caption)) {
+            return 'Your post is missing a caption. Please add the unique code to your caption.';
+        }
+        return 'The unique code in your caption is missing or incorrect. Please check and ensure the code matches exactly.';
+    }
+
     private function markVerified(SocialVerificationTransaction $transaction): void
     {
         $transaction->status      = SocialVerificationTransaction::STATUS_VERIFIED;
@@ -118,7 +135,14 @@ class ProcessSocialVerifications extends Command
 
     private function markNotVerified(SocialVerificationTransaction $transaction, FcmNotificationService $fcm): void
     {
+        $failureReason = $this->determinePostFailureReason(
+            $transaction->username,
+            $transaction->platform,
+            $transaction->unique_code
+        );
+
         $transaction->status          = SocialVerificationTransaction::STATUS_NOT_VERIFIED;
+        $transaction->failure_reason  = $failureReason;
         $transaction->notified_24h_at = now();
         $transaction->save();
 
@@ -134,7 +158,7 @@ class ProcessSocialVerifications extends Command
 
         $platform = ucfirst($transaction->platform);
         $title    = 'Verification Unsuccessful';
-        $body     = "We couldn't verify your {$platform} post. Open the app to try again.";
+        $body     = "We couldn't verify your {$platform} account. {$failureReason}";
         $data     = [
             'type'     => 'social_verification_failed',
             'platform' => $transaction->platform,
