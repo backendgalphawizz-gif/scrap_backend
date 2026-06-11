@@ -257,29 +257,59 @@ class ProcessScrapeResults extends Command
         return $rewardTransaction;
     }
 
+    private function determinePostFailureReason(string $username, string $platform, string $uniqueCode): string
+    {
+        $post = DB::table('scrapped_posts')
+            ->where('username', $username)
+            ->where('platform', $platform)
+            ->orderByDesc('scraped_at')
+            ->first(['caption', 'unique_code']);
+
+        if (!$post) {
+            return 'Your post was not found. Please make sure you have tagged @rexarix in your post.';
+        }
+        if (empty($post->caption)) {
+            return 'Your post is missing a caption. Please add the unique code to your caption.';
+        }
+        return 'The unique code in your caption is missing or incorrect. Please check and ensure the code matches exactly.';
+    }
+
+    private function getPlatformUsername(User $user, string $platform): string
+    {
+        $field = $platform . '_username';
+        return (string) ($user->$field ?? '');
+    }
+
     private function markFlagged(CampaignTransaction $transaction): void
     {
-        $transaction->status = CampaignTransaction::STATUS_FLAGGED;
-        $transaction->violation_reason = 'Post not verified. Submit a valid post URL to avoid deletion.';
-        $transaction->save();
-        
-        // Send FCM notification to user about post being flagged
         $user = User::find($transaction->user_id);
+        $username = $user ? $this->getPlatformUsername($user, $transaction->shared_on) : '';
+        $reason = $username
+            ? $this->determinePostFailureReason($username, $transaction->shared_on, $transaction->unique_code)
+            : 'Post not verified. Submit a valid post URL to avoid deletion.';
+
+        $transaction->status = CampaignTransaction::STATUS_FLAGGED;
+        $transaction->violation_reason = $reason;
+        $transaction->save();
+
         if ($user && $user->fcm_id) {
             $title = 'Post Flagged ⚠️';
-            $body = "Your post for campaign \"{$transaction->campaign->title}\" has been flagged. Please submit a valid post URL to avoid deletion.";
+            $body = "Your post for campaign \"{$transaction->campaign->title}\" has been flagged. {$reason}";
             Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
         }
     }
 
     private function markDeleted(CampaignTransaction $transaction, CoinTransaction $rewardTransaction): void
     {
-        $transaction->status = CampaignTransaction::STATUS_DELETED;
-        $transaction->violation_reason = 'Post could not be verified after flagging. Participation removed and slot released.';
-        $transaction->save();
-
-        // Resolve user once; guard against orphaned transactions
         $user = User::find($transaction->user_id);
+        $username = $user ? $this->getPlatformUsername($user, $transaction->shared_on) : '';
+        $reason = $username
+            ? $this->determinePostFailureReason($username, $transaction->shared_on, $transaction->unique_code)
+            : 'Post could not be verified after flagging. Participation removed and slot released.';
+
+        $transaction->status = CampaignTransaction::STATUS_DELETED;
+        $transaction->violation_reason = $reason;
+        $transaction->save();
 
         if ($rewardTransaction->status === 'pending') {
             $rewardTransaction->status = 'rejected';
@@ -289,10 +319,9 @@ class ProcessScrapeResults extends Command
             Helpers::logUserWalletTransaction('rejected', $rewardTransaction, $user, 'Campaign reward cancelled');
         }
 
-        // Send FCM notification to user about post being deleted
         if ($user && $user->fcm_id) {
             $title = 'Post Deleted ❌';
-            $body = "Your post for campaign \"{$transaction->campaign->title}\" could not be verified and has been deleted. Your participation has been removed.";
+            $body = "Your post for campaign \"{$transaction->campaign->title}\" has been removed. {$reason}";
             Helpers::send_push_notif_to_topic($user->fcm_id, $title, $body);
         }
     }
