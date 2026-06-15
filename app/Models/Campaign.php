@@ -67,6 +67,7 @@ class Campaign extends Model
         'invoice_type',
         'gst_invoice_available',
         'normal_invoice_available',
+        'credit_note_available',
     ];
 
     // public function getActivitylogOptions(): LogOptions
@@ -237,12 +238,12 @@ class Campaign extends Model
 
     public function getInvoiceAvailableAttribute(): bool
     {
-        if ($this->status === 'stopped') {
-            return true;
-        }
+        return $this->status !== 'rejected';
+    }
 
-        return $this->status === 'completed'
-            && $this->settlement_status === \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED;
+    public function getCreditNoteAvailableAttribute(): bool
+    {
+        return CampaignCreditNote::where('campaign_id', $this->id)->exists();
     }
 
     public function getInvoiceTypeAttribute(): string

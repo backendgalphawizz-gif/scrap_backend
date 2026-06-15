@@ -42,28 +42,34 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => ['required', 'string', 'max:40', 'regex:/^[a-zA-Z ]+$/', 'regex:/^(?!.*(.)(\1{3,})).*/'],
-            'email'    => ['required', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:150', 'unique:sales,email'],
+            'name'       => ['required', 'string', 'max:40', 'regex:/^[a-zA-Z ]+$/', 'regex:/^(?!.*(.)(\1{3,})).*/'],
+            'email'      => ['required', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:150', 'unique:sales,email'],
             // Unique among sales persons only — may match an existing user or brand contact number.
-            'mobile'   => ['required', 'digits:10', Rule::unique('sales', 'mobile')],
-            'password' => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
-            'image'    => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+            'mobile'     => ['required', 'digits:10', Rule::unique('sales', 'mobile')],
+            'password'   => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
+            'image'      => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+            'sales_type' => ['nullable', 'in:salaried,commission'],
+            'salary'     => ['nullable', 'numeric', 'min:0'],
         ], [
-            'name.regex'   => 'Name must contain only letters and spaces, with no repeated characters.',
-            'mobile.digits' => 'Mobile number must be exactly 10 digits.',
-            'mobile.unique' => 'This mobile number is already registered for another sales person.',
-            'email.regex'  => 'Please enter a valid email address with a proper domain (e.g. user@example.com).',
-            'email.unique' => 'This email is already registered.',
+            'name.regex'        => 'Name must contain only letters and spaces, with no repeated characters.',
+            'mobile.digits'     => 'Mobile number must be exactly 10 digits.',
+            'mobile.unique'     => 'This mobile number is already registered for another sales person.',
+            'email.regex'       => 'Please enter a valid email address with a proper domain (e.g. user@example.com).',
+            'email.unique'      => 'This email is already registered.',
+            'sales_type.in'     => 'Sales type must be salaried or commission.',
+            'salary.numeric'    => 'Salary must be a valid number.',
         ]);
 
         $sale = new Sale;
         if ($request->hasFile('image')) {
             $sale->image = ImageManager::upload('profile/', 'png', $request->file('image'));
         }
-        $sale->name     = $request->name;
-        $sale->email    = $request->email;
-        $sale->mobile   = $request->mobile;
-        $sale->password = bcrypt($request->password);
+        $sale->name       = $request->name;
+        $sale->email      = $request->email;
+        $sale->mobile     = $request->mobile;
+        $sale->password   = bcrypt($request->password);
+        $sale->sales_type = $request->sales_type;
+        $sale->salary     = $request->salary;
         $sale->save();
 
         // Set referral_code as RXS-{id} after save
@@ -159,8 +165,10 @@ class SaleController extends Controller
             'account_number' => 'nullable|string|max:60',
             'ifsc_code' => 'nullable|string|max:30',
             'branch_name' => 'nullable|string|max:120',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'pan_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'pan_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'sales_type' => 'nullable|in:salaried,commission',
+            'salary'     => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('image')) {
@@ -219,6 +227,8 @@ class SaleController extends Controller
             'ifsc_code' => $request->ifsc_code,
             'branch_name' => $request->branch_name,
         ]);
+        $sale->sales_type = $request->sales_type;
+        $sale->salary     = $request->salary;
         $sale->save();
 
         Helpers::systemActivity('sale', auth()->user(), 'updated', 'Sale profile updated by admin', $sale);

@@ -110,6 +110,27 @@
                                     @error('image') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">{{\App\CPU\translate('Sales Type')}}</label>
+                                    <select name="sales_type" class="form-control @error('sales_type') is-invalid @enderror">
+                                        <option value="">-- Select Type --</option>
+                                        <option value="salaried" {{ old('sales_type') === 'salaried' ? 'selected' : '' }}>Salaried</option>
+                                        <option value="commission" {{ old('sales_type') === 'commission' ? 'selected' : '' }}>Commission</option>
+                                    </select>
+                                    @error('sales_type') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">{{\App\CPU\translate('Salary')}}</label>
+                                    <input type="number" name="salary" id="saleSalary"
+                                        class="form-control @error('salary') is-invalid @enderror"
+                                        value="{{ old('salary') }}"
+                                        min="0" step="0.01">
+                                    @error('salary') <span class="invalid-feedback d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row g-3 mt-1">

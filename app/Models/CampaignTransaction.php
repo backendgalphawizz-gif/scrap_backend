@@ -38,10 +38,15 @@ class CampaignTransaction extends Model
         'violation_reason',
         'post_url',
         'day_status',
+        'manually_verified',
+        'manually_verified_by',
+        'manually_verified_at',
     ];
 
     protected $casts = [
-        'verified_at' => 'datetime',
+        'verified_at'         => 'datetime',
+        'manually_verified'   => 'boolean',
+        'manually_verified_at' => 'datetime',
     ];
 
     // protected $appends = ['left_days'];

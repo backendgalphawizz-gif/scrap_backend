@@ -20,6 +20,7 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\Admin\PaymentSplitController;
 use App\Http\Controllers\Admin\BrandCategoryController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\SocialVerificationController;
 
 Route::get('/', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/auth-login', [LoginController::class, 'submit'])->name('admin.auth.login');
@@ -142,6 +143,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::group(['prefix' => 'campaigns-transactions'], function() {
         Route::get('/', [CampaignController::class, 'campaignTransctions'])->name('admin.campaigns-transactions.list');
     });
+
+    // Manual verification (scraper fallback)
+    Route::get('/manual-verifications', [CampaignController::class, 'manualVerifications'])->name('admin.manual-verifications');
+    Route::post('/campaign-transaction/{id}/manual-verify', [CampaignController::class, 'manualVerifyTransaction'])->name('admin.campaign-transaction.manual-verify');
+
+    Route::get('/social-verifications', [SocialVerificationController::class, 'index'])->name('admin.social-verifications');
+    Route::post('/social-verifications/{id}/manual-verify', [SocialVerificationController::class, 'manualVerify'])->name('admin.social-verification.manual-verify');
 
     Route::group(['prefix' => 'voucher-brands', 'as' => 'admin.voucher-brand.'], function() {
         Route::get('/', [VoucherBrandController::class, 'index'])->name('index');

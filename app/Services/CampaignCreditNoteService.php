@@ -20,12 +20,14 @@ class CampaignCreditNoteService
 
     public function creditNoteNumber(Campaign $campaign): string
     {
-        return 'CN-GST-CAM-' . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
+        $prefix = (bool) $campaign->generate_gst_invoice ? 'CN-GST-CAM-' : 'CN-CAM-';
+        return $prefix . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
     }
 
     public function originalInvoiceNumber(Campaign $campaign): string
     {
-        return 'INV-GST-CAM-' . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
+        $prefix = (bool) $campaign->generate_gst_invoice ? 'INV-GST-CAM-' : 'INV-CAM-';
+        return $prefix . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -33,10 +35,6 @@ class CampaignCreditNoteService
      */
     public function issueForSettlement(Campaign $campaign, array $settlementData, ?string $reason = null): ?CampaignCreditNote
     {
-        if (!(bool) $campaign->generate_gst_invoice) {
-            return null;
-        }
-
         $existing = CampaignCreditNote::where('campaign_id', $campaign->id)->first();
         if ($existing) {
             return $existing;
@@ -70,10 +68,6 @@ class CampaignCreditNoteService
      */
     public function issueForRefund(Campaign $campaign, CampaignRefund $refund, array $refundData, ?string $reason = null): ?CampaignCreditNote
     {
-        if (!(bool) $campaign->generate_gst_invoice) {
-            return null;
-        }
-
         $existing = CampaignCreditNote::where('campaign_id', $campaign->id)->first();
         if ($existing) {
             return $existing;
@@ -104,8 +98,7 @@ class CampaignCreditNoteService
 
     public function canDownload(Campaign $campaign): bool
     {
-        return (bool) $campaign->generate_gst_invoice
-            && CampaignCreditNote::where('campaign_id', $campaign->id)->exists();
+        return CampaignCreditNote::where('campaign_id', $campaign->id)->exists();
     }
 
     /**
@@ -152,6 +145,7 @@ class CampaignCreditNoteService
         return [
             'credit_note' => $creditNote,
             'campaign' => $campaign,
+            'is_gst' => (bool) $campaign->generate_gst_invoice,
             'original_invoice_no' => $creditNote->original_invoice_no,
             'credit_note_no' => $creditNote->credit_note_no,
             'credit_note_date' => $creditNote->credit_note_date->format('d/m/Y'),
@@ -178,8 +172,10 @@ class CampaignCreditNoteService
     public function downloadResponse(Campaign $campaign): SymfonyResponse
     {
         $data = $this->buildCreditNoteData($campaign);
-        $filename = 'campaign-gst-credit-note-' . $campaign->id . '.html';
-        $html = View::make('invoices.campaign-gst-credit-note', $data)->render();
+        $isGst = (bool) $campaign->generate_gst_invoice;
+        $view = $isGst ? 'invoices.campaign-gst-credit-note' : 'invoices.campaign-normal-credit-note';
+        $filename = ($isGst ? 'campaign-gst-credit-note-' : 'campaign-credit-note-') . $campaign->id . '.html';
+        $html = View::make($view, $data)->render();
 
         return response($html, Response::HTTP_OK, [
             'Content-Type' => 'text/html; charset=UTF-8',

@@ -761,4 +761,6 @@
   'No vouchers found' => 'No vouchers found',
   'Campaign Video' => 'Campaign Video',
   'Your browser does not support the video tag.' => 'Your browser does not support the video tag.',
+  'Sales Type' => 'Sales Type',
+  'Salary' => 'Salary',
 );

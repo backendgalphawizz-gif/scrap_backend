@@ -21,12 +21,7 @@ class CampaignInvoiceService
 
     public function canDownload(Campaign $campaign): bool
     {
-        if ($campaign->status === 'stopped') {
-            return true;
-        }
-
-        return $campaign->status === 'completed'
-            && $campaign->settlement_status === \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED;
+        return $campaign->status !== 'rejected';
     }
 
     /**
@@ -42,14 +37,10 @@ class CampaignInvoiceService
             ];
         }
 
-        if ($campaign->status === 'stopped') {
-            return ['ok' => true, 'message' => '', 'code' => 200];
-        }
-
-        if ($campaign->status !== 'completed' || $campaign->settlement_status !== \App\Services\CampaignSettlementService::SETTLEMENT_SETTLED) {
+        if ($campaign->status === 'rejected') {
             return [
                 'ok' => false,
-                'message' => 'Invoice is only available after campaign settlement is complete.',
+                'message' => 'Invoice is not available for rejected campaigns.',
                 'code' => 422,
             ];
         }
@@ -96,7 +87,7 @@ class CampaignInvoiceService
             $brandName = $brand->username ?? 'Brand';
         }
 
-        $invoiceDate = $campaign->updated_at ?? $campaign->created_at ?? now();
+        $invoiceDate = $campaign->created_at ?? now();
         $prefix = $isGstInvoice ? 'INV-GST-CAM-' : 'INV-CAM-';
 
         return [
