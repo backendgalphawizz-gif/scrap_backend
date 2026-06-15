@@ -85,6 +85,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin:auth']], function() {
     Route::get('reports/financial-report-export', [ReportController::class, 'exportFinancialReport'])->name('admin.financial.reports.export');
     Route::get('reports/admin-earning-report', [ReportController::class, 'adminEarningReport'])->name('admin.earning.reports');
     Route::get('reports/admin-earning-report-export', [ReportController::class, 'exportAdminEarningReport'])->name('admin.earning.reports.export');
+    Route::get('reports/gst-report', [ReportController::class, 'gstReport'])->name('admin.gst.reports');
+    Route::get('reports/gst-report-export', [ReportController::class, 'exportGstReport'])->name('admin.gst.reports.export');
+    Route::get('reports/tds-report', [ReportController::class, 'tdsReport'])->name('admin.tds.reports');
+    Route::get('reports/tds-report-export', [ReportController::class, 'exportTdsReport'])->name('admin.tds.reports.export');
     Route::get('activity-logs', [ReportController::class, 'activityLogs'])->name('admin.activity.logs');
     
     // BannerController
