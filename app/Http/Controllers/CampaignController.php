@@ -15,6 +15,7 @@ use App\Models\SellerWalletHistory;
 use App\Models\PaymentSplit;
 use App\Services\CampaignCreditNoteService;
 use App\Services\CampaignSettlementService;
+use App\Services\CampaignVerificationService;
 // use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -611,6 +612,52 @@ class CampaignController extends Controller
     private function calculateRefund(Campaign $campaign): array
     {
         return app(CampaignSettlementService::class)->calculateReleasableAmount($campaign);
+    }
+
+    public function manualVerifications(Request $request)
+    {
+        $statuses = [
+            CampaignTransaction::STATUS_PENDING,
+            CampaignTransaction::STATUS_ACTIVE,
+            CampaignTransaction::STATUS_FLAGGED,
+            CampaignTransaction::STATUS_APPROVED,
+        ];
+
+        $transactions = CampaignTransaction::with(['campaign.brand', 'user'])
+            ->whereIn('status', $statuses)
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('platform'), fn($q) => $q->where('shared_on', $request->platform))
+            ->when($request->filled('campaign_id'), fn($q) => $q->where('campaign_id', $request->campaign_id))
+            ->when($request->filled('unique_code'), fn($q) => $q->where('unique_code', 'like', '%' . trim($request->unique_code) . '%'))
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin-views.campaign.manual-verifications', compact('transactions', 'statuses'));
+    }
+
+    public function manualVerifyTransaction(Request $request, $id)
+    {
+        $transaction = CampaignTransaction::with('campaign')->findOrFail($id);
+
+        $verifiableStatuses = [
+            CampaignTransaction::STATUS_PENDING,
+            CampaignTransaction::STATUS_ACTIVE,
+            CampaignTransaction::STATUS_FLAGGED,
+            CampaignTransaction::STATUS_APPROVED,
+        ];
+
+        if (!in_array($transaction->status, $verifiableStatuses, true)) {
+            return back()->with('error', 'This transaction cannot be manually verified (status: ' . $transaction->status . ').');
+        }
+
+        $result = app(CampaignVerificationService::class)->approveAndRelease($transaction, auth()->id());
+
+        $message = $result === 'completed'
+            ? 'Transaction approved and coins released to user wallet.'
+            : 'Transaction marked as approved. Coins will be released after the campaign end date.';
+
+        return back()->with('success', $message);
     }
 
     private function getCampaignGuidelineOptions(): array

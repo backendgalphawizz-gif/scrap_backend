@@ -26,12 +26,17 @@ class SocialVerificationTransaction extends Model
         'verified_at',
         'end_date',
         'failure_reason',
+        'manually_verified',
+        'manually_verified_by',
+        'manually_verified_at',
     ];
 
     protected $casts = [
-        'submitted_at' => 'datetime',
-        'verified_at'  => 'datetime',
-        'end_date'     => 'date',
+        'submitted_at'         => 'datetime',
+        'verified_at'          => 'datetime',
+        'end_date'             => 'date',
+        'manually_verified'    => 'boolean',
+        'manually_verified_at' => 'datetime',
     ];
 
     public function user()

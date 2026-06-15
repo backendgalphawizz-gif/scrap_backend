@@ -99,7 +99,7 @@
             </div>
         </li>
         @endif
-        @php($brandMenuOpen = request()->routeIs('admin.brand*') || request()->routeIs('admin.campaign.*') || request()->routeIs('admin.campaigns-transactions.*') || request()->routeIs('admin.business-settings.campaign-guideline*') || request()->routeIs('admin.business-settings.brand-faq*') || request()->routeIs('admin.brand-category.*'))
+        @php($brandMenuOpen = request()->routeIs('admin.brand*') || request()->routeIs('admin.campaign.*') || request()->routeIs('admin.campaigns-transactions.*') || request()->routeIs('admin.business-settings.campaign-guideline*') || request()->routeIs('admin.business-settings.brand-faq*') || request()->routeIs('admin.brand-category.*') || request()->routeIs('admin.manual-verifications') || request()->routeIs('admin.social-verifications'))
         @if(\App\CPU\Helpers::module_permission_check('brand_management'))
         <li class="nav-item">
             <a class="nav-link {{ $brandMenuOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#brands" aria-expanded="{{ $brandMenuOpen ? 'true' : 'false' }}" aria-controls="brands">
@@ -122,6 +122,16 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.brand-category.*') ? 'active' : '' }}" href="{{ route('admin.brand-category.index') }}">Brand Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.manual-verifications') ? 'active' : '' }}" href="{{ route('admin.manual-verifications') }}">
+                            <i class="mdi mdi-shield-check me-1 text-warning"></i> Manual Post Verify
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.social-verifications') ? 'active' : '' }}" href="{{ route('admin.social-verifications') }}">
+                            <i class="mdi mdi-account-check me-1 text-info"></i> Manual Social Verify
+                        </a>
                     </li>
                 </ul>
             </div>

@@ -108,6 +108,21 @@
                                 <label for="referral_code" class="form-label">{{ \App\CPU\translate('referral_code') }}</label>
                                 <input type="text" id="referral_code" class="form-control" value="{{ $sale->referral_code }}" readonly disabled>
                             </div>
+                            <div class="col-md-4">
+                                <label for="sales_type" class="form-label">{{ \App\CPU\translate('Sales Type') }}</label>
+                                <select name="sales_type" id="sales_type" class="form-select @error('sales_type') is-invalid @enderror">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="salaried" {{ old('sales_type', $sale->sales_type) === 'salaried' ? 'selected' : '' }}>Salaried</option>
+                                    <option value="commission" {{ old('sales_type', $sale->sales_type) === 'commission' ? 'selected' : '' }}>Commission</option>
+                                </select>
+                                @error('sales_type') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="salary" class="form-label">{{ \App\CPU\translate('Salary') }}</label>
+                                <input type="number" name="salary" id="salary" class="form-control @error('salary') is-invalid @enderror"
+                                    value="{{ old('salary', $sale->salary) }}" min="0" step="0.01">
+                                @error('salary') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
                         </div>
                     </div>
                 </div>

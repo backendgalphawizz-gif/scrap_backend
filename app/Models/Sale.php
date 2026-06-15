@@ -20,6 +20,8 @@ class Sale extends Authenticatable
         'image',
         'auth_token',
         'referral_code',
+        'sales_type',
+        'salary',
     ];
 
     protected $appends = [
