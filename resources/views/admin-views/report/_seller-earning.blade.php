@@ -222,6 +222,8 @@
                                 <th>Discount</th>
                                 <th>Users</th>
                                 <th>Sales <small class="text-muted fw-normal">(actual)</small></th>
+                                <th>Feedback</th>
+                                <th>Repeat Brand</th>
                                 <th>Referral</th>
                                 <th>Admin <small class="text-muted fw-normal">(effective)</small></th>
                             </tr>
@@ -238,6 +240,8 @@
                                     <td>{{ rtrim(rtrim(number_format($totals['discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                     <td>{{ rtrim(rtrim(number_format($totals['users'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                     <td>{{ rtrim(rtrim(number_format($totals['sales'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['feedback'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($totals['repeat_brand'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                     <td>{{ rtrim(rtrim(number_format($totals['referral'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                     <td>{{ rtrim(rtrim(number_format($totals['admin'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 </tr>
@@ -267,6 +271,8 @@
                                 <td>{{ rtrim(rtrim(number_format($brand['discount'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['users'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['sales'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['feedback'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
+                                <td>{{ rtrim(rtrim(number_format($brand['repeat_brand'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['referral'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                                 <td>{{ rtrim(rtrim(number_format($brand['admin'] ?? 0, 2, '.', ''), '0'), '.') }}</td>
                             </tr>
@@ -274,7 +280,7 @@
                             @empty
 
                             <tr>
-                                <th colspan="11">
+                                <th colspan="13">
                                     No Report Available
                                 </th>
                             </tr>
