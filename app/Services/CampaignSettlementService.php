@@ -29,6 +29,8 @@ class CampaignSettlementService
      */
     public function calculateReleasableAmount(Campaign $campaign): array
     {
+        $campaign->loadMissing('brand');
+
         $completedCount = CampaignTransaction::where('campaign_id', $campaign->id)
             ->where('status', CampaignTransaction::STATUS_COMPLETED)
             ->count();
@@ -47,40 +49,64 @@ class CampaignSettlementService
             $gstPercentage = 18.0;
         }
 
-        $rewardPerUser = (float) ($campaign->reward_per_user ?? 0);
-        $taxablePaid = round((float) ($campaign->total_campaign_budget ?? 0), 2);
-        $totalBudgetGst = round((float) ($campaign->compign_budget_with_gst ?? 0), 2);
-        $gstPaid = round(max(0, $totalBudgetGst - $taxablePaid), 2);
+        $rewardPerUser  = (float) ($campaign->reward_per_user ?? 0);
+        $totalPosts     = (int) ($campaign->total_user_required ?? 0);
+        $totalDiscount  = round((float) ($campaign->discount_amount ?? 0), 2);
 
-        $utilizedTaxable = round($completedCount * $rewardPerUser, 2);
-        $utilizedGst = round($utilizedTaxable * $gstPercentage / 100, 2);
-        $utilizedWithGst = round($utilizedTaxable + $utilizedGst, 2);
+        // Completed utilization (discount proportionally used for completed posts)
+        $utilizedDiscount = $totalPosts > 0
+            ? round($totalDiscount * ($completedCount / $totalPosts), 2)
+            : 0.0;
+        $utilizedGross    = round($completedCount * $rewardPerUser, 2);
+        $utilizedTaxable  = round(max(0, $utilizedGross - $utilizedDiscount), 2);
+        $utilizedGst      = round($utilizedTaxable * $gstPercentage / 100, 2);
+        $utilizedWithGst  = round($utilizedTaxable + $utilizedGst, 2);
 
-        $taxableReversal = round(max(0, $taxablePaid - $utilizedTaxable), 2);
-        $gstReversal = round(max(0, $gstPaid - $utilizedGst), 2);
-        $cgstReversal = round($gstReversal / 2, 2);
-        $sgstReversal = round($gstReversal - $cgstReversal, 2);
-        $releasableAmount = round($taxableReversal + $gstReversal, 2);
+        // Unused portion credit note calculation (client formula)
+        $unusedPosts      = max(0, $totalPosts - $completedCount);
+        $unusedValue      = round($unusedPosts * $rewardPerUser, 2);
+        $unusedDiscount   = $totalPosts > 0
+            ? round($totalDiscount * ($unusedPosts / $totalPosts), 2)
+            : 0.0;
+        $netCreditTaxable = round(max(0, $unusedValue - $unusedDiscount), 2);
+
+        // IGST vs CGST+SGST: intra-state when brand's state matches platform state
+        $platformState = strtolower(trim((string) (Helpers::get_business_settings('company_state') ?? '')));
+        $brand         = $campaign->brand;
+        $brandState    = strtolower(trim((string) ($brand->state ?? '')));
+        $isIntraState  = $platformState !== '' && $brandState !== '' && $platformState === $brandState;
+
+        $gstCredit    = round($netCreditTaxable * $gstPercentage / 100, 2);
+        $cgstReversal = $isIntraState ? round($gstCredit / 2, 2) : 0.0;
+        $sgstReversal = $isIntraState ? round($gstCredit - $cgstReversal, 2) : 0.0;
+        $igstReversal = $isIntraState ? 0.0 : $gstCredit;
+
+        $releasableAmount = round($netCreditTaxable + $gstCredit, 2);
 
         return [
-            'completed_count' => $completedCount,
-            'reserved_count' => $reservedCount,
-            'utilized_slots' => $completedCount,
-            'reward_per_user' => $rewardPerUser,
-            'gst_percentage' => $gstPercentage,
-            'taxable_paid' => $taxablePaid,
-            'gst_paid' => $gstPaid,
-            'utilized_raw' => $utilizedTaxable,
-            'utilized_taxable' => $utilizedTaxable,
-            'utilized_gst' => $utilizedGst,
-            'utilized_with_gst' => $utilizedWithGst,
-            'taxable_reversal' => $taxableReversal,
-            'gst_reversal' => $gstReversal,
-            'cgst_reversal' => $cgstReversal,
-            'sgst_reversal' => $sgstReversal,
-            'total_budget_gst' => $totalBudgetGst,
-            'refundable_amount' => $releasableAmount,
-            'releasable_amount' => $releasableAmount,
+            'completed_count'    => $completedCount,
+            'reserved_count'     => $reservedCount,
+            'utilized_slots'     => $completedCount,
+            'reward_per_user'    => $rewardPerUser,
+            'gst_percentage'     => $gstPercentage,
+            'total_posts'        => $totalPosts,
+            'unused_posts'       => $unusedPosts,
+            'per_post_amount'    => $rewardPerUser,
+            'total_discount'     => $totalDiscount,
+            'unused_discount'    => $unusedDiscount,
+            'gross_reversal'     => $unusedValue,
+            'utilized_taxable'   => $utilizedTaxable,
+            'utilized_gst'       => $utilizedGst,
+            'utilized_with_gst'  => $utilizedWithGst,
+            'taxable_reversal'   => $netCreditTaxable,
+            'net_credit_taxable' => $netCreditTaxable,
+            'gst_reversal'       => $gstCredit,
+            'cgst_reversal'      => $cgstReversal,
+            'sgst_reversal'      => $sgstReversal,
+            'igst_reversal'      => $igstReversal,
+            'is_intra_state'     => $isIntraState,
+            'refundable_amount'  => $releasableAmount,
+            'releasable_amount'  => $releasableAmount,
         ];
     }
 

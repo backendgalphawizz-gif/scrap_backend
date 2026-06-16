@@ -497,7 +497,7 @@
 </script>
 @endpush
 
-@push('css')
+@push('css_or_js')
 <style>
     .campaign-gallery-image {
         height: 120px;
@@ -558,12 +558,20 @@
     .participant-status-badge.participant-status-deleted.active { background: #6b7280; }
     .participant-status-badge.participant-status-other.active { background: #64748b; }
 
-    .participant-row-status.participant-status-pending { background: #fef3c7; color: #92400e; }
-    .participant-row-status.participant-status-active { background: #dbeafe; color: #1e40af; }
-    .participant-row-status.participant-status-approved { background: #d1fae5; color: #065f46; }
-    .participant-row-status.participant-status-completed { background: #a7f3d0; color: #047857; }
-    .participant-row-status.participant-status-rejected { background: #fee2e2; color: #991b1b; }
-    .participant-row-status.participant-status-flagged { background: #ede9fe; color: #5b21b6; }
-    .participant-row-status.participant-status-deleted { background: #f3f4f6; color: #374151; }
+    .participant-row-status {
+        --bs-badge-color: currentColor;
+    }
+
+    .table-hover tbody tr:hover .participant-row-status {
+        color: inherit;
+    }
+
+    .participant-row-status.participant-status-pending { --bs-badge-color: #92400e; background: #fef3c7; color: #92400e; }
+    .participant-row-status.participant-status-active { --bs-badge-color: #1e40af; background: #dbeafe; color: #1e40af; }
+    .participant-row-status.participant-status-approved { --bs-badge-color: #065f46; background: #d1fae5; color: #065f46; }
+    .participant-row-status.participant-status-completed { --bs-badge-color: #047857; background: #a7f3d0; color: #047857; }
+    .participant-row-status.participant-status-rejected { --bs-badge-color: #991b1b; background: #fee2e2; color: #991b1b; }
+    .participant-row-status.participant-status-flagged { --bs-badge-color: #5b21b6; background: #ede9fe; color: #5b21b6; }
+    .participant-row-status.participant-status-deleted { --bs-badge-color: #374151; background: #f3f4f6; color: #374151; }
 </style>
 @endpush

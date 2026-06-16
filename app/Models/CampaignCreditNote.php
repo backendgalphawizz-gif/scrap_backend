@@ -21,6 +21,14 @@ class CampaignCreditNote extends Model
         'reason',
         'credit_note_date',
         'status',
+        'purchased_posts',
+        'completed_posts',
+        'unutilized_posts',
+        'per_post_amount',
+        'gross_reversal_amount',
+        'discount_reversal',
+        'igst_reversal',
+        'is_intra_state',
     ];
 
     protected $casts = [
@@ -29,6 +37,14 @@ class CampaignCreditNote extends Model
         'cgst_reversal' => 'float',
         'sgst_reversal' => 'float',
         'credit_note_date' => 'date',
+        'purchased_posts' => 'integer',
+        'completed_posts' => 'integer',
+        'unutilized_posts' => 'integer',
+        'per_post_amount' => 'float',
+        'gross_reversal_amount' => 'float',
+        'discount_reversal' => 'float',
+        'igst_reversal' => 'float',
+        'is_intra_state' => 'boolean',
     ];
 
     public function campaign()
