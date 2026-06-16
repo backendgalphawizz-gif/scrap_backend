@@ -109,8 +109,8 @@ class BusinessSettingsSeeder extends Seeder
             'brand_campaign_creation_timeframe_hours' => '24',
 
             // TDS
-            'tds_percent' => '30',
-            'tds_rate_valid_pan' => '30',
+            'tds_percent' => '1',
+            'tds_rate_valid_pan' => '1',
             'tds_rate_invalid_pan' => '20',
             'tds_section' => '194C',
 
