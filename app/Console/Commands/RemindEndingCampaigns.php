@@ -3,38 +3,23 @@
 namespace App\Console\Commands;
 
 use App\Models\Campaign;
-use App\Services\CampaignSettlementService;
 use App\Services\FcmNotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class CloseDailyCampaigns extends Command
+class RemindEndingCampaigns extends Command
 {
-    protected $signature = 'campaign:close-daily-ended';
+    protected $signature = 'campaign:remind-ending-soon';
 
-    protected $description = 'Close campaigns whose end date passed at midnight, settle eligible ones, and remind brands whose campaign ends tomorrow. Runs at 00:05.';
+    protected $description = 'Send a push notification to brands whose campaign ends tomorrow. Runs at noon so brands are notified during business hours.';
 
-    public function __construct(
-        protected CampaignSettlementService $settlementService,
-        protected FcmNotificationService $fcm,
-    ) {
+    public function __construct(private FcmNotificationService $fcm)
+    {
         parent::__construct();
     }
 
     public function handle(): void
-    {
-        $this->info('Closing daily-ended campaigns...');
-
-        $closed  = $this->settlementService->closeEligibleCampaigns();
-        $settled = $this->settlementService->settleEligibleCampaigns();
-
-        $this->info("Done. Closed: {$closed} | Settled: {$settled}");
-
-        $this->remindEndingSoon();
-    }
-
-    private function remindEndingSoon(): void
     {
         $tomorrow = Carbon::tomorrow()->toDateString();
 
@@ -43,14 +28,16 @@ class CloseDailyCampaigns extends Command
             ->whereDate('end_date', $tomorrow)
             ->get();
 
-        $this->info("Sending ending-soon reminders for {$campaigns->count()} campaign(s) ending on {$tomorrow}...");
+        $this->info("Found {$campaigns->count()} campaign(s) ending on {$tomorrow}.");
 
         $notified = 0;
+        $skipped  = 0;
 
         foreach ($campaigns as $campaign) {
             $brand = $campaign->brand;
 
             if (! $brand || empty($brand->cm_firebase_token)) {
+                $skipped++;
                 continue;
             }
 
@@ -66,18 +53,19 @@ class CloseDailyCampaigns extends Command
 
             if ($sent) {
                 $notified++;
-                Log::info('Campaign ending reminder sent', [
+                Log::info("Campaign ending reminder sent", [
                     'campaign_id' => $campaign->id,
                     'brand_id'    => $brand->id,
                 ]);
             } else {
-                Log::warning('Campaign ending reminder failed to send', [
+                $skipped++;
+                Log::warning("Campaign ending reminder failed to send", [
                     'campaign_id' => $campaign->id,
                     'brand_id'    => $brand->id,
                 ]);
             }
         }
 
-        $this->info("Reminders sent: {$notified}");
+        $this->info("Done. Notified: {$notified} | Skipped/Failed: {$skipped}");
     }
 }

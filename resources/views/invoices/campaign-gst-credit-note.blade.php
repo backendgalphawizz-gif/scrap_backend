@@ -3,24 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credit Note - {{ $credit_note_no }}</title>
+    <title>GST Credit Note - {{ $credit_note_no }}</title>
     <style>
         * { box-sizing: border-box; }
         body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #222; margin: 24px; }
-        h1 { font-size: 20px; margin: 0 0 4px; }
-        h2 { font-size: 14px; margin: 20px 0 8px; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #f5f5f5; }
-        .meta { width: 100%; margin-bottom: 20px; }
-        .meta td { border: none; padding: 4px 8px 4px 0; vertical-align: top; }
+        h1 { font-size: 18px; margin: 0 0 2px; }
+        h2 { font-size: 13px; margin: 16px 0 6px; color: #333; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #aaa; padding: 7px 9px; text-align: left; vertical-align: top; }
+        th { background: #e8e8e8; font-weight: bold; }
+        .header-box { border: 2px solid #333; text-align: center; padding: 8px; margin-bottom: 14px; }
+        .header-box h1 { font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+        .header-box p { margin: 2px 0; font-size: 12px; }
+        .meta td { border: 1px solid #aaa; padding: 6px 9px; vertical-align: top; }
         .text-right { text-align: right; }
-        .totals td { border: none; padding: 4px 0; }
-        .totals .label { text-align: right; padding-right: 12px; width: 75%; }
-        .totals .value { text-align: right; font-weight: bold; width: 25%; }
-        .header-grid { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-        .party { flex: 1; min-width: 260px; }
-        .muted { color: #666; font-size: 12px; }
+        .text-center { text-align: center; }
+        .header-grid { display: flex; gap: 0; margin-top: 10px; }
+        .party { flex: 1; border: 1px solid #aaa; padding: 8px 10px; }
+        .party:first-child { border-right: none; }
+        .party h2 { margin: 0 0 6px; }
+        .muted { color: #555; font-size: 11px; }
+        .gst-sub td { border-top: none; }
+        .gst-sub td:first-child { padding-left: 24px; }
+        .total-row td { font-weight: bold; background: #f0f0f0; }
         @media print {
             body { margin: 0; }
             .no-print { display: none; }
@@ -28,84 +33,143 @@
     </style>
 </head>
 <body>
-    <div class="no-print" style="margin-bottom:16px;">
-        <button onclick="window.print()" style="padding:8px 16px;cursor:pointer;">Print / Save as PDF</button>
+    <div class="no-print" style="margin-bottom:14px;">
+        <button onclick="window.print()" style="padding:7px 16px;cursor:pointer;">Print / Save as PDF</button>
     </div>
 
-    <h1>Credit Note</h1>
-    <p class="muted">GST reversal for unused campaign budget</p>
+    {{-- Company header --}}
+    <div class="header-box">
+        <h1>{{ strtoupper($company['name']) }}</h1>
+        @if($company['address'])<p>{{ $company['address'] }}</p>@endif
+        @if($company['gst_number'])<p>GST: {{ $company['gst_number'] }}</p>@endif
+    </div>
 
+    <h2>GST CREDIT NOTE</h2>
+
+    {{-- Credit note meta --}}
     <table class="meta">
         <tr>
-            <td><strong>Credit Note No.</strong><br>{{ $credit_note_no }}</td>
-            <td><strong>Credit Note Date</strong><br>{{ $credit_note_date }}</td>
-            <td><strong>Original Invoice No.</strong><br>{{ $original_invoice_no }}</td>
-            <td><strong>Campaign ID</strong><br>#{{ $campaign->id }}</td>
+            <th>Credit Note</th>
+            <th>Credit Note Date</th>
+            <th>Original Invoice Number</th>
+            <th>Original Invoice Date</th>
         </tr>
         <tr>
-            <td colspan="4"><strong>Reason</strong><br>{{ $reason }}</td>
+            <td>{{ $credit_note_no }}</td>
+            <td>{{ $credit_note_date }}</td>
+            <td>{{ $original_invoice_no }}</td>
+            <td>{{ $credit_note->created_at ? \Carbon\Carbon::parse($credit_note->created_at)->format('d-M-y') : 'N/A' }}</td>
         </tr>
     </table>
 
+    {{-- Parties --}}
     <div class="header-grid">
         <div class="party">
-            <h2>From (Supplier)</h2>
-            <strong>{{ $company['name'] }}</strong><br>
-            @if($company['address']){{ $company['address'] }}<br>@endif
-            @if($company['phone'])Phone: {{ $company['phone'] }}<br>@endif
-            @if($company['email'])Email: {{ $company['email'] }}<br>@endif
-            @if($company['gst_number'])GSTIN: {{ $company['gst_number'] }}@endif
-        </div>
-        <div class="party">
-            <h2>Bill To (Brand)</h2>
+            <h2>Credit To</h2>
             <strong>{{ $brand['name'] }}</strong>
             @if($brand['username']) ({{ $brand['username'] }})@endif<br>
-            @if($brand['address']){{ $brand['address'] }}<br>@endif
-            <strong>GSTIN: {{ $brand['gst_number'] ?: 'N/A' }}</strong>
+            @if($brand['address'])Address: {{ $brand['address'] }}<br>@endif
+            @if($brand['city'] || $brand['state']){{ trim(($brand['city'] ?? '') . ', ' . ($brand['state'] ?? ''), ', ') }}<br>@endif
+            @if($brand['phone'])Contact No. {{ $brand['phone'] }}<br>@endif
+            @if($brand['email'])Email ID: {{ $brand['email'] }}<br>@endif
+            @if($brand['gst_number'])GST: {{ $brand['gst_number'] }}@endif
+        </div>
+        <div class="party">
+            <h2>From</h2>
+            <strong>{{ $company['name'] }}</strong><br>
+            @if($company['address'])Address: {{ $company['address'] }}<br>@endif
+            @if($company['phone'])Contact No. {{ $company['phone'] }}<br>@endif
+            @if($company['email'])Email ID: {{ $company['email'] }}<br>@endif
+            @if($company['gst_number'])GST: {{ $company['gst_number'] }}@endif
         </div>
     </div>
 
-    <h2>Reversal Details</h2>
-    <table>
+    {{-- Reversal details --}}
+    <table style="margin-top:14px;">
         <tr>
-            <th>Description</th>
-            <th class="text-right" style="width:140px;">Taxable Reversal (₹)</th>
-            <th class="text-right" style="width:140px;">GST Reversal (₹)</th>
+            <th>Reason of Credit Note</th>
+            <th class="text-center" style="width:160px;">Per Post Amount X Unutilised</th>
+            <th class="text-right" style="width:110px;">Amount</th>
         </tr>
+
+        {{-- Main service row --}}
         <tr>
             <td>
-                Unused campaign budget — {{ $campaign->title ?: 'Campaign #' . $campaign->id }}
+                Partial cancellation / unutilized campaign inventory.<br>
+                {{ $campaign->title ?: 'Campaign #' . $campaign->id }}<br>
+                <span class="muted">Campaign ID: #{{ $campaign->id }}</span>
+                @if($posts['purchased'] > 0)
+                    <br><span class="muted">Total Post: {{ $posts['purchased'] }}</span>
+                @endif
             </td>
-            <td class="text-right">{{ number_format($amounts['taxable_reversal'], 2) }}</td>
-            <td class="text-right">{{ number_format($amounts['gst_reversal'], 2) }}</td>
+            <td class="text-center">
+                @if($posts['per_post_amount'] > 0 && $posts['unutilized'] > 0)
+                    {{ number_format($posts['per_post_amount'], 0) }} x {{ $posts['unutilized'] }}
+                @else
+                    &mdash;
+                @endif
+            </td>
+            <td class="text-right">{{ number_format($amounts['gross_reversal'], 2) }}</td>
+        </tr>
+
+        {{-- Discount row --}}
+        @if($amounts['discount_reversal'] > 0)
+        <tr>
+            <td>
+                Discount
+                @if($amounts['discount_pct'] > 0)
+                    {{ number_format($amounts['discount_pct'], 0) }}%
+                @endif
+            </td>
+            <td class="text-center">&mdash;</td>
+            <td class="text-right">{{ number_format($amounts['discount_reversal'], 2) }}</td>
+        </tr>
+        @endif
+
+        {{-- Net amount row --}}
+        <tr>
+            <td><strong>Net Amount</strong></td>
+            <td class="text-center">&mdash;</td>
+            <td class="text-right"><strong>{{ number_format($amounts['taxable_reversal'], 2) }}</strong></td>
+        </tr>
+
+        {{-- GST header row --}}
+        <tr>
+            <td rowspan="3"><strong>GST</strong></td>
+            <td>CGST</td>
+            <td class="text-right">
+                {{ number_format($amounts['cgst_rate'], 0) }}%
+                &nbsp; {{ number_format($amounts['cgst_reversal'], 2) }}
+            </td>
+        </tr>
+        <tr class="gst-sub">
+            <td>SGST</td>
+            <td class="text-right">
+                {{ number_format($amounts['sgst_rate'], 0) }}%
+                &nbsp; {{ number_format($amounts['sgst_reversal'], 2) }}
+            </td>
+        </tr>
+        <tr class="gst-sub">
+            <td>IGST</td>
+            <td class="text-right">
+                {{ number_format($amounts['igst_rate'], 0) }}%
+                &nbsp; {{ number_format($amounts['igst_reversal'], 2) }}
+            </td>
+        </tr>
+
+        {{-- Total row --}}
+        <tr class="total-row">
+            <td colspan="2"><strong>Total Invoice Amount:</strong></td>
+            <td class="text-right"><strong>{{ number_format($amounts['total_reversal'], 2) }}</strong></td>
         </tr>
     </table>
 
-    <table class="totals" style="max-width:420px;margin-left:auto;margin-top:16px;">
-        <tr>
-            <td class="label">Taxable Reversal Amount</td>
-            <td class="value">₹{{ number_format($amounts['taxable_reversal'], 2) }}</td>
-        </tr>
-        <tr>
-            <td class="label">CGST Reversal @ {{ number_format($amounts['cgst_rate'], 2) }}%</td>
-            <td class="value">₹{{ number_format($amounts['cgst_reversal'], 2) }}</td>
-        </tr>
-        <tr>
-            <td class="label">SGST Reversal @ {{ number_format($amounts['sgst_rate'], 2) }}%</td>
-            <td class="value">₹{{ number_format($amounts['sgst_reversal'], 2) }}</td>
-        </tr>
-        <tr>
-            <td class="label"><strong>Total GST Reversal</strong></td>
-            <td class="value"><strong>₹{{ number_format($amounts['gst_reversal'], 2) }}</strong></td>
-        </tr>
-        <tr>
-            <td class="label"><strong>Total Credit (incl. GST)</strong></td>
-            <td class="value"><strong>₹{{ number_format($amounts['total_reversal'], 2) }}</strong></td>
-        </tr>
-    </table>
+    <p class="muted" style="margin-top:20px;">
+        Adjustment: The above amount shall be credited to the Brand Wallet and may be utilized for future campaigns or refunded in accordance with Rexarix policies.
+    </p>
 
-    <p class="muted" style="margin-top:32px;">
-        This is a computer-generated credit note against invoice {{ $original_invoice_no }} for campaign ID #{{ $campaign->id }}.
+    <p class="muted" style="margin-top:8px;">
+        This is a computer-generated GST credit note against invoice {{ $original_invoice_no }} for campaign ID #{{ $campaign->id }}.
     </p>
 </body>
 </html>
