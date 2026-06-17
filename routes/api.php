@@ -288,6 +288,7 @@ Route::group(['prefix' => 'sale'], function () {
         Route::get('profile', [SaleDashboardController::class, 'index']);
         Route::post('update-profile', [SaleDashboardController::class, 'update']);
         Route::post('update-kyc', [SaleDashboardController::class, 'updatekyc']);
+        Route::get('wallet/withdrawal-preview', [SaleDashboardController::class, 'withdrawalPreview']);
         Route::post('create-withdrawl-request', [SaleDashboardController::class, 'createWithdrawl']);
 
         Route::post('campaign/create', [SaleDashboardController::class, 'createCampaign']);

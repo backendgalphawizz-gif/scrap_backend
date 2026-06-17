@@ -201,6 +201,9 @@
                             @php($tds_rate_valid_pan=\App\CPU\Helpers::get_business_settings('tds_rate_valid_pan') ?: $tds_percent ?: '1')
                             @php($tds_rate_invalid_pan=\App\CPU\Helpers::get_business_settings('tds_rate_invalid_pan') ?: '20')
                             @php($tds_section=\App\CPU\Helpers::get_business_settings('tds_section') ?: '194C')
+                            @php($sales_tds_rate_valid_pan=\App\CPU\Helpers::get_business_settings('sales_tds_rate_valid_pan') ?: '5')
+                            @php($sales_tds_rate_invalid_pan=\App\CPU\Helpers::get_business_settings('sales_tds_rate_invalid_pan') ?: '20')
+                            @php($sales_tds_section=\App\CPU\Helpers::get_business_settings('sales_tds_section') ?: '194H')
                             @php($sale_post_commission=\App\Models\BusinessSetting::where('type','sale_post_commission')->first()->value ?? '')
                             @php($sale_brand_commission=\App\Models\BusinessSetting::where('type','sale_brand_commission')->first()->value ?? '')
                             @php($minimum_wallet_balance=\App\Models\BusinessSetting::where('type','minimum_wallet_balance')->first()->value ?? '')
@@ -272,6 +275,30 @@
                                     <input class="form-control" type="text" name="tds_section" value="{{ $tds_section }}">
                                 </div>
                             </div>
+
+                            {{-- Sales TDS --}}
+                            <div class="col-12 mt-2 mb-1">
+                                <small class="text-muted fw-semibold text-uppercase" style="letter-spacing:.05em;">Sales TDS (on commission withdrawals)</small>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Sales TDS rate — valid PAN (%)</label>
+                                    <input class="form-control" type="text" name="sales_tds_rate_valid_pan" value="{{ $sales_tds_rate_valid_pan }}" placeholder="5">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Sales TDS rate — invalid/missing PAN (%)</label>
+                                    <input class="form-control" type="text" name="sales_tds_rate_invalid_pan" value="{{ $sales_tds_rate_invalid_pan }}" placeholder="20">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label class="title-color d-flex">Sales TDS section</label>
+                                    <input class="form-control" type="text" name="sales_tds_section" value="{{ $sales_tds_section }}" placeholder="194H">
+                                </div>
+                            </div>
+
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="form-group">
                                     <label class="title-color d-flex">Platform commission</label>

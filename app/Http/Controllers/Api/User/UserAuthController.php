@@ -274,6 +274,13 @@ class UserAuthController extends Controller
                 Helpers::get_business_settings('tds_rate_invalid_pan') ?: '20'
             ),
             'tds_section' => strval(Helpers::get_business_settings('tds_section') ?: '194C'),
+            'sales_tds_rate_valid_pan' => strval(
+                Helpers::get_business_settings('sales_tds_rate_valid_pan') ?: '5'
+            ),
+            'sales_tds_rate_invalid_pan' => strval(
+                Helpers::get_business_settings('sales_tds_rate_invalid_pan') ?: '20'
+            ),
+            'sales_tds_section' => strval(Helpers::get_business_settings('sales_tds_section') ?: '194H'),
             'sale_post_commission' => Helpers::get_business_settings('sale_post_commission'),
             'sale_brand_commission' => Helpers::get_business_settings('sale_brand_commission'),
             'minimum_wallet_balance' => Helpers::get_business_settings('minimum_wallet_balance'),

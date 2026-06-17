@@ -21,6 +21,7 @@ use App\Http\Resources\CommonResource;
 use Illuminate\Support\Str;
 use function App\CPU\translate;
 use App\Services\PanValidationService;
+use App\Services\TdsCalculationService;
 use Hash;
 
 class DashboardController extends Controller
@@ -858,58 +859,124 @@ class DashboardController extends Controller
         }
     }
 
-    public function createWithdrawl(Request $request) {
+    public function withdrawalPreview(Request $request, TdsCalculationService $tdsService)
+    {
         $data = Helpers::get_sale_by_token($request);
 
-        if ($data['success'] == 1) {
-            $seller = $data['data'];
-
-            if($seller->balance < $request->amount) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient balance',
-                    'data' => []
-                ], 200);
-            }
-
-            if (SaleWalletTransaction::where('sale_id', '=', $seller['id'], 'and')
-                ->where('amount', '=', $request->amount, 'and')
-                ->where('type', '=', 'debit', 'and')
-                ->where('status', '=', 'pending', 'and')
-                ->first()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'One request is already pending',
-                    'data' => []
-                ], 200);
-            }
-
-            $transactions = SaleWalletTransaction::create([
-                'sale_id' => $seller['id'],
-                'amount' => $request->amount,
-                'type' => 'debit',
-                'status' => 'pending',
-                'remarks' => $request->remarks
-            ]);
-            $seller->balance -= $request->amount;
-            $seller->save();
-
-            Helpers::systemActivity('sale_wallet_transaction', $seller, 'created', 'Wallet Withdrawl Request', $transactions);
-            Helpers::systemActivity('sale_wallet_transaction', $seller, 'created', 'Balance debited from wallet', $seller);
-
+        if ($data['success'] != 1) {
             return response()->json([
-                'status' => true,
-                'message' => 'Wallet withdrawl created successfully',
-                'data' => [],
-                'wallet_balance' => strval($seller->balance ?? 0)
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Your existing session token does not authorize you any more',
-                'data' => []
+                'data'    => [],
             ], 401);
         }
+
+        $seller = $data['data'];
+        $amount = (float) $request->input('amount', 0);
+
+        if ($amount <= 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please provide a valid amount.',
+            ], 422);
+        }
+
+        if ($amount > (float) $seller->balance) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Insufficient balance.',
+            ], 422);
+        }
+
+        $breakdown = $tdsService->computeSalesWithdrawal($seller, $amount);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Withdrawal preview',
+            'data'    => [
+                'gross_amount'             => number_format($breakdown['gross_amount'], 2, '.', ''),
+                'tds_amount'               => number_format($breakdown['tds_amount'], 2, '.', ''),
+                'tds_rate'                 => (string) $breakdown['tds_rate'],
+                'tds_section'              => $breakdown['tds_section'],
+                'net_amount'               => number_format($breakdown['net_amount'], 2, '.', ''),
+                'pan_status_at_withdrawal' => $breakdown['pan_status_at_withdrawal'],
+            ],
+        ], 200);
+    }
+
+    public function createWithdrawl(Request $request, TdsCalculationService $tdsService)
+    {
+        $data = Helpers::get_sale_by_token($request);
+
+        if ($data['success'] != 1) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Your existing session token does not authorize you any more',
+                'data'    => [],
+            ], 401);
+        }
+
+        $seller = $data['data'];
+        $amount = (float) $request->input('amount', 0);
+
+        if ($amount <= 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please provide a valid amount.',
+                'data'    => [],
+            ], 422);
+        }
+
+        if ($seller->balance < $amount) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Insufficient balance',
+                'data'    => [],
+            ], 200);
+        }
+
+        if (SaleWalletTransaction::where('sale_id', $seller['id'])
+            ->where('type', 'debit')
+            ->where('status', 'pending')
+            ->exists()) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'One request is already pending',
+                'data'    => [],
+            ], 200);
+        }
+
+        $breakdown = $tdsService->computeSalesWithdrawal($seller, $amount);
+
+        $transactions = SaleWalletTransaction::create([
+            'sale_id'                  => $seller['id'],
+            'amount'                   => $amount,
+            'tds'                      => $breakdown['tds_amount'],
+            'net_amount'               => $breakdown['net_amount'],
+            'tds_rate'                 => $breakdown['tds_rate'],
+            'tds_section'              => $breakdown['tds_section'],
+            'pan_status_at_withdrawal' => $breakdown['pan_status_at_withdrawal'],
+            'type'                     => 'debit',
+            'status'                   => 'pending',
+            'remarks'                  => $request->remarks,
+        ]);
+
+        $seller->balance -= $amount;
+        $seller->save();
+
+        Helpers::systemActivity('sale_wallet_transaction', $seller, 'created', 'Wallet Withdrawal Request', $transactions);
+        Helpers::systemActivity('sale_wallet_transaction', $seller, 'created', 'Balance debited from wallet', $seller);
+
+        return response()->json([
+            'status'         => true,
+            'message'        => 'Wallet withdrawal created successfully',
+            'data'           => [],
+            'tds_amount'     => number_format($breakdown['tds_amount'], 2, '.', ''),
+            'net_amount'     => number_format($breakdown['net_amount'], 2, '.', ''),
+            'tds_rate'       => (string) $breakdown['tds_rate'],
+            'tds_section'    => $breakdown['tds_section'],
+            'wallet_balance' => strval($seller->balance ?? 0),
+        ], 200);
     }
 
     public function notifications(Request $request) {

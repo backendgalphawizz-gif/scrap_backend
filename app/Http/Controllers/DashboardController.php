@@ -602,6 +602,15 @@ class DashboardController extends Controller
         DB::table('business_settings')->updateOrInsert(['type' => 'tds_section'], [
             'value' => $request->input('tds_section') ?? '194C'
         ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'sales_tds_rate_valid_pan'], [
+            'value' => $request->input('sales_tds_rate_valid_pan') ?? '5'
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'sales_tds_rate_invalid_pan'], [
+            'value' => $request->input('sales_tds_rate_invalid_pan') ?? '20'
+        ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'sales_tds_section'], [
+            'value' => $request->input('sales_tds_section') ?? '194H'
+        ]);
         DB::table('business_settings')->updateOrInsert(['type' => 'max_coin_withdrawal'], [
             'value' => $request->input('max_coin_withdrawal') ?? '20000'
         ]);
