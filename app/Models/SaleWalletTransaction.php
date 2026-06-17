@@ -12,9 +12,14 @@ class SaleWalletTransaction extends Model
     protected $fillable = [
         'sale_id',
         'amount',
+        'tds',
+        'net_amount',
+        'tds_rate',
+        'tds_section',
+        'pan_status_at_withdrawal',
         'remarks',
         'type',
-        'status'
+        'status',
     ];
 
     public function sale() {

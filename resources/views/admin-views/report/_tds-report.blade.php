@@ -163,6 +163,59 @@
                 </div>
             </div>
 
+            {{-- Summary Cards — Sales --}}
+            <div class="row mb-2">
+                <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                    <div class="card bg-gradient-info card-img-holder text-white w-100">
+                        <div class="card-body">
+                            <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
+                            <h4 class="font-weight-normal mb-3 small cardText">
+                                Sales Withdrawals
+                                <i class="mdi mdi-account-cash mdi-24px float-end"></i>
+                            </h4>
+                            <h2 class="small">{{ number_format($salesTotals['count'] ?? 0) }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                    <div class="card bg-gradient-success card-img-holder text-white w-100">
+                        <div class="card-body">
+                            <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
+                            <h4 class="font-weight-normal mb-3 small cardText">
+                                Sales Gross Amount
+                                <i class="mdi mdi-currency-inr mdi-24px float-end"></i>
+                            </h4>
+                            <h2 class="small">{{ $fmt($salesTotals['total_gross'] ?? 0) }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                    <div class="card bg-gradient-danger card-img-holder text-white w-100">
+                        <div class="card-body">
+                            <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
+                            <h4 class="font-weight-normal mb-3 small cardText">
+                                Sales TDS Deducted
+                                <i class="mdi mdi-percent mdi-24px float-end"></i>
+                            </h4>
+                            <h2 class="small">{{ $fmt($salesTotals['total_tds'] ?? 0) }}</h2>
+                            <p class="mb-0 small">Section 194H</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 col-sm-12 stretch-card grid-margin">
+                    <div class="card bg-gradient-warning card-img-holder text-white w-100">
+                        <div class="card-body">
+                            <img src="{{ asset('assets/images/dashboard/circle.svg') }}" class="card-img-absolute">
+                            <h4 class="font-weight-normal mb-3 small cardText">
+                                Sales Net Payout
+                                <i class="mdi mdi-cash-check mdi-24px float-end"></i>
+                            </h4>
+                            <h2 class="small">{{ $fmt($salesTotals['total_net'] ?? 0) }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Table Card --}}
             <div class="card">
                 <div class="card-header">
@@ -276,6 +329,113 @@
                         <div class="premium-pagination-shell">
                             <div class="premium-pagination-inline">
                                 {!! $rows->onEachSide(1)->links('vendor.pagination.premium') !!}
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Sales Commission TDS Table --}}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4 class="mb-0">TDS on Sales Commission Withdrawals</h4>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table tds-report-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Sales Name</th>
+                                <th>PAN No.</th>
+                                <th>PAN Status at Withdrawal</th>
+                                <th>Gross (₹)</th>
+                                <th>TDS Rate</th>
+                                <th>TDS (₹)</th>
+                                <th>Net Payout (₹)</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if ($salesRows->count() > 0)
+                                <tr class="fw-bold table-light">
+                                    <td colspan="4">Total (this page)</td>
+                                    <td>{{ $fmtNum($salesRows->sum('amount')) }}</td>
+                                    <td></td>
+                                    <td>{{ $fmtNum($salesRows->sum('tds')) }}</td>
+                                    <td>{{ $fmtNum($salesRows->sum('net_amount')) }}</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            @endif
+
+                            @forelse ($salesRows as $i => $tx)
+                                @php
+                                    $sale = $tx->sale ?? null;
+                                    $panStatus = $tx->pan_status_at_withdrawal ?? '-';
+                                    $panBadge  = match ($panStatus) {
+                                        'Verified'                        => 'success',
+                                        'Submitted', 'Under Verification' => 'warning',
+                                        'Rejected'                        => 'danger',
+                                        default                           => 'secondary',
+                                    };
+                                @endphp
+                                <tr>
+                                    <td>{{ ($salesRows->currentPage() - 1) * $salesRows->perPage() + $i + 1 }}</td>
+                                    <td>{{ $sale->name ?? '-' }}</td>
+                                    <td>
+                                        @if ($sale && $sale->pan_number)
+                                            <code>{{ $sale->pan_number }}</code>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td><span class="badge bg-{{ $panBadge }}">{{ $panStatus }}</span></td>
+                                    <td>{{ $fmtNum($tx->amount) }}</td>
+                                    <td>
+                                        @if ($tx->tds_rate)
+                                            <span class="badge bg-secondary">{{ $fmtNum($tx->tds_rate) }}%</span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-danger fw-semibold">{{ $fmtNum($tx->tds ?? 0) }}</td>
+                                    <td class="text-success fw-semibold">{{ $fmtNum($tx->net_amount ?? $tx->amount) }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ $tx->tds_section ?? '194H' }}</span></td>
+                                    <td>
+                                        <span class="badge bg-{{ match($tx->status) { 'success' => 'success', 'pending' => 'warning', 'failed' => 'danger', default => 'secondary' } }}">
+                                            {{ ucfirst($tx->status) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ \App\CPU\Helpers::formatAdminDateTime($tx->created_at) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="11" class="text-center py-4">No sales withdrawal records found for the selected period.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                        @if ($salesRows->count() > 0)
+                            <tfoot>
+                                <tr class="fw-bold table-secondary">
+                                    <td colspan="4">Overall Total (all pages)</td>
+                                    <td>{{ $fmtNum($salesTotals['total_gross'] ?? 0) }}</td>
+                                    <td></td>
+                                    <td>{{ $fmtNum($salesTotals['total_tds'] ?? 0) }}</td>
+                                    <td>{{ $fmtNum($salesTotals['total_net'] ?? 0) }}</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            </tfoot>
+                        @endif
+                    </table>
+                </div>
+
+                @if ($salesRows->hasPages())
+                    <div class="premium-pagination-wrap">
+                        <div class="premium-pagination-shell">
+                            <div class="premium-pagination-inline">
+                                {!! $salesRows->onEachSide(1)->links('vendor.pagination.premium') !!}
                             </div>
                         </div>
                     </div>

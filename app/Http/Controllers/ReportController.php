@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\BusinessSetting;
 use App\Models\Campaign;
 use App\Models\CoinTransaction;
+use App\Models\SaleWalletTransaction;
 use App\Models\CampaignTransaction;
 use App\Models\CampaignCreditNote;
 use App\Models\Seller;
@@ -1287,6 +1288,7 @@ class ReportController extends Controller
         $limit  = (int) ($request->get('limit') ?? 10);
         $status = $request->get('status', 'all');
 
+        // User coin withdrawals
         $query = CoinTransaction::with(['wallet:id,user_id', 'wallet.user:id,name,pan_number,pan_status'])
             ->where('type', 'debit')
             ->whereBetween('created_at', [$from, $to]);
@@ -1305,8 +1307,27 @@ class ReportController extends Controller
 
         $rows = $query->orderByDesc('id')->paginate($limit)->withQueryString();
 
+        // Sales commission withdrawals
+        $salesQuery = SaleWalletTransaction::with(['sale:id,name,pan_number,pan_status'])
+            ->where('type', 'debit')
+            ->whereBetween('created_at', [$from, $to]);
+
+        if ($status !== 'all') {
+            $salesQuery->where('status', $status);
+        }
+
+        $salesTotals = [
+            'count'       => (clone $salesQuery)->count(),
+            'total_gross' => (clone $salesQuery)->sum('amount'),
+            'total_tds'   => (clone $salesQuery)->sum('tds'),
+            'total_net'   => (clone $salesQuery)->sum('net_amount'),
+        ];
+
+        $salesRows = $salesQuery->orderByDesc('id')->paginate($limit, ['*'], 'sales_page')->withQueryString();
+
         return view('admin-views.report._tds-report', compact(
-            'rows', 'totals', 'date_type', 'from', 'to', 'status'
+            'rows', 'totals', 'date_type', 'from', 'to', 'status',
+            'salesRows', 'salesTotals'
         ));
     }
 
@@ -1334,8 +1355,21 @@ class ReportController extends Controller
             'Expires'             => '0',
         ];
 
-        return response()->stream(function () use ($rows) {
+        $salesQuery = SaleWalletTransaction::with(['sale:id,name,pan_number,pan_status'])
+            ->where('type', 'debit')
+            ->whereBetween('created_at', [$from, $to]);
+
+        if ($status !== 'all') {
+            $salesQuery->where('status', $status);
+        }
+
+        $salesRows = $salesQuery->orderByDesc('id')->get();
+
+        return response()->stream(function () use ($rows, $salesRows) {
             $h = fopen('php://output', 'w');
+
+            // ── User withdrawals section ──────────────────────────────────────
+            fputcsv($h, ['--- USER COIN WITHDRAWALS ---']);
             fputcsv($h, [
                 '#', 'User Name', 'PAN No.', 'PAN Status at Withdrawal',
                 'Coins', 'Gross Amount (Rs)', 'TDS Rate %', 'TDS Amount (Rs)',
@@ -1359,6 +1393,32 @@ class ReportController extends Controller
                     Helpers::formatAdminDateTime($tx->created_at),
                 ]);
             }
+
+            // ── Sales commission withdrawals section ──────────────────────────
+            fputcsv($h, []);
+            fputcsv($h, ['--- SALES COMMISSION WITHDRAWALS ---']);
+            fputcsv($h, [
+                '#', 'Sales Name', 'PAN No.', 'PAN Status at Withdrawal',
+                'Gross Amount (Rs)', 'TDS Rate %', 'TDS Amount (Rs)',
+                'Net Payout (Rs)', 'TDS Section', 'Status', 'Date',
+            ]);
+            foreach ($salesRows as $i => $tx) {
+                $sale = $tx->sale ?? null;
+                fputcsv($h, [
+                    $i + 1,
+                    $sale->name ?? '-',
+                    $sale->pan_number ?? '-',
+                    $tx->pan_status_at_withdrawal ?? '-',
+                    number_format((float) $tx->amount, 2, '.', ''),
+                    number_format((float) ($tx->tds_rate ?? 0), 2, '.', '') . '%',
+                    number_format((float) ($tx->tds ?? 0), 2, '.', ''),
+                    number_format((float) ($tx->net_amount ?? $tx->amount ?? 0), 2, '.', ''),
+                    $tx->tds_section ?? '194H',
+                    ucfirst($tx->status),
+                    Helpers::formatAdminDateTime($tx->created_at),
+                ]);
+            }
+
             fclose($h);
         }, 200, $streamHeaders);
     }

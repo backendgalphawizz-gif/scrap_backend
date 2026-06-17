@@ -80,6 +80,62 @@ class TdsCalculationService
      *     pan_status_at_withdrawal: string|null
      * }
      */
+    // ── Sales-specific TDS ────────────────────────────────────────────────────
+
+    public function getSalesTdsRateValidPan(): float
+    {
+        $rate = Helpers::get_business_settings('sales_tds_rate_valid_pan');
+
+        return (float) ($rate !== null && $rate !== '' ? $rate : 5);
+    }
+
+    public function getSalesTdsRateInvalidPan(): float
+    {
+        $rate = Helpers::get_business_settings('sales_tds_rate_invalid_pan');
+
+        return (float) ($rate !== null && $rate !== '' ? $rate : 20);
+    }
+
+    public function getSalesTdsSection(): string
+    {
+        $section = Helpers::get_business_settings('sales_tds_section');
+
+        return (string) ($section !== null && $section !== '' ? $section : '194H');
+    }
+
+    /**
+     * Compute TDS breakdown for a sales withdrawal (direct rupee amount).
+     *
+     * @return array{
+     *     gross_amount: float,
+     *     tds_amount: float,
+     *     tds_rate: float,
+     *     tds_section: string,
+     *     net_amount: float,
+     *     pan_status_at_withdrawal: string|null
+     * }
+     */
+    public function computeSalesWithdrawal(\App\Models\Sale $sale, float $grossAmount): array
+    {
+        $tdsRatePercent = $sale->pan_status === 'Verified'
+            ? $this->getSalesTdsRateValidPan()
+            : $this->getSalesTdsRateInvalidPan();
+
+        $tdsAmount = round($grossAmount * ($tdsRatePercent / 100), 2);
+        $netAmount = round($grossAmount - $tdsAmount, 2);
+
+        return [
+            'gross_amount'             => $grossAmount,
+            'tds_amount'               => $tdsAmount,
+            'tds_rate'                 => $tdsRatePercent,
+            'tds_section'              => $this->getSalesTdsSection(),
+            'net_amount'               => $netAmount,
+            'pan_status_at_withdrawal' => $sale->pan_status,
+        ];
+    }
+
+    // ── User coin withdrawals ─────────────────────────────────────────────────
+
     public function computeWithdrawal(User $user, float $coins): array
     {
         $this->assertKycVerified($user);

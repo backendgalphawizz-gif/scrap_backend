@@ -763,4 +763,5 @@
   'Your browser does not support the video tag.' => 'Your browser does not support the video tag.',
   'Sales Type' => 'Sales Type',
   'Salary' => 'Salary',
+  'Gross (₹)' => 'Gross (₹)',
 );

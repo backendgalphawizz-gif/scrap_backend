@@ -135,7 +135,12 @@
                                 <tr>
                                     <th>{{ \App\CPU\translate('SL')}}</th>
                                     <th>{{ \App\CPU\translate('Name')}}</th>
-                                    <th>{{ \App\CPU\translate('Amount')}}</th>
+                                    <th>{{ \App\CPU\translate('Gross (₹)')}}</th>
+                                    <th>TDS Rate</th>
+                                    <th>TDS (₹)</th>
+                                    <th>Net Payout (₹)</th>
+                                    <th>Section</th>
+                                    <th>PAN Status</th>
                                     <th>{{ \App\CPU\translate('Type')}}</th>
                                     <th>{{ \App\CPU\translate('Remarks')}}</th>
                                     <th>{{ \App\CPU\translate('Status')}}</th>
@@ -147,7 +152,28 @@
                                     <tr>
                                         <td>{{ $transactions->firstItem() + $key }}</td>
                                         <td>{{ $txn->sale->name ?? '' }}</td>
-                                        <td>{{ $txn->amount ?? '' }}</td>
+                                        <td>{{ number_format((float) ($txn->amount ?? 0), 2) }}</td>
+                                        <td>
+                                            @if($txn->tds_rate)
+                                                <span class="badge bg-secondary">{{ number_format((float) $txn->tds_rate, 2) }}%</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-danger fw-semibold">{{ number_format((float) ($txn->tds ?? 0), 2) }}</td>
+                                        <td class="text-success fw-semibold">{{ number_format((float) ($txn->net_amount ?? $txn->amount ?? 0), 2) }}</td>
+                                        <td><span class="badge bg-info text-dark">{{ $txn->tds_section ?? '194H' }}</span></td>
+                                        <td>
+                                            @php
+                                                $panBadge = match($txn->pan_status_at_withdrawal ?? '') {
+                                                    'Verified'                          => 'success',
+                                                    'Submitted', 'Under Verification'   => 'warning',
+                                                    'Rejected'                          => 'danger',
+                                                    default                             => 'secondary',
+                                                };
+                                            @endphp
+                                            <span class="badge bg-{{ $panBadge }}">{{ $txn->pan_status_at_withdrawal ?? '—' }}</span>
+                                        </td>
                                         <td>{{ ucfirst($txn->type ?? '-') }}</td>
                                         <td>{{ $txn->remarks ?? '' }}</td>
                                         <td>
@@ -158,7 +184,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">
+                                        <td colspan="12" class="text-center">
                                             {{ \App\CPU\translate('No transactions found')}}
                                         </td>
                                     </tr>
