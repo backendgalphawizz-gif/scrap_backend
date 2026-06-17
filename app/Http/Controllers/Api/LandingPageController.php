@@ -71,7 +71,7 @@ class LandingPageController extends Controller
     {
         $keys = [
             'company_name', 'company_email', 'company_phone', 'shop_address',
-            'company_web_logo',
+            'company_web_logo', 'company_favicon',
             'footer_short_desc', 'footer_copyright',
             'social_facebook', 'social_twitter', 'social_instagram',
             'social_youtube', 'social_linkedin',
@@ -80,6 +80,7 @@ class LandingPageController extends Controller
         $rows = BusinessSetting::whereIn('type', $keys)->pluck('value', 'type');
 
         $logo = $rows['company_web_logo'] ?? null;
+        $favicon = $rows['company_favicon'] ?? null;
 
         // Build social array — only include non-empty links
         $social = [];
@@ -105,6 +106,8 @@ class LandingPageController extends Controller
             'address'         => $rows['shop_address']    ?? '',
             'logo'            => $logo,
             'logo_url'        => $logo ? asset('storage/company/' . $logo) : null,
+            'favicon'         => $favicon,
+            'favicon_url'     => $favicon ? asset('storage/company/' . $favicon) : null,
             'copyright'       => $rows['footer_copyright'] ?? '',
             'social'          => $social,
         ];
