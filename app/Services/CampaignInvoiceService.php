@@ -19,6 +19,13 @@ class CampaignInvoiceService
         return (bool) $campaign->generate_gst_invoice ? self::TYPE_GST : self::TYPE_NORMAL;
     }
 
+    public function invoiceNumber(Campaign $campaign): string
+    {
+        $invoiceDate = $campaign->created_at ?? now();
+
+        return 'RXI-' . $invoiceDate->format('Y') . '-' . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
+    }
+
     public function canDownload(Campaign $campaign): bool
     {
         return $campaign->status !== 'rejected';
@@ -50,11 +57,10 @@ class CampaignInvoiceService
 
     public function buildInvoiceData(Campaign $campaign): array
     {
-        $campaign->loadMissing('brand');
-
-        $brand = $campaign->brand instanceof Seller
-            ? $campaign->brand
-            : Seller::find($campaign->brand_id);
+        $brand = Seller::find($campaign->brand_id);
+        if (!$brand) {
+            $brand = new Seller();
+        }
 
         $isGstInvoice = (bool) $campaign->generate_gst_invoice;
         $invoiceType = $isGstInvoice ? self::TYPE_GST : self::TYPE_NORMAL;
@@ -82,19 +88,26 @@ class CampaignInvoiceService
         $sgstAmount  = $isIntraState ? round($gstAmount - $cgstAmount, 2) : 0.0;
         $igstAmount  = $isIntraState ? 0.0 : $gstAmount;
 
+        $numberOfPost = (int) ($campaign->number_of_post ?? 0);
+        $perPostAmount = $numberOfPost > 0
+            ? round($taxableAmount / $numberOfPost, 2)
+            : 0.0;
+        $discountPct = ($taxableAmount > 0 && $discountAmount > 0)
+            ? round($discountAmount / $taxableAmount * 100, 2)
+            : 0.0;
+
         $brandName = trim(($brand->f_name ?? '') . ' ' . ($brand->l_name ?? ''));
         if ($brandName === '') {
             $brandName = $brand->username ?? 'Brand';
         }
 
         $invoiceDate = $campaign->created_at ?? now();
-        $prefix = $isGstInvoice ? 'INV-GST-CAM-' : 'INV-CAM-';
 
         return [
             'invoice_type' => $invoiceType,
             'is_gst_invoice' => $isGstInvoice,
-            'invoice_number' => $prefix . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT),
-            'invoice_date' => $invoiceDate->format('d/m/Y'),
+            'invoice_number' => $this->invoiceNumber($campaign),
+            'invoice_date' => $invoiceDate->format('d-M-y'),
             'campaign' => $campaign,
             'company' => [
                 'name' => (string) (Helpers::get_business_settings('company_name') ?? 'Scrap'),
@@ -107,6 +120,7 @@ class CampaignInvoiceService
                 'name' => $brandName,
                 'username' => $brand->username ?? '',
                 'gst_number' => $brand->gst_number ?? '',
+                'pan_number' => $brand->pan_number ?? '',
                 'gst_status' => $brand->gst_status ?? '',
                 'address' => $brand->full_address ?? '',
                 'city' => $brand->city ?? '',
@@ -115,18 +129,23 @@ class CampaignInvoiceService
                 'email' => $brand->email ?? '',
             ],
             'is_intra_state' => $isIntraState,
+            'posts' => [
+                'per_post_amount' => $perPostAmount,
+                'total_posts' => $numberOfPost,
+            ],
             'amounts' => [
                 'taxable' => $taxableAmount,
                 'discount_amount' => $discountAmount,
+                'discount_pct' => $discountPct,
                 'net_taxable' => $netTaxableAmount,
                 'gst_percentage' => $gstPercentage,
                 'gst_amount' => $gstAmount,
                 'is_intra_state' => $isIntraState,
-                'cgst_rate' => $halfGstRate,
-                'sgst_rate' => $halfGstRate,
+                'cgst_rate' => $isIntraState ? $halfGstRate : 0.0,
+                'sgst_rate' => $isIntraState ? $halfGstRate : 0.0,
                 'cgst_amount' => $cgstAmount,
                 'sgst_amount' => $sgstAmount,
-                'igst_rate' => $gstPercentage,
+                'igst_rate' => $isIntraState ? 0.0 : $gstPercentage,
                 'igst_amount' => $igstAmount,
                 'total' => $totalAmount,
             ],

@@ -15,6 +15,7 @@ use App\Models\CampaignCreditNote;
 use App\Models\Seller;
 use App\Models\User;
 use App\Http\Resources\CommonResource;
+use App\Services\CampaignInvoiceService;
 use DB;
 use App\CPU\ImageManager;
 use Spatie\Activitylog\Models\Activity;
@@ -1249,9 +1250,8 @@ class ReportController extends Controller
         $igst     = $isIntraState ? 0.0 : $gstAmount;
 
         $isGst     = (bool) $campaign->generate_gst_invoice;
-        $prefix    = $isGst ? 'INV-GST-CAM-' : 'INV-CAM-';
-        $invoiceNo = $prefix . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
-        $invDate   = ($campaign->updated_at ?? $campaign->created_at)->format('d/m/Y');
+        $invoiceNo = app(CampaignInvoiceService::class)->invoiceNumber($campaign);
+        $invDate   = ($campaign->created_at ?? $campaign->updated_at)->format('d-M-y');
 
         return [
             'campaign_id'    => $campaign->id,
