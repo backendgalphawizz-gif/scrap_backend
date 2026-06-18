@@ -26,8 +26,7 @@ class CampaignCreditNoteService
 
     public function originalInvoiceNumber(Campaign $campaign): string
     {
-        $prefix = (bool) $campaign->generate_gst_invoice ? 'INV-GST-CAM-' : 'INV-CAM-';
-        return $prefix . str_pad((string) $campaign->id, 6, '0', STR_PAD_LEFT);
+        return $this->invoiceService->invoiceNumber($campaign);
     }
 
     /**
