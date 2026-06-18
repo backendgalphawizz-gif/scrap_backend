@@ -764,4 +764,5 @@
   'Sales Type' => 'Sales Type',
   'Salary' => 'Salary',
   'Gross (₹)' => 'Gross (₹)',
+  'Unread messages' => 'Unread messages',
 );

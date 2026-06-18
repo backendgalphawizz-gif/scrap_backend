@@ -83,11 +83,19 @@ class SellerDashboardController extends Controller
 
             $campaignList = Campaign::where('brand_id', $userId)->select('id', 'title', 'status')->get();
 
-            $engagement = 0;
+            $campaignIds = Campaign::where('brand_id', $userId)->pluck('id');
+
+            $engagement = CampaignTransaction::whereIn('campaign_id', $campaignIds)
+                ->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES)
+                ->count();
 
             $avgFeedback = Feedback::where('brand_id', $userId)->avg('ratings');
 
-            $costPerClick = 0; // Campaign::avg('cpc');
+            $sellerCampaigns = Campaign::where('brand_id', $userId)->get();
+            $costPerClick = round(
+                (float) ($sellerCampaigns->avg(fn (Campaign $campaign) => (float) $campaign->cost_per_click) ?? 0),
+                2
+            );
 
             $budget = Campaign::where('brand_id', $userId)->sum('total_campaign_budget');
 
@@ -131,36 +139,45 @@ class SellerDashboardController extends Controller
             $seller = $data['data'];
             $userId = $seller['id'];
 
-            $campaignList = []; // Campaign::where('brand_id', $userId)->where('id', $campaignId)->select('id','title' ,'status')->get();
+            $campaign = Campaign::where('brand_id', $userId)
+                ->where('id', $campaignId)
+                ->withCount(['occupiedTransactions as occupied_slots'])
+                ->first();
 
-            $chartData = CampaignTransaction::whereHas('campaign', function ($q) use ($userId, $campaignId) {
-                $q->where('brand_id', $userId)->where('id', $campaignId);
-            })
+            if (!$campaign) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Campaign not found or you do not have permission to access this campaign.',
+                    'data' => [],
+                ], 404);
+            }
+
+            $campaignList = Campaign::where('brand_id', $userId)
+                ->where('id', $campaignId)
+                ->select('id', 'title', 'status')
+                ->get();
+
+            $chartData = CampaignTransaction::where('campaign_id', $campaign->id)
+                ->whereIn('status', CampaignTransaction::SLOT_OCCUPIED_STATUSES)
                 ->selectRaw('DATE(created_at) as date, count(*) as value')
                 ->groupBy('date')
                 ->get();
 
-            $engagement = CampaignTransaction::whereHas('campaign', function ($q) use ($userId, $campaignId) {
-                $q->where('brand_id', $userId)->where('id', $campaignId);
-            })->count();
+            $metrics = $this->buildCampaignReportMetrics($campaign);
 
-            $avgFeedback = Feedback::whereHas('campaign', function ($q) use ($campaignId) {
-                $q->where('id', $campaignId);
-            })->avg('ratings');
-
-            $costPerClick = Campaign::where('id', $campaignId)->value('daily_budget_cap');
-
-            $budget = Campaign::where('id', $campaignId)->value('total_campaign_budget');
+            $avgFeedback = Feedback::where('campaign_id', $campaignId)->avg('ratings');
 
             return response()->json([
                 "status" => true,
                 "message" => "Statistics Data",
                 "data" => new CommonResource([
                     'campaign_list' => $campaignList,
-                    'engagement' => $engagement,
+                    'engagement' => $metrics['engagement'],
                     'avg_feedback' => round($avgFeedback, 1),
-                    'cost_per_click' => $costPerClick,
-                    'budget' => $budget,
+                    'average_feedbacks' => round($avgFeedback, 1),
+                    'cost_per_click' => $metrics['cost_per_click'],
+                    'budget' => $metrics['budget'],
+                    'budget_spent' => $metrics['budget_utilized'],
                     'report_chart' => $chartData
                 ])
             ], 200);
@@ -450,19 +467,6 @@ class SellerDashboardController extends Controller
                 }
             }
 
-            $sellerWallet = Helpers::get_seller_wallet($seller['id']);
-
-            if ($request->total_campaign_budget > $sellerWallet->wallet_amount) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient fund. Please recharge wallet.',
-                    'data' => [],
-                    'balance_sufficient' => false,
-                    'current_balance' => $sellerWallet->wallet_amount,
-                    'balance_required' => $request->total_campaign_budget
-                ], 200);
-            }
-
             $category = BrandCategory::where('id', $request->category_id)
                 ->where(function ($query) {
                     $query->whereNull('parent_id')->orWhere('parent_id', 0);
@@ -588,6 +592,20 @@ class SellerDashboardController extends Controller
             // Apply discount before GST: GST is charged on the net taxable amount only
             $net_taxable_amount      = $total_campaign_budget - $discountAmount;
             $compign_budget_with_gst = $net_taxable_amount + ($net_taxable_amount * $gst_percentage / 100);
+
+            $sellerWallet = Helpers::get_seller_wallet($seller['id']);
+
+            if ($compign_budget_with_gst > $sellerWallet->wallet_amount) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Insufficient fund. Please recharge wallet.',
+                    'data' => [],
+                    'balance_sufficient' => false,
+                    'current_balance' => $sellerWallet->wallet_amount,
+                    'balance_required' => $compign_budget_with_gst,
+                    'required_balance' => $compign_budget_with_gst,
+                ], 200);
+            }
 
             $campaign->brand_id = $seller['id'];
             $campaign->created_by = Campaign::CREATED_BY_BRAND;
@@ -968,23 +986,78 @@ class SellerDashboardController extends Controller
     {
         $data = Helpers::get_seller_by_token($request);
 
-        if ($data['success'] == 1) {
-            $seller = $data['data'];
-            // Logic to create campaign
-
-            $campaign = Campaign::find($id);
-
-            $campaign->status = $request->status;
-            $campaign->save();
-
-            Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign status updated to ' . ($request->status), $campaign);
-        } else {
+        if ($data['success'] != 1) {
             return response()->json([
                 'status' => false,
                 'message' => translate('Your existing session token does not authorize you any more'),
                 'data' => []
             ], 401);
         }
+
+        $seller = $data['data'];
+        $campaign = Campaign::where('id', $id)->where('brand_id', $seller['id'])->first();
+
+        if (!$campaign) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Campaign not found.',
+                'data' => []
+            ], 404);
+        }
+
+        $newStatus = $request->status;
+        $shouldChargeWallet = $newStatus === 'accepted'
+            && $campaign->created_by === Campaign::CREATED_BY_SALES_PERSON
+            && $campaign->status === 'pending';
+
+        if ($shouldChargeWallet) {
+            $charge = (float) $campaign->compign_budget_with_gst;
+
+            return DB::transaction(function () use ($seller, $campaign, $newStatus, $charge) {
+                $sellerWallet = SellerWallet::where('seller_id', $seller['id'])->lockForUpdate()->first();
+                if (!$sellerWallet) {
+                    $sellerWallet = Helpers::get_seller_wallet($seller['id']);
+                }
+
+                if ($charge > (float) $sellerWallet->wallet_amount) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Insufficient fund. Please recharge wallet.',
+                        'data' => [],
+                        'balance_sufficient' => false,
+                        'current_balance' => $sellerWallet->wallet_amount,
+                        'balance_required' => $charge,
+                        'required_balance' => $charge,
+                    ], 200);
+                }
+
+                $sellerWallet->wallet_amount -= $charge;
+                $sellerWallet->save();
+
+                \App\Models\SellerWalletHistory::create([
+                    'seller_id' => $seller['id'],
+                    'amount'    => $charge,
+                    'remarks'   => 'Campaign accepted: ' . $campaign->title,
+                    'type'      => 'debit',
+                ]);
+
+                $campaign->status = $newStatus;
+                $campaign->save();
+
+                Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign status updated to ' . $newStatus, $campaign);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Campaign updated successfully',
+                    'data' => []
+                ], 200);
+            });
+        }
+
+        $campaign->status = $newStatus;
+        $campaign->save();
+
+        Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign status updated to ' . $newStatus, $campaign);
 
         return response()->json([
             'status' => true,
@@ -1300,6 +1373,41 @@ class SellerDashboardController extends Controller
             'status' => $gstStatus,
             'name'   => $decoded['data']['legal_name_of_business'] ?? null,
             'error'  => null,
+        ];
+    }
+
+    private function buildCampaignReportMetrics(Campaign $campaign): array
+    {
+        $totalCampaignBudget = (float) ($campaign->total_campaign_budget ?? 0);
+        $numberOfPost = (int) ($campaign->number_of_post ?? 0);
+        $occupiedSlots = (int) ($campaign->occupied_slots ?? 0);
+
+        $perPostBudget = $numberOfPost > 0 ? ($totalCampaignBudget / $numberOfPost) : 0;
+        $budgetUtilized = round($perPostBudget * $occupiedSlots, 2);
+
+        $estimatedReach = (int) DB::table('campaign_transactions as ct')
+            ->join('users as u', 'u.id', '=', 'ct.user_id')
+            ->where('ct.campaign_id', $campaign->id)
+            ->whereIn('ct.status', CampaignTransaction::SLOT_OCCUPIED_STATUSES)
+            ->whereNull('u.deleted_at')
+            ->selectRaw(
+                'SUM(CASE WHEN ct.shared_on = "instagram" THEN COALESCE(u.instagram_followers, 0) ELSE 0 END)' .
+                ' + SUM(CASE WHEN ct.shared_on = "facebook"  THEN COALESCE(u.facebook_followers,  0) ELSE 0 END)' .
+                ' AS estimated_reach'
+            )
+            ->value('estimated_reach');
+
+        $costPerClick = (float) $campaign->cost_per_click;
+        if ($estimatedReach > 0) {
+            $costPerClick = round($totalCampaignBudget / $estimatedReach, 4);
+        }
+
+        return [
+            'engagement' => $occupiedSlots,
+            'cost_per_click' => $costPerClick,
+            'budget_utilized' => $budgetUtilized,
+            'budget' => $totalCampaignBudget,
+            'estimated_reach' => $estimatedReach,
         ];
     }
 }

@@ -44,6 +44,21 @@
             justify-content: flex-end;
         }
     }
+
+    .unread-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 50px;
+        background: #dc3545;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+    }
 </style>
 @endpush
 
@@ -143,6 +158,12 @@
 
                             <!-- Button -->
                             <div class="w-auto text-end d-flex gap-2 justify-content-end align-items-center">
+
+                                @if(($ticket->unread_messages_count ?? 0) > 0)
+                                <span class="unread-badge" title="{{ \App\CPU\translate('Unread messages') }}">
+                                    {{ $ticket->unread_messages_count }}
+                                </span>
+                                @endif
 
                                 <a class="btn btn--primary btn-sm py-2 px-3"
                                     href="{{ route('admin.support-ticket.singleTicket', $ticket->id) }}">

@@ -72,7 +72,7 @@
         <div class="card-body">
 
             <!-- Chat Container -->
-            <div style="max-height: 500px; overflow-y: auto; padding-right:10px;">
+            <div id="supportTicketChat" style="max-height: 500px; overflow-y: auto; padding-right:10px;">
 
                 <!-- Ticket First Message -->
                 <div class="d-flex mb-4">
@@ -112,6 +112,11 @@
                         </p>
                         <small style="opacity: 0.8;">
                             {{ \App\CPU\Helpers::formatAdminDateTime($message->created_at) }}
+                            @if($message->seen_by_requester)
+                                <span class="ms-1">✔✔</span>
+                            @else
+                                <span class="ms-1">✔</span>
+                            @endif
                         </small>
                     </div>
                 </div>
@@ -152,3 +157,14 @@
 
 </div>
 @endsection
+
+@push('script')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var chatBox = document.getElementById('supportTicketChat');
+        if (chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+</script>
+@endpush

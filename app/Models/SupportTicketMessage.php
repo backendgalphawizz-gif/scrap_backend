@@ -13,7 +13,23 @@ class SupportTicketMessage extends Model
         'sender_user_id',
         'sender_seller_id',
         'body',
+        'seen_by_admin',
+        'seen_by_requester',
     ];
+
+    protected $casts = [
+        'seen_by_admin' => 'boolean',
+        'seen_by_requester' => 'boolean',
+    ];
+
+    public static function readFlagsForSender(string $senderType): array
+    {
+        if ($senderType === 'admin') {
+            return ['seen_by_admin' => true, 'seen_by_requester' => false];
+        }
+
+        return ['seen_by_admin' => false, 'seen_by_requester' => true];
+    }
 
     public function ticket(): BelongsTo
     {
