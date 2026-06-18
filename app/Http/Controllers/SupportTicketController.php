@@ -35,7 +35,16 @@ public function index(Request $request)
     }
 
     // 3️⃣ Latest first + paginate + preserve query string
-    $tickets = $tickets->latest()->paginate(10)->withQueryString();
+    $tickets = $tickets
+        ->withCount([
+            'messages as unread_messages_count' => function ($q) {
+                $q->whereIn('sender_type', ['user', 'brand'])
+                    ->where('seen_by_admin', false);
+            },
+        ])
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
 
     return view('admin-views.support-ticket.view', compact('tickets'));
 }
@@ -48,7 +57,11 @@ public function view($id)
     if (!$ticket) {
         abort(404);
     }
-    // dd($ticket);
+
+    SupportTicketMessage::where('support_ticket_id', $ticket->id)
+        ->whereIn('sender_type', ['user', 'brand'])
+        ->where('seen_by_admin', false)
+        ->update(['seen_by_admin' => true]);
 
     return view('admin-views.support-ticket.singleView', compact('ticket'));
 }
@@ -60,11 +73,11 @@ public function reply(Request $request, $id)
         'replay' => 'required'
     ]);
 
-    SupportTicketMessage::create([
+    SupportTicketMessage::create(array_merge([
         'support_ticket_id' => $id,
         'sender_type' => 'admin',
         'body' => $request->replay,
-    ]);
+    ], SupportTicketMessage::readFlagsForSender('admin')));
 
     // Send Firebase notification to ticket owner
     $ticket = SupportTicket::with(['user', 'seller'])->find($id);

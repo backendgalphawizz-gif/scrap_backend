@@ -31,7 +31,13 @@ class AdminSupportTicketController extends Controller
             return $err;
         }
 
-        $query = SupportTicket::query()->withCount('messages')->latest();
+        $query = SupportTicket::query()->withCount([
+            'messages',
+            'messages as admin_unread_messages_count' => function ($q) {
+                $q->whereIn('sender_type', ['user', 'brand'])
+                    ->where('seen_by_admin', false);
+            },
+        ])->latest();
 
         if ($request->filled('requester_type')) {
             $request->validate([
@@ -81,6 +87,11 @@ class AdminSupportTicketController extends Controller
                 'message' => 'Ticket not found',
             ], 404);
         }
+
+        SupportTicketMessage::where('support_ticket_id', $ticket->id)
+            ->whereIn('sender_type', ['user', 'brand'])
+            ->where('seen_by_admin', false)
+            ->update(['seen_by_admin' => true]);
 
         $payload = SupportTicketPresenter::ticket($ticket, true);
         if ($ticket->user_id) {
@@ -159,13 +170,13 @@ class AdminSupportTicketController extends Controller
             ], 404);
         }
 
-        $msg = SupportTicketMessage::create([
+        $msg = SupportTicketMessage::create(array_merge([
             'support_ticket_id' => $ticket->id,
             'sender_type' => 'admin',
             'sender_user_id' => $admin->id,
             'sender_seller_id' => null,
             'body' => $request->message,
-        ]);
+        ], SupportTicketMessage::readFlagsForSender('admin')));
 
         return response()->json([
             'status' => true,

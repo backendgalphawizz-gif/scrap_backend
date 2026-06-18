@@ -39,7 +39,13 @@ class SupportTicketController extends Controller
         $tickets = SupportTicket::query()
             ->where('seller_id', $seller->id)
             ->whereNull('user_id')
-            ->withCount('messages')
+            ->withCount([
+                'messages',
+                'messages as unread_messages_count' => function ($q) {
+                    $q->where('sender_type', 'admin')
+                        ->where('seen_by_requester', false);
+                },
+            ])
             ->latest()
             ->get();
 
@@ -78,13 +84,13 @@ class SupportTicketController extends Controller
                 'status' => 'open',
             ]);
 
-            SupportTicketMessage::create([
+            SupportTicketMessage::create(array_merge([
                 'support_ticket_id' => $ticket->id,
                 'sender_type' => 'brand',
                 'sender_user_id' => null,
                 'sender_seller_id' => $seller->id,
                 'body' => $request->message,
-            ]);
+            ], SupportTicketMessage::readFlagsForSender('brand')));
 
             return $ticket;
         });
@@ -125,6 +131,11 @@ class SupportTicketController extends Controller
                 'message' => 'Ticket not found',
             ], 404);
         }
+
+        SupportTicketMessage::where('support_ticket_id', $ticket->id)
+            ->where('sender_type', 'admin')
+            ->where('seen_by_requester', false)
+            ->update(['seen_by_requester' => true]);
 
         return response()->json([
             'status' => true,
@@ -192,13 +203,13 @@ class SupportTicketController extends Controller
             ], 404);
         }
 
-        $msg = SupportTicketMessage::create([
+        $msg = SupportTicketMessage::create(array_merge([
             'support_ticket_id' => $ticket->id,
             'sender_type' => 'brand',
             'sender_user_id' => null,
             'sender_seller_id' => $seller->id,
             'body' => $request->message,
-        ]);
+        ], SupportTicketMessage::readFlagsForSender('brand')));
 
         if ($ticket->status === 'closed') {
             $ticket->update(['status' => 'open']);
