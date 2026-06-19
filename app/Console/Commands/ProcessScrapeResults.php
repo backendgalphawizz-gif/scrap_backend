@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CampaignTransaction;
-use App\Models\ScrappedPost;
 use App\Services\CampaignVerificationService;
+use App\Services\CaptionVerificationService;
 use App\Services\FraudDetectionService;
 use App\Services\FraudScoreService;
 use Carbon\Carbon;
@@ -29,8 +29,9 @@ class ProcessScrapeResults extends Command
         $this->info('Processing scrape results...');
 
         $verificationService = app(CampaignVerificationService::class);
+        $captionService      = app(CaptionVerificationService::class);
 
-        $transactions = CampaignTransaction::with(['campaign'])
+        $transactions = CampaignTransaction::with(['campaign.brand'])
             ->whereIn('status', [
                 CampaignTransaction::STATUS_PENDING,
                 CampaignTransaction::STATUS_ACTIVE,
@@ -55,7 +56,27 @@ class ProcessScrapeResults extends Command
             }
 
             $rewardTransaction = $verificationService->ensurePendingRewardTransaction($transaction);
-            ['days' => $verifiedDays, 'post_url' => $scrapedPostUrl] = $this->calculateVerifiedDays($transaction);
+            $scrapedRow = $this->getLatestScrapedPost(
+                $transaction->unique_code,
+                $transaction->shared_on,
+                $transaction->post_url ?? null
+            );
+
+            if ($this->hasCaptionMismatch($transaction, $scrapedRow, $captionService)) {
+                $endDate = Carbon::parse($transaction->end_date)->endOfDay();
+                $reason  = CaptionVerificationService::MISMATCH_REASON;
+
+                if ($transaction->status === CampaignTransaction::STATUS_FLAGGED && Carbon::now()->gt($endDate)) {
+                    $this->markDeleted($transaction, $rewardTransaction, $reason);
+                    $deleted++;
+                } elseif ($transaction->status !== CampaignTransaction::STATUS_FLAGGED) {
+                    $this->markFlagged($transaction, $reason);
+                    $flagged++;
+                }
+                continue;
+            }
+
+            ['days' => $verifiedDays, 'post_url' => $scrapedPostUrl] = $this->calculateVerifiedDays($transaction, $scrapedRow);
             $transaction->day_status = $verifiedDays;
 
             if ($verifiedDays >= $this->getMaxVerifiedDays()) {
@@ -177,15 +198,29 @@ class ProcessScrapeResults extends Command
                 $query->orWhere('post_url', $postUrl);
             })
             ->orderByDesc('scraped_at')
-            ->select('scraped_at', 'post_url')
+            ->select('scraped_at', 'post_url', 'caption')
             ->first();
 
         return $row;
     }
 
-    private function calculateVerifiedDays(CampaignTransaction $transaction): array
+    private function hasCaptionMismatch(
+        CampaignTransaction $transaction,
+        ?object $scrapedRow,
+        CaptionVerificationService $captionService
+    ): bool {
+        if (!$scrapedRow || empty($scrapedRow->caption)) {
+            return false;
+        }
+
+        $expectedCaption = $captionService->buildExpectedCaption($transaction->campaign, $transaction);
+
+        return $captionService->hasMismatch($expectedCaption, (string) $scrapedRow->caption);
+    }
+
+    private function calculateVerifiedDays(CampaignTransaction $transaction, ?object $row = null): array
     {
-        $row = $this->getLatestScrapedPost(
+        $row ??= $this->getLatestScrapedPost(
             $transaction->unique_code,
             $transaction->shared_on,
             $transaction->post_url ?? null
@@ -233,11 +268,11 @@ class ProcessScrapeResults extends Command
         return (string) ($user->$field ?? '');
     }
 
-    private function markFlagged(CampaignTransaction $transaction): void
+    private function markFlagged(CampaignTransaction $transaction, ?string $reason = null): void
     {
         $user     = User::find($transaction->user_id);
         $username = $user ? $this->getPlatformUsername($user, $transaction->shared_on) : '';
-        $reason   = $username
+        $reason ??= $username
             ? $this->determinePostFailureReason($username, $transaction->shared_on, $transaction->unique_code)
             : 'Post not verified. Submit a valid post URL to avoid deletion.';
 
@@ -252,11 +287,11 @@ class ProcessScrapeResults extends Command
         }
     }
 
-    private function markDeleted(CampaignTransaction $transaction, $rewardTransaction): void
+    private function markDeleted(CampaignTransaction $transaction, $rewardTransaction, ?string $reason = null): void
     {
         $user     = User::find($transaction->user_id);
         $username = $user ? $this->getPlatformUsername($user, $transaction->shared_on) : '';
-        $reason   = $username
+        $reason ??= $username
             ? $this->determinePostFailureReason($username, $transaction->shared_on, $transaction->unique_code)
             : 'Post could not be verified after flagging. Participation removed and slot released.';
 
