@@ -47,19 +47,19 @@ class BrandFeedbackQuestion extends Model
 
         $defaults = [
             [
-                'question'      => 'How would you rate your overall experience?',
+                'question'      => 'How relevant was this campaign to you?',
                 'question_type' => 'multiple_choice',
-                'options'       => ['Excellent', 'Good', 'Average', 'Poor', 'Very Poor'],
+                'options'       => ['Very Relevant', 'Relevant', 'Neutral', 'Slightly Relevant', 'Not Relevant'],
             ],
             [
-                'question'      => 'Would you recommend us to others?',
+                'question'      => 'Did this campaign increase your interest in the brand?',
                 'question_type' => 'multiple_choice',
-                'options'       => ['Definitely', 'Maybe', 'No'],
+                'options'       => ['Significantly Increased', 'Increased', 'No Change', 'Reduced Interest', 'Not Sure'],
             ],
             [
-                'question'      => 'Any additional feedback or suggestions?',
-                'question_type' => 'input',
-                'options'       => [],
+                'question'      => 'What influenced you most about this campaign?',
+                'question_type' => 'multiple_choice',
+                'options'       => ['Product/Service Offering', 'Price / Offer', 'Brand Reputation', 'Visual Content', 'Campaign Message', 'Nothing in Particular'],
             ],
         ];
 
