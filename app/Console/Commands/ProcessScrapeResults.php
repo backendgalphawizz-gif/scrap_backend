@@ -198,7 +198,7 @@ class ProcessScrapeResults extends Command
                 $query->orWhere('post_url', $postUrl);
             })
             ->orderByDesc('scraped_at')
-            ->select('scraped_at', 'post_url', 'caption')
+            ->select('scraped_at', 'post_url', 'caption', 'hashtags', 'mentions', 'unique_code')
             ->first();
 
         return $row;
@@ -209,13 +209,14 @@ class ProcessScrapeResults extends Command
         ?object $scrapedRow,
         CaptionVerificationService $captionService
     ): bool {
-        if (!$scrapedRow || empty($scrapedRow->caption)) {
+        $actualCaption = $captionService->buildScrapedCaption($scrapedRow);
+        if ($actualCaption === null) {
             return false;
         }
 
         $expectedCaption = $captionService->buildExpectedCaption($transaction->campaign, $transaction);
 
-        return $captionService->hasMismatch($expectedCaption, (string) $scrapedRow->caption);
+        return $captionService->hasMismatch($expectedCaption, $actualCaption);
     }
 
     private function calculateVerifiedDays(CampaignTransaction $transaction, ?object $row = null): array

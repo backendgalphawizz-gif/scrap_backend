@@ -56,9 +56,50 @@ class CaptionVerificationService
         return $message;
     }
 
+    public function buildScrapedCaption(?object $row): ?string
+    {
+        if (!$row || empty($row->caption)) {
+            return null;
+        }
+
+        $parts = [trim((string) $row->caption)];
+
+        foreach (['hashtags', 'mentions'] as $field) {
+            $value = trim((string) ($row->$field ?? ''));
+            if ($value !== '') {
+                $parts[] = $this->dedupeSeparatedTokens(str_replace(',', ' ', $value));
+            }
+        }
+
+        $merged = trim(implode(' ', $parts));
+
+        $uniqueCode = trim((string) ($row->unique_code ?? ''));
+        if ($uniqueCode !== '' && stripos($merged, $uniqueCode) === false) {
+            $merged .= ' [' . $uniqueCode . ']';
+        }
+
+        return $merged;
+    }
+
     public function hasMismatch(string $expected, string $actual): bool
     {
-        return $this->extractCaptionStructure($expected) !== $this->extractCaptionStructure($actual);
+        return $this->extractWordBag($expected) !== $this->extractWordBag($actual);
+    }
+
+    /** @return array<string, int> */
+    private function extractWordBag(string $caption): array
+    {
+        $bag = [];
+
+        foreach ($this->extractCaptionStructure($caption) as $lineWords) {
+            foreach ($lineWords as $word) {
+                $bag[$word] = ($bag[$word] ?? 0) + 1;
+            }
+        }
+
+        ksort($bag);
+
+        return $bag;
     }
 
     /** @return list<list<string>> */
@@ -107,5 +148,22 @@ class CaptionVerificationService
         return implode(' ', array_map(function (string $tag) {
             return str_starts_with($tag, '#') ? $tag : '#' . $tag;
         }, $parts));
+    }
+
+    private function dedupeSeparatedTokens(string $raw): string
+    {
+        $parts = preg_split('/[\s,]+/', trim($raw), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $seen  = [];
+        $out   = [];
+
+        foreach ($parts as $part) {
+            $key = mb_strtolower((string) preg_replace('/[^\p{L}\p{N}\-]/u', '', $part));
+            if ($key !== '' && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $out[]       = $part;
+            }
+        }
+
+        return implode(' ', $out);
     }
 }
