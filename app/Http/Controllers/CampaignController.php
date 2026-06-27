@@ -266,6 +266,18 @@ class CampaignController extends Controller
     {
         if ($request->ajax()) {
             $campaign = Campaign::with('brand')->find($request->id);
+
+            if (! $campaign) {
+                return response()->json(['status' => false, 'message' => 'Campaign not found'], 404);
+            }
+
+            if (! $campaign->canReactivateTo($request->status)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Settled or refunded campaigns cannot be reactivated. Create a new campaign instead.',
+                ], 422);
+            }
+
             $oldStatus = $campaign->status;
             $campaign->status = $request->status;
             $campaign->save();
@@ -388,6 +400,11 @@ class CampaignController extends Controller
         }
 
         $campaign = Campaign::find($id);
+        if (! $campaign) {
+            return back()->with('error', 'Campaign not found.');
+        }
+
+        $billingLocked = $campaign->locksBillingFields();
         if($request->hasFile('thumbnail')) {
             $campaign->thumbnail = ImageManager::update('profile/', $campaign->thumbnail, 'png', $request->file('thumbnail'));
         }
@@ -420,40 +437,48 @@ class CampaignController extends Controller
                 $campaign->images = implode(',', $product_images);
             }
         }
-        $campaign->brand_id = $request->brand_id;
         $campaign->title = $request->title ?? $request->caption;
         $campaign->descriptions = $request->caption;
         $campaign->tags = $request->hashtags;
-        $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
-        $campaign->status = $request->filled('status') ? $request->status : ($campaign->status ?: 'pending');
-        $campaign->category_id = $category->id;
-        $campaign->sub_category_id = $subCategoryId;
-        $campaign->start_date = $request->start_date;
-        $campaign->end_date = $request->end_date;
-        $campaign->gender = $request->gender;
-        $campaign->state = $request->state;
-        $campaign->city = implode(',', array_filter((array)($request->city ?? [])));
         $campaign->guidelines = implode('|', $request->input('guidelines', []));
-        $campaign->coins = $request->coins ?? $campaign->coins;
-        $campaign->reward_per_user = $request->reward_per_user;
-        $campaign->total_user_required = $request->number_of_post;
-        $campaign->number_of_post = $request->number_of_post;
-        $campaign->used_post = $request->used_post ?? $campaign->used_post;
-        $campaign->daily_budget_cap = $request->filled('daily_budget_cap') ? $request->daily_budget_cap : null;
-        $campaign->total_campaign_budget = $request->total_campaign_budget;
-        $campaign->age_range = $ageRange;
-        $campaign->sales_referal_code = $request->sales_referal_code;
-        $campaign->admin_percentage = $request->admin_percentage ?? $campaign->admin_percentage;
-        $campaign->user_percentage = $request->user_percentage ?? $campaign->user_percentage;
-        $campaign->sales_percentage = $request->sales_percentage ?? $campaign->sales_percentage;
-        $campaign->feedback_percentage = $request->feedback_percentage ?? $campaign->feedback_percentage;
-        $campaign->campaign_user_budget = $request->campaign_user_budget ?? $campaign->campaign_user_budget;
-        $campaign->compign_budget_with_gst = $request->compign_budget_with_gst ?? $campaign->compign_budget_with_gst;
-        if ($request->has('generate_gst_invoice')) {
-            $campaign->generate_gst_invoice = $request->boolean('generate_gst_invoice');
+
+        if (! $billingLocked) {
+            $campaign->brand_id = $request->brand_id;
+            $campaign->share_on = $request->social_media ? implode(',', $request->social_media) : '';
+            $newStatus = $request->filled('status') ? $request->status : ($campaign->status ?: 'pending');
+            if (! $campaign->canReactivateTo($newStatus)) {
+                return back()->with('error', 'Settled or refunded campaigns cannot be reactivated. Create a new campaign instead.');
+            }
+            $campaign->status = $newStatus;
+            $campaign->category_id = $category->id;
+            $campaign->sub_category_id = $subCategoryId;
+            $campaign->start_date = $request->start_date;
+            $campaign->end_date = $request->end_date;
+            $campaign->gender = $request->gender;
+            $campaign->state = $request->state;
+            $campaign->city = implode(',', array_filter((array)($request->city ?? [])));
+            $campaign->coins = $request->coins ?? $campaign->coins;
+            $campaign->reward_per_user = $request->reward_per_user;
+            $campaign->total_user_required = $request->number_of_post;
+            $campaign->number_of_post = $request->number_of_post;
+            $campaign->used_post = $request->used_post ?? $campaign->used_post;
+            $campaign->daily_budget_cap = $request->filled('daily_budget_cap') ? $request->daily_budget_cap : null;
+            $campaign->total_campaign_budget = $request->total_campaign_budget;
+            $campaign->age_range = $ageRange;
+            $campaign->sales_referal_code = $request->sales_referal_code;
+            $campaign->admin_percentage = $request->admin_percentage ?? $campaign->admin_percentage;
+            $campaign->user_percentage = $request->user_percentage ?? $campaign->user_percentage;
+            $campaign->sales_percentage = $request->sales_percentage ?? $campaign->sales_percentage;
+            $campaign->feedback_percentage = $request->feedback_percentage ?? $campaign->feedback_percentage;
+            $campaign->campaign_user_budget = $request->campaign_user_budget ?? $campaign->campaign_user_budget;
+            $campaign->compign_budget_with_gst = $request->compign_budget_with_gst ?? $campaign->compign_budget_with_gst;
+            if ($request->has('generate_gst_invoice')) {
+                $campaign->generate_gst_invoice = $request->boolean('generate_gst_invoice');
+            }
+            $campaign->final_reward_for_user = $request->final_reward_for_user ?? $campaign->final_reward_for_user;
+            $campaign->feedback_coin = $request->feedback_coin ?? $campaign->feedback_coin;
         }
-        $campaign->final_reward_for_user = $request->final_reward_for_user ?? $campaign->final_reward_for_user;
-        $campaign->feedback_coin = $request->feedback_coin ?? $campaign->feedback_coin;
+
         $campaign->save();
 
         return redirect()->route('admin.campaign.list');
