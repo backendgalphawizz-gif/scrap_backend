@@ -865,9 +865,20 @@ class SellerDashboardController extends Controller
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            // Logic to create campaign
 
-            $campaign = Campaign::find($id);
+            $campaign = Campaign::where('id', $id)->where('brand_id', $seller['id'])->first();
+
+            if (! $campaign) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Campaign not found.',
+                    'data' => [],
+                ], 404);
+            }
+
+            $billingLocked = $campaign->locksBillingFields();
+
+            if (! $billingLocked) {
             $category = BrandCategory::where('id', $request->category_id)
                 ->where(function ($query) {
                     $query->whereNull('parent_id')->orWhere('parent_id', 0);
@@ -893,6 +904,9 @@ class SellerDashboardController extends Controller
                         'data' => [],
                     ], 422);
                 }
+            }
+            } else {
+                $subCategoryId = $campaign->sub_category_id;
             }
 
             if ($request->hasFile('thumbnail')) {
@@ -940,30 +954,31 @@ class SellerDashboardController extends Controller
                 }
             }
             $campaign->post_type = $request->post_type ?? 'post';
-            $campaign->brand_id = $seller['id'];
             $campaign->title = $request->caption;
             $campaign->descriptions = $request->caption;
             $campaign->tags = $request->hashtags;
-            $campaign->share_on = $request->social_media;
-            $campaign->start_date = $request->start_date;
-            $campaign->end_date = $request->end_date;
-            $campaign->gender = $request->gender;
-            $campaign->state = $request->state;
-            $campaign->city = is_array($request->city)
-                ? implode(',', array_filter($request->city))
-                : ($request->city ?? '');
-            $campaign->category_id = $category->id;
-            $campaign->sub_category_id = $subCategoryId;
             $campaign->guidelines = implode('|', $request->guidelines);
-            $campaign->coins = $request->reward_per_user;
 
-            $campaign->total_user_required = $request->total_user_required;
-            $campaign->reward_per_user = $request->reward_per_user;
-            // $campaign->reward_per_post = $request->reward_per_post;
-            $campaign->number_of_post = $request->number_of_post;
-            $campaign->daily_budget_cap = $request->daily_budget_cap;
-            $campaign->total_campaign_budget = $request->total_campaign_budget;
-            $campaign->age_range = $request->age_range;
+            if (! $billingLocked) {
+                $campaign->share_on = $request->social_media;
+                $campaign->start_date = $request->start_date;
+                $campaign->end_date = $request->end_date;
+                $campaign->gender = $request->gender;
+                $campaign->state = $request->state;
+                $campaign->city = is_array($request->city)
+                    ? implode(',', array_filter($request->city))
+                    : ($request->city ?? '');
+                $campaign->category_id = $category->id;
+                $campaign->sub_category_id = $subCategoryId;
+                $campaign->coins = $request->reward_per_user;
+                $campaign->total_user_required = $request->total_user_required;
+                $campaign->reward_per_user = $request->reward_per_user;
+                $campaign->number_of_post = $request->number_of_post;
+                $campaign->daily_budget_cap = $request->daily_budget_cap;
+                $campaign->total_campaign_budget = $request->total_campaign_budget;
+                $campaign->age_range = $request->age_range;
+            }
+
             $campaign->save();
 
             Helpers::systemActivity('campaign', $seller, 'updated', 'Campaign updated successfully', $campaign);
@@ -1006,6 +1021,15 @@ class SellerDashboardController extends Controller
         }
 
         $newStatus = $request->status;
+
+        if (! $campaign->canReactivateTo($newStatus)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This campaign has been settled or refunded and cannot be reactivated. Please create a new campaign.',
+                'data' => [],
+            ], 422);
+        }
+
         $shouldChargeWallet = $newStatus === 'accepted'
             && $campaign->created_by === Campaign::CREATED_BY_SALES_PERSON
             && $campaign->status === 'pending';

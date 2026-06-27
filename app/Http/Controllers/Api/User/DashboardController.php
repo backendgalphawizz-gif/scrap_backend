@@ -227,10 +227,10 @@ class DashboardController extends Controller
 
         $campaign = Campaign::find($id);
 
-        if (!$campaign || $campaign->status != 'active') {
+        if (! $campaign || ! $campaign->isOpenForEnrollment()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Campaign not found or inactive'
+                'message' => 'Campaign not found or inactive',
             ], 404);
         }
 

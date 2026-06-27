@@ -622,6 +622,9 @@ class DashboardController extends Controller
         DB::table('business_settings')->updateOrInsert(['type' => 'company_phone'], [
             'value' => $request->input('company_phone') ?? ''
         ]);
+        DB::table('business_settings')->updateOrInsert(['type' => 'shop_address'], [
+            'value' => $request->input('shop_address') ?? ''
+        ]);
 
         DB::table('business_settings')->updateOrInsert(['type' => 'timezone'], [
             'value' => $request->input('timezone') ?? ''

@@ -508,9 +508,19 @@ class DashboardController extends Controller
 
         if ($data['success'] == 1) {
             $seller = $data['data'];
-            // Logic to create campaign
 
-            $campaign = Campaign::find($id);
+            $campaign = Campaign::where('id', $id)->where('sale_id', $seller['id'])->first();
+
+            if (! $campaign) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Campaign not found.',
+                    'data' => [],
+                ], 404);
+            }
+
+            $billingLocked = $campaign->locksBillingFields();
+
             if($request->hasFile('thumbnail')) {
                 $campaign->thumbnail = ImageManager::upload('profile/', 'png', $request->file('thumbnail'));
             }
@@ -537,28 +547,30 @@ class DashboardController extends Controller
                 }
             }
             $campaign->sale_id = $seller['id'];
-            $campaign->brand_id = $request->brand_id;
             $campaign->title = $request->caption;
             $campaign->descriptions = $request->caption;
             $campaign->tags = $request->hashtags;
-            $campaign->share_on = $request->social_media;
-            $campaign->start_date = $request->start_date;
-            $campaign->end_date = $request->end_date;
-            $campaign->gender = $request->gender;
-            $campaign->state = $request->state;
-            $campaign->city = is_array($request->city)
-                ? implode(',', array_filter($request->city))
-                : ($request->city ?? '');
             $campaign->guidelines = implode('|', $request->guidelines);
-            $campaign->coins = $request->reward_per_user;
 
-            $campaign->total_user_required = $request->total_user_required;
-            $campaign->reward_per_user = $request->reward_per_user;
-            // $campaign->reward_per_post = $request->reward_per_post;
-            $campaign->number_of_post = $request->number_of_post;
-            $campaign->daily_budget_cap = $request->daily_budget_cap;
-            $campaign->total_campaign_budget = $request->total_campaign_budget;
-            $campaign->age_range = $request->age_range;
+            if (! $billingLocked) {
+                $campaign->brand_id = $request->brand_id;
+                $campaign->share_on = $request->social_media;
+                $campaign->start_date = $request->start_date;
+                $campaign->end_date = $request->end_date;
+                $campaign->gender = $request->gender;
+                $campaign->state = $request->state;
+                $campaign->city = is_array($request->city)
+                    ? implode(',', array_filter($request->city))
+                    : ($request->city ?? '');
+                $campaign->coins = $request->reward_per_user;
+                $campaign->total_user_required = $request->total_user_required;
+                $campaign->reward_per_user = $request->reward_per_user;
+                $campaign->number_of_post = $request->number_of_post;
+                $campaign->daily_budget_cap = $request->daily_budget_cap;
+                $campaign->total_campaign_budget = $request->total_campaign_budget;
+                $campaign->age_range = $request->age_range;
+            }
+
             $campaign->save();
 
             /**

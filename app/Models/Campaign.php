@@ -16,6 +16,47 @@ class Campaign extends Model
     public const CREATED_BY_BRAND = 'brand';
     public const CREATED_BY_SALES_PERSON = 'sales_person';
 
+    public const TERMINAL_STATUSES = ['closed', 'stopped', 'completed', 'rejected'];
+
+    public const REACTIVATABLE_STATUSES = ['active', 'live', 'accepted'];
+
+    public function isSettlementSettled(): bool
+    {
+        return $this->settlement_status === 'settled';
+    }
+
+    public function isRefundProcessed(): bool
+    {
+        return $this->refund_status === 'processed';
+    }
+
+    public function hasTerminalStatus(): bool
+    {
+        return in_array($this->status, self::TERMINAL_STATUSES, true);
+    }
+
+    /** Billing, dates, slots, and targeting cannot change after settlement/refund or terminal status. */
+    public function locksBillingFields(): bool
+    {
+        return $this->isSettlementSettled()
+            || $this->isRefundProcessed()
+            || $this->hasTerminalStatus();
+    }
+
+    public function canReactivateTo(string $newStatus): bool
+    {
+        if (! in_array($newStatus, self::REACTIVATABLE_STATUSES, true)) {
+            return true;
+        }
+
+        return ! $this->locksBillingFields();
+    }
+
+    public function isOpenForEnrollment(): bool
+    {
+        return $this->status === 'active' && ! $this->locksBillingFields();
+    }
+
     protected $fillable = [
         'title',
         'descriptions',
